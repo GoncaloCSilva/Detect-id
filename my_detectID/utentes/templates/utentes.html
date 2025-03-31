@@ -1,0 +1,30 @@
+{% extends "master.html" %}
+
+{% block title %}
+  My Detect.id - List of all utentes
+{% endblock %}
+
+
+{% block content %}
+
+<p><a href="/">HOME</a></p>
+
+  <h1 style="margin-left: 15%;">Utentes</h1>
+  
+  <table border='1' style="  margin-left: auto; margin-right: auto;">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Birthday</th>
+      <th>Risk</th>
+    </tr>
+    {% for x in mymembers %}
+      <tr>
+        <td>{{ x.id }}</td>
+          <td><a href="details/{{ x.id }}">{{ x.firstname }} {{ x.lastname }}</a></td>
+        <td>{{ x.birthday }}</td>
+        <td>{{ x.risk }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}
