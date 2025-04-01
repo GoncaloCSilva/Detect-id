@@ -1,0 +1,46 @@
+{% extends "master.html" %}
+
+{% block title %}
+  Editar Utente
+{% endblock %}
+
+{% block content %}
+  <h1>Editar Utente</h1>
+
+  <form method="POST" action="{% url 'editarUtente' utente.id %}">
+    {% csrf_token %}
+
+    <label for="firstname">First Name:</label>
+    <input type="text" id="firstname" name="firstname" value="{{ utente.firstname }}" required>
+    <br>
+
+    <label for="lastname">Last Name:</label>
+    <input type="text" id="lastname" name="lastname" value="{{ utente.lastname }}" required>
+    <br>
+
+    <label for="birthday">Birthday:</label>
+    <input type="date" id="birthday" name="birthday" value="{{ utente.birthday|date:'Y-m-d' }}" required>
+    <br>
+
+    <label for="gender">Gender:</label>
+    <select id="gender" name="gender" required>
+      <option value="Male" {% if utente.gender == 'Male' %}selected{% endif %}>Male</option>
+      <option value="Female" {% if utente.gender == 'Female' %}selected{% endif %}>Female</option>
+      <option value="Other" {% if utente.gender == 'Other' %}selected{% endif %}>Other</option>
+    </select>
+    <br>
+
+    <label for="risk">Risk:</label>
+    <select id="risk" name="risk" required>
+      <option value="High Risk" {% if utente.risk == 'High Risk' %}selected{% endif %}>High Risk</option>
+      <option value="Some Risk" {% if utente.risk == 'Some Risk' %}selected{% endif %}>Some Risk</option>
+      <option value="No Risk" {% if utente.risk == 'No Risk' %}selected{% endif %}>No Risk</option>
+    </select>
+    <br>
+
+    <button type="submit">Guardar Alterações</button>
+  </form>
+
+  <p><a href="/utentes">Voltar</a></p>
+
+{% endblock %}

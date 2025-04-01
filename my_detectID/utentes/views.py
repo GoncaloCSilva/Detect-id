@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Utente
@@ -48,4 +48,28 @@ def adicionarUtente(request):
   return HttpResponse(template.render())       
 
 
+def editarUtente(request,id):
+  utente = Utente.objects.get(id=id)
+  if request.method == "POST":
+      utente.firstname = request.POST.get("firstname")
+      utente.lastname = request.POST.get("lastname")
+      utente.birthday = request.POST.get("birthday")
+      utente.gender = request.POST.get("gender")
+      utente.risk = request.POST.get("risk")
+      utente.save()
+
+      return redirect("/utentes/")
+  
+  return render(request, "editarUtente.html", {"utente": utente})
+
+
+def removerUtente(request,id):
+  utente = Utente.objects.get(id=id)
+  if request.method == "POST":
+        utente.delete()
+        return redirect("/utentes/")
+
+  return render(request,"details.html",{"mymember":utente})
+  
+  
 
