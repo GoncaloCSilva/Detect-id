@@ -9,4 +9,5 @@ urlpatterns = [
     path('utentes/editarUtente/<int:id>', views.editarUtente, name='editarUtente'),
     path("utentes/removerUtente/<int:id>/", views.removerUtente, name="removerUtente"),
     path("utentes/listarUtentes", views.listarUtentes, name="listarUtentes"),
+    path('api/utentes/', views.listar_utentes_api, name='listar_utentes_api'),
 ]

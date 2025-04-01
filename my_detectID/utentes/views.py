@@ -3,6 +3,9 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Utente
 from django.template import loader
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .serializers import UtenteSerializer
 
 
 # Create your views here.
@@ -83,7 +86,14 @@ def listarUtentes(request):
 
     if order_by in ["firstname", "-firstname", "lastname", "-lastname", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
-        
+
     return render(request, "utentes.html", {"mymembers": utentes, "risk_filter": risk_filter, "order_by": order_by})
+
+
+@api_view(['GET'])
+def listar_utentes_api(request):
+    utentes = Utente.objects.all()
+    serializer = UtenteSerializer(utentes, many=True)
+    return Response(serializer.data)
   
 
