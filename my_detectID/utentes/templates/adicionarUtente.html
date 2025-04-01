@@ -1,0 +1,45 @@
+{% extends "master.html" %}
+
+{% block title %}
+    My Detect.Id - Adicionar Utente
+{% endblock %}
+
+{% block content %}
+  <h1>Adicionar Utente</h1>
+
+  <form method="POST"action="{% url 'adicionarUtente' %}">
+    <label for="firstname">First Name:</label>
+    <input type="text" id="firstname" name="firstname" required>
+    
+    <br>
+
+    <label for="lastname">Last Name:</label>
+    <input type="text" id="lastname" name="lastname" required>
+    <br>
+
+    <label for="birthday">Birthday:</label>
+    <input type="date" id="birthday" name="birthday" required>
+    <br>
+
+    <label for="gender">Gender:</label>
+    <select id="gender" name="gender" required>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+    </select>
+    <br>
+
+    <label for="risk">Risk:</label>
+    <select id="risk" name="risk" required>
+      <option value="High Risk">High Risk</option>
+      <option value="Some Risk">Some Risk</option>
+      <option value="No Risk">No Risk</option>
+    </select>
+    <br>
+
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <p>Back to <a href="/utentes">Utentes</a></p>
+
+{% endblock %}
