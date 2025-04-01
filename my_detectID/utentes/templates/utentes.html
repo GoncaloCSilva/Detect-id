@@ -4,16 +4,40 @@
   My Detect.id - List of all utentes
 {% endblock %}
 
-
 {% block content %}
 
-<p><a href="/">HOME</a>
+<p>
+  <a href="/">HOME</a>
   <a href="/adicionarUtente">Adicionar Utente</a>
 </p>
 
-  <h1 style="margin-left: 15%;">Utentes</h1>
-  
-  <table border='1' style="  margin-left: auto; margin-right: auto;">
+<h1 style="margin-left: 15%;">Utentes</h1>
+
+<!-- Formulário para filtrar e ordenar -->
+<form method="GET" action="{% url 'listarUtentes' %}" style="text-align: center; margin-bottom: 20px;">
+    <!-- Filtro por Risco -->
+    <label for="risk">Filtrar por Risco:</label>
+    <select name="risk" id="risk">
+        <option value="">Todos</option>
+        <option value="High Risk" {% if request.GET.risk == "High Risk" %}selected{% endif %}>High Risk</option>
+        <option value="Some Risk" {% if request.GET.risk == "Some Risk" %}selected{% endif %}>Some Risk</option>
+        <option value="No Risk" {% if request.GET.risk == "No Risk" %}selected{% endif %}>No Risk</option>
+    </select>
+
+    <!-- Ordenação -->
+    <label for="order">Ordenar por:</label>
+    <select name="order" id="order">
+        <option value="NoOrder" {% if request.GET.order == "NoOrder" %}selected{% endif %}>No Order</option>
+        <option value="firstname" {% if request.GET.order == "firstname" %}selected{% endif %}>Nome (A-Z)</option>
+        <option value="-firstname" {% if request.GET.order == "-firstname" %}selected{% endif %}>Nome (Z-A)</option>
+        <option value="birthday" {% if request.GET.order == "birthday" %}selected{% endif %}>Nascimento (Antigo - Novo)</option>
+        <option value="-birthday" {% if request.GET.order == "-birthday" %}selected{% endif %}>Nascimento (Novo - Antigo)</option>
+    </select>
+
+    <button type="submit">Aplicar</button>
+</form>
+
+<table border='1' style="margin-left: auto; margin-right: auto;">
     <tr>
       <th>ID</th>
       <th>Name</th>
@@ -23,10 +47,11 @@
     {% for x in mymembers %}
       <tr>
         <td>{{ x.id }}</td>
-          <td><a href="details/{{ x.id }}">{{ x.firstname }} {{ x.lastname }}</a></td>
+        <td><a href="details/{{ x.id }}">{{ x.firstname }} {{ x.lastname }}</a></td>
         <td>{{ x.birthday }}</td>
         <td>{{ x.risk }}</td>
       </tr>
     {% endfor %}
-  </table>
+</table>
+
 {% endblock %}

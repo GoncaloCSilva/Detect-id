@@ -22,9 +22,10 @@ def details(request, id):
   }
   return HttpResponse(template.render(context, request))
 
+
 def main(request):
   template = loader.get_template('main.html')
-  return HttpResponse(template.render())
+  return HttpResponse(template.render()) 
 
 @csrf_exempt  # Desativa a verificação CSRF para esta view
 def adicionarUtente(request):
@@ -71,5 +72,18 @@ def removerUtente(request,id):
 
   return render(request,"details.html",{"mymember":utente})
   
+
+def listarUtentes(request):
+    risk_filter = request.GET.get("risk", "")  
+    order_by = request.GET.get("order", "firstname") 
+
+    utentes = Utente.objects.all()
+    if risk_filter in ["High Risk", "Some Risk", "No Risk"]:
+        utentes = utentes.filter(risk=risk_filter)
+
+    if order_by in ["firstname", "-firstname", "lastname", "-lastname", "birthday", "-birthday"]:
+        utentes = utentes.order_by(order_by)
+        
+    return render(request, "utentes.html", {"mymembers": utentes, "risk_filter": risk_filter, "order_by": order_by})
   
 
