@@ -10,8 +10,11 @@
     <p>Gender: {{ mymember.gender }}</p>
     <p>Birthday: {{ mymember.birthday }}</p>
     <p>Risk: {{ mymember.risk }}</p>
-    <br>    
 
+
+    <img src="{% url 'grafico_view' mymember.id %}" alt="Gráfico do utente">
+
+    <br>
     <a href="/utentes/editarUtente/{{mymember.id}}">Editar Utente</a>
 
     <!-- Botão para abrir o popup -->

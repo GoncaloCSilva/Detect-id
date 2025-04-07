@@ -6,7 +6,9 @@ from django.template import loader
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import UtenteSerializer
-
+import matplotlib.pyplot as plt
+from io import BytesIO
+from .graficos import grafico
 
 # Create your views here.
 def utentes(request):
@@ -88,6 +90,18 @@ def listarUtentes(request):
         utentes = utentes.order_by(order_by)
 
     return render(request, "utentes.html", {"mymembers": utentes, "risk_filter": risk_filter, "order_by": order_by})
+
+def grafico_view(request, id):
+    utente = Utente.objects.get(id=id)
+
+    grafico()
+
+    # Salvar o gráfico em memória
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
 @api_view(['GET'])
