@@ -24,6 +24,13 @@ ADD CONSTRAINT fk_visit_person
 FOREIGN KEY (person_id)
 REFERENCES cdmDatabaseSchema.PERSON(person_id);
 
+-- VISIT_OCCURRENCE → CARE_SITE
+ALTER TABLE cdmDatabaseSchema.VISIT_OCCURRENCE
+ADD CONSTRAINT fk_care_site
+FOREIGN KEY (care_site_id)
+REFERENCES cdmDatabaseSchema.CARE_SITE(care_site_id);
+
+
 -- MEASUREMENT → PERSON
 ALTER TABLE cdmDatabaseSchema.MEASUREMENT
 ADD CONSTRAINT fk_measurement_person

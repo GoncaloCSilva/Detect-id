@@ -13,22 +13,20 @@ CREATE TABLE cdmDatabaseSchema.PERSON (
 CREATE TABLE cdmDatabaseSchema.CONDITION_OCCURRENCE (	
 	condition_occurrence_id integer PRIMARY KEY,	-- Id
 	person_id integer NOT NULL,				-- Utente
-	condition_concept_id integer NOT NULL, -- Diagnóstico Principal
 	condition_start_date date NOT NULL, -- Data Diagnóstico 
-	condition_type_concept_id integer NOT NULL -- Caso sejam adicionados mais tipos
+	condition_source_value varchar(50) NOT NULL -- Diagnóstico Principal
 );
 
 -- HINT DISTRIBUTE ON KEY (person_id)
-CREATE TABLE cdmDatabaseSchema.NOTE (	-- Queixas de Entrada
+CREATE TABLE cdmDatabaseSchema.NOTE (	-- Queixas de Entrada, Alergias
 	note_id integer PRIMARY KEY,		-- Id
 	person_id integer NOT NULL,		-- Utente
-	note_datetime timestamp NOT NULL, -- Data e Hora
 	note_text TEXT NOT NULL,		-- Texto da nota
 	note_type_concept_id integer NOT NULL -- Tipo de Nota
 );
 
 -- HINT DISTRIBUTE ON KEY (person_id)
-CREATE TABLE cdmDatabaseSchema.OBSERVATION ( -- Alergias, Evento, Necessidade de O2 e Nivel de Consciencia
+CREATE TABLE cdmDatabaseSchema.OBSERVATION ( -- Evento, Necessidade de O2 e Nivel de Consciencia
 	observation_id integer PRIMARY KEY,		-- Id
 	person_id integer NOT NULL,				-- Utente
 	observation_concept_id integer NOT NULL, -- Tipo de Observação
@@ -36,10 +34,10 @@ CREATE TABLE cdmDatabaseSchema.OBSERVATION ( -- Alergias, Evento, Necessidade de
 );
 
 -- HINT DISTRIBUTE ON KEY (person_id)
-CREATE TABLE cdmDatabaseSchema.VISIT_OCCURRENCE ( -- Hora e Data de Internamento / Cama ou Maca
+CREATE TABLE cdmDatabaseSchema.VISIT_OCCURRENCE ( -- Hora e Data de Internamento
 	visit_occurrence_id integer PRIMARY KEY,	-- Id
 	person_id integer NOT NULL,			-- Utente
-	visit_concept_id integer NOT NULL, -- Cama / Maca
+	care_site_id integer NULL, 			-- Serviço
 	visit_start_datetime timestamp NOT NULL, -- Hora e Data de Internamento
 	visit_end_datetime timestamp NULL -- Hora e Data de Alta
 );
