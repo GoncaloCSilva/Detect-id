@@ -26,10 +26,11 @@ CREATE TABLE cdmDatabaseSchema.NOTE (	-- Queixas de Entrada, Alergias
 );
 
 -- HINT DISTRIBUTE ON KEY (person_id)
-CREATE TABLE cdmDatabaseSchema.OBSERVATION ( -- Evento, Necessidade de O2 e Nivel de Consciencia
+CREATE TABLE cdmDatabaseSchema.OBSERVATION ( -- Evento
 	observation_id integer PRIMARY KEY,		-- Id
 	person_id integer NOT NULL,				-- Utente
 	observation_concept_id integer NOT NULL, -- Tipo de Observação
+	value_as_number NUMERIC NULL, -- Valor da Observação -> 0 Nao ativo, 1 Ativo
 	observation_datetime timestamp NOT NULL -- Data de Observação
 );
 
