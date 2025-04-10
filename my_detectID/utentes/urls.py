@@ -11,4 +11,7 @@ urlpatterns = [
     path("utentes/listarUtentes", views.listarUtentes, name="listarUtentes"),
     path('api/utentes/', views.listar_utentes_api, name='listar_utentes_api'),
     path('grafico/<int:id>/', views.grafico_view, name='grafico_view'),
+
+    path('utentes2/', views.utentes2, name='utentes2'),
+
 ]

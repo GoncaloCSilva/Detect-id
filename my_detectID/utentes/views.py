@@ -9,6 +9,8 @@ from .serializers import UtenteSerializer
 import matplotlib.pyplot as plt
 from io import BytesIO
 from .graficos import grafico
+from .bd import *
+
 
 # Create your views here.
 def utentes(request):
@@ -16,6 +18,16 @@ def utentes(request):
   template = loader.get_template('utentes.html')
   context = {
     'mymembers': mymembers,
+  }
+  return HttpResponse(template.render(context, request))
+
+def utentes2(request):
+  mymembers = Utente.objects.all().values()
+  template = loader.get_template('utentes2.html')
+  fetchUtentes = getUtentes()
+
+  context = {
+    'mymembers': fetchUtentes,
   }
   return HttpResponse(template.render(context, request))
 
