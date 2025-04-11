@@ -1,21 +1,21 @@
 {% extends "master.html" %}
 
 {% block title %}
-  My Detect.Id - Details about {{ mymember.firstname }} {{ mymember.lastname }}
+  My Detect.Id - Details about {{ mymember.first_name }} {{ mymember.last_name }}
 {% endblock %}
 
 {% block content %}
-    <h1>{{ mymember.firstname }} {{ mymember.lastname }}</h1>
+    <h1>{{ mymember.first_name }} {{ mymember.last_name }}</h1>
   
-    <p>Gender: {{ mymember.gender }}</p>
-    <p>Birthday: {{ mymember.birthday }}</p>
-    <p>Risk: {{ mymember.risk }}</p>
+    <p>Genero: {{ mymember.gender_concept_id }}</p>
+    <p>Data de Nascimento: {{ x.day_of_birth }}/{{ x.month_of_birth }}/{{ x.year_of_birth }}</p>
+    <p>Número de Utente: {{ mymember.person_source_value }}</p>
 
 
-    <img src="{% url 'grafico_view' mymember.id %}" alt="Gráfico do utente">
+    <img src="{% url 'grafico_view' mymember.person_id %}" alt="Gráfico do utente">
 
     <br>
-    <a href="/utentes/editarUtente/{{mymember.id}}">Editar Utente</a>
+    <a href="/utentes/editarUtente/{{mymember.person_id}}">Editar Utente</a>
 
     <!-- Botão para abrir o popup -->
     <button onclick="openPopup()" style="background-color: red; color: white; border: none; padding: 8px 12px; cursor: pointer;">
@@ -29,7 +29,7 @@
       <div class="modal-content">
         <h2>Confirmar Remoção</h2>
         <p>Tem certeza que deseja remover <strong>{{ mymember.firstname }} {{ mymember.lastname }}</strong>?</p>
-        <form method="POST" action="{% url 'removerUtente' mymember.id %}">
+        <form method="POST" action="{% url 'removerUtente' mymember.person_id %}">
           {% csrf_token %}
           <button type="submit" style="background-color: red; color: white;">Sim, remover</button>
           <button type="button" onclick="closePopup()">Cancelar</button>

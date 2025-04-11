@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from .models import Person
 from .models import Utente
 from django.template import loader
 from rest_framework.response import Response
@@ -14,7 +15,7 @@ from .bd import *
 
 # Create your views here.
 def utentes(request):
-  mymembers = Utente.objects.all().values()
+  mymembers = Person.objects.all().values()
   template = loader.get_template('utentes.html')
   context = {
     'mymembers': mymembers,
@@ -31,8 +32,8 @@ def utentes2(request):
   }
   return HttpResponse(template.render(context, request))
 
-def details(request, id):
-  mymember = Utente.objects.get(id=id)
+def details(request, person_id):
+  mymember = Person.objects.get(person_id=person_id)
   template = loader.get_template('details.html')
   context = {
     'mymember': mymember,
@@ -103,8 +104,8 @@ def listarUtentes(request):
 
     return render(request, "utentes.html", {"mymembers": utentes, "risk_filter": risk_filter, "order_by": order_by})
 
-def grafico_view(request, id):
-    utente = Utente.objects.get(id=id)
+def grafico_view(request, person_id):
+    utente = Utente.objects.get(person_id=person_id)
 
     grafico()
 

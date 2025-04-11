@@ -77,8 +77,15 @@ WSGI_APPLICATION = 'my_detectID.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'detectid',
+        'USER': 'postgres',
+        'PASSWORD': 'Goncalo123',
+        'HOST': 'localhost',  
+        'PORT': '5432', 
+        'OPTIONS': {
+            'options': '-c search_path=cdmdatabaseschema,public'
+        }      
     }
 }
 
@@ -120,7 +127,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "utentes/static",
 ]
 
 # Default primary key field type

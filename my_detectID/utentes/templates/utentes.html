@@ -37,19 +37,23 @@
     <button type="submit">Aplicar</button>
 </form>
 
-<table border='1' style="margin-left: auto; margin-right: auto;">
+<table border='1' style="margin-left: auto; margin-right: auto; text-align: center;">
     <tr>
       <th>ID</th>
-      <th>Name</th>
-      <th>Birthday</th>
-      <th>Risk</th>
+      <th>Nome</th>
+      <th>Data de Nascimento</th>
+      <th>Genero</th>
     </tr>
     {% for x in mymembers %}
       <tr>
-        <td>{{ x.id }}</td>
-        <td><a href="details/{{ x.id }}">{{ x.firstname }} {{ x.lastname }}</a></td>
-        <td>{{ x.birthday }}</td>
-        <td>{{ x.risk }}</td>
+        <td>{{ x.person_id }}</td>
+        <td><a href="details/{{ x.person_id }}">{{ x.first_name }} {{ x.last_name }}</a></td>
+        <td>{{ x.day_of_birth }}/{{ x.month_of_birth }}/{{ x.year_of_birth }}</td>
+        {% if x.gender_concept_id == 1 %}
+        <td>Masculino</td>
+        {% else %}
+        <td>Feminino</td>
+        {% endif %}
       </tr>
     {% endfor %}
 </table>
