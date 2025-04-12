@@ -6,10 +6,18 @@
 
 {% block content %}
 
-<p>
-  <a href="/">HOME</a>
-  <a href="/adicionarUtente">Adicionar Utente</a>
-</p>
+
+{% load static %}
+<!-- NAVBAR VERDE -->
+<div style="background-color: green; display: flex; align-items: center; padding: 10px;">
+  <!-- LOGO/IMAGEM À ESQUERDA -->
+  <a href="/"><img src="{% static 'images/detectid.png' %}" alt="Logo" style="height: 100px; margin-right: 20px;"></a>
+    <!-- LINKS AO CENTRO -->
+    <div style="flex-grow: 1; text-align: center;">
+      <a href="" style="color: yellow; text-decoration: none; font-weight: bold; margin: 0 70px;font-size: 25px;"><u>Utentes</u></a>
+      <a href="/adicionarUtente" style="color: yellow; text-decoration: none; font-weight: bold; margin: 0 70px;font-size: 25px;">Adicionar Utente</a>
+  </div>
+</div>
 
 <h1 style="margin-left: 15%;">Utentes</h1>
 

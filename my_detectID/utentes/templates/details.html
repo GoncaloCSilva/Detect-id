@@ -7,8 +7,12 @@
 {% block content %}
     <h1>{{ mymember.first_name }} {{ mymember.last_name }}</h1>
   
-    <p>Genero: {{ mymember.gender_concept_id }}</p>
-    <p>Data de Nascimento: {{ x.day_of_birth }}/{{ x.month_of_birth }}/{{ x.year_of_birth }}</p>
+    <p>Genero:{% if x.gender_concept_id == 1 %}
+      Masculino
+      {% else %}
+      Feminino
+      {% endif %}</p>
+    <p>Data de Nascimento: {{ mymember.day_of_birth }}/{{ mymember.month_of_birth }}/{{ mymember.year_of_birth }}</p>
     <p>Número de Utente: {{ mymember.person_source_value }}</p>
 
 

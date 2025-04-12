@@ -105,7 +105,6 @@ def listarUtentes(request):
     return render(request, "utentes.html", {"mymembers": utentes, "risk_filter": risk_filter, "order_by": order_by})
 
 def grafico_view(request, person_id):
-    utente = Utente.objects.get(person_id=person_id)
 
     grafico()
 
