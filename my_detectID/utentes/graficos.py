@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def grafico():
     #Ler Dados
-    df = pd.read_excel(r"C:\Users\gonca\Desktop\SV2425\DjangoTest\my_detectID\Orange\detect.id.xlsx")
+    df = pd.read_excel("./Orange/detect.id.xlsx")
     #Preencher dados
     df_clean = df.dropna(subset=["Tempo", "DESCOMPENSAÇÃO"])
     df["Tempo"].fillna(df["Tempo"].median(), inplace=True)
