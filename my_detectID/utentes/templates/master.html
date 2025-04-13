@@ -2,11 +2,34 @@
 <html>
 <head>
   <title>{% block title %}{% endblock %}</title>
+  <style>
+    a.nav-link {
+      color: yellow;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 0 70px;
+      font-size: 25px;
+    }
+    a.nav-link.active {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+  {% load static %}
+  <!-- NAVBAR VERDE -->
+  <div style="background-color: green; display: flex; align-items: center; padding: 10px;">
+    <!-- LOGO/IMAGEM À ESQUERDA -->
+    <a href="/"><img src="{% static 'images/detectid.png' %}" alt="Logo" style="height: 100px; margin-right: 20px;"></a>
 
-{% block content %}
-{% endblock %}
+    <!-- LINKS AO CENTRO -->
+    <div style="flex-grow: 1; text-align: center;">
+      <a href="{% url 'utentes' %}" class="nav-link {% if active_page == 'utentes' %}active{% endif %}">Utentes</a>
+      <a href="{% url 'adicionar_utente' %}" class="nav-link {% if active_page == 'adicionar' %}active{% endif %}">Adicionar Utente</a>
+    </div>
+  </div>
 
+  {% block content %}
+  {% endblock %}
 </body>
 </html>

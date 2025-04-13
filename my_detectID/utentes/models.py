@@ -50,11 +50,8 @@ class Observation(models.Model):
 class Person(models.Model):
     person_id = models.IntegerField(primary_key=True)
     gender_concept_id = models.IntegerField()
-    year_of_birth = models.IntegerField()
-    month_of_birth = models.IntegerField(blank=True, null=True)
-    day_of_birth = models.IntegerField(blank=True, null=True)
     person_source_value = models.CharField(max_length=50, blank=True, null=True)
-
+    birthday = models.DateField(blank=True, null=True)
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 

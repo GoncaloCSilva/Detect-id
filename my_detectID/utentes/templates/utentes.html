@@ -5,20 +5,6 @@
 {% endblock %}
 
 {% block content %}
-
-
-{% load static %}
-<!-- NAVBAR VERDE -->
-<div style="background-color: green; display: flex; align-items: center; padding: 10px;">
-  <!-- LOGO/IMAGEM À ESQUERDA -->
-  <a href="/"><img src="{% static 'images/detectid.png' %}" alt="Logo" style="height: 100px; margin-right: 20px;"></a>
-    <!-- LINKS AO CENTRO -->
-    <div style="flex-grow: 1; text-align: center;">
-      <a href="" style="color: yellow; text-decoration: none; font-weight: bold; margin: 0 70px;font-size: 25px;"><u>Utentes</u></a>
-      <a href="/adicionarUtente" style="color: yellow; text-decoration: none; font-weight: bold; margin: 0 70px;font-size: 25px;">Adicionar Utente</a>
-  </div>
-</div>
-
 <h1 style="margin-left: 15%;">Utentes</h1>
 
 <!-- Formulário para filtrar e ordenar -->
@@ -36,8 +22,8 @@
     <label for="order">Ordenar por:</label>
     <select name="order" id="order">
         <option value="NoOrder" {% if request.GET.order == "NoOrder" %}selected{% endif %}>No Order</option>
-        <option value="firstname" {% if request.GET.order == "firstname" %}selected{% endif %}>Nome (A-Z)</option>
-        <option value="-firstname" {% if request.GET.order == "-firstname" %}selected{% endif %}>Nome (Z-A)</option>
+        <option value="first_name" {% if request.GET.order == "first_name" %}selected{% endif %}>Nome (A-Z)</option>
+        <option value="-first_name" {% if request.GET.order == "-first_name" %}selected{% endif %}>Nome (Z-A)</option>
         <option value="birthday" {% if request.GET.order == "birthday" %}selected{% endif %}>Nascimento (Antigo - Novo)</option>
         <option value="-birthday" {% if request.GET.order == "-birthday" %}selected{% endif %}>Nascimento (Novo - Antigo)</option>
     </select>
@@ -56,7 +42,7 @@
       <tr>
         <td>{{ x.person_id }}</td>
         <td><a href="details/{{ x.person_id }}">{{ x.first_name }} {{ x.last_name }}</a></td>
-        <td>{{ x.day_of_birth }}/{{ x.month_of_birth }}/{{ x.year_of_birth }}</td>
+        <td>{{ x.birthday }}</td>
         {% if x.gender_concept_id == 1 %}
         <td>Masculino</td>
         {% else %}

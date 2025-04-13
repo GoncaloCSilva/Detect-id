@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Person
+from .models import *
 from .models import Utente
 from django.template import loader
 from rest_framework.response import Response
@@ -19,6 +19,7 @@ def utentes(request):
   template = loader.get_template('utentes.html')
   context = {
     'mymembers': mymembers,
+    'active_page': 'utentes'
   }
   return HttpResponse(template.render(context, request))
 
@@ -34,9 +35,11 @@ def utentes2(request):
 
 def details(request, person_id):
   mymember = Person.objects.get(person_id=person_id)
+  mymeasurement = Measurement.objects.filter(person_id=person_id).values()
   template = loader.get_template('details.html')
   context = {
     'mymember': mymember,
+    'mymeasurement': mymeasurement,
   }
   return HttpResponse(template.render(context, request))
 
@@ -46,7 +49,7 @@ def main(request):
   return HttpResponse(template.render()) 
 
 @csrf_exempt  # Desativa a verificação CSRF para esta view
-def adicionarUtente(request):
+def adicionar_utente(request):
 
   if request.method == "POST":
 
@@ -92,14 +95,14 @@ def removerUtente(request,id):
   
 
 def listarUtentes(request):
-    risk_filter = request.GET.get("risk", "")  
-    order_by = request.GET.get("order", "firstname") 
+    risk_filter = request.GET.get("risk")  
+    order_by = request.GET.get("order") 
 
-    utentes = Utente.objects.all()
-    if risk_filter in ["High Risk", "Some Risk", "No Risk"]:
-        utentes = utentes.filter(risk=risk_filter)
+    utentes = Person.objects.all()
+    # if risk_filter in ["High Risk", "Some Risk", "No Risk"]:
+    #     utentes = utentes.filter(risk=risk_filter)
 
-    if order_by in ["firstname", "-firstname", "lastname", "-lastname", "birthday", "-birthday"]:
+    if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
 
     return render(request, "utentes.html", {"mymembers": utentes, "risk_filter": risk_filter, "order_by": order_by})

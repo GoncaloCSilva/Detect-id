@@ -7,15 +7,22 @@
 {% block content %}
     <h1>{{ mymember.first_name }} {{ mymember.last_name }}</h1>
   
-    <p>Genero:{% if x.gender_concept_id == 1 %}
+    <p>Genero:{% if mymember.gender_concept_id == 1 %}
       Masculino
       {% else %}
       Feminino
       {% endif %}</p>
-    <p>Data de Nascimento: {{ mymember.day_of_birth }}/{{ mymember.month_of_birth }}/{{ mymember.year_of_birth }}</p>
+    <p>Data de Nascimento: {{ mymember.birthday }}</p>
     <p>Número de Utente: {{ mymember.person_source_value }}</p>
-
-
+    <p>Parametro 1: {{ mymeasurement.0.value_as_number }}</p>
+    <p>Parametro 2: </p>
+    <p>Parametro 3: </p>
+    <p>Parametro 4: </p>
+    <p>Parametro 5: </p>
+    <p>Parametro 6: </p>
+    <p>Parametro 7: </p>
+    <p>Parametro 8: </p>
+    
     <img src="{% url 'grafico_view' mymember.person_id %}" alt="Gráfico do utente">
 
     <br>
