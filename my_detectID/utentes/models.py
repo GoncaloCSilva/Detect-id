@@ -1,17 +1,7 @@
-from django.db import models
 from datetime import date
+from django.db import models
 
 # Create your models here.
-class Utente(models.Model):
-    firstname = models.CharField(max_length=255)
-    lastname = models.CharField(max_length=255)
-    gender = models.CharField(max_length=255)
-    risk = models.CharField(max_length=255)
-    birthday = models.DateField()
-
-    def __str__(self):
-        return f"{self.firstname} {self.lastname}"
-    
 
 class Measurement(models.Model):
     measurement_id = models.IntegerField(primary_key=True)
@@ -21,7 +11,7 @@ class Measurement(models.Model):
     measurement_datetime = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'measurement'
 
 
@@ -32,7 +22,7 @@ class Note(models.Model):
     note_type_concept_id = models.IntegerField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'note'
 
 
@@ -44,7 +34,7 @@ class Observation(models.Model):
     observation_datetime = models.DateTimeField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'observation'
 
 
@@ -56,18 +46,17 @@ class Person(models.Model):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
-    
+    class Meta:
+        managed = True
+        db_table = 'person'
+
     def idade(self):
         if self.birthday:
-            hoje = date.today()
-            return hoje.year - self.birthday.year - (
-                (hoje.month, hoje.day) < (self.birthday.month, self.birthday.day)
+            today = date.today()
+            return today.year - self.birthday.year - (
+                (today.month, today.day) < (self.birthday.month, self.birthday.day)
             )
-        return None  # ou 0, ou qualquer valor padrão
-
-    class Meta:
-        managed = False
-        db_table = 'person'
+        return None
 
 
 class UtentesUtente(models.Model):
@@ -79,14 +68,14 @@ class UtentesUtente(models.Model):
     birthday = models.DateField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'utentes_utente'
 
 class CareSite(models.Model):
     care_site_id = models.IntegerField(primary_key=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'care_site'
 
 
@@ -97,7 +86,7 @@ class ConditionOccurrence(models.Model):
     condition_source_value = models.CharField(max_length=50)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'condition_occurrence'
 
 
@@ -109,5 +98,5 @@ class VisitOccurrence(models.Model):
     visit_end_datetime = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'visit_occurrence'

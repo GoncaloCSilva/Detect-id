@@ -2,11 +2,9 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import *
-from .models import Utente
 from django.template import loader
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .serializers import UtenteSerializer
 import matplotlib.pyplot as plt
 from io import BytesIO
 from .graficos import grafico
@@ -85,9 +83,6 @@ def adicionar_utente(request):
       nívelConsciencia = request.POST.get("NívelConsciencia")
       dor = request.POST.get("Dor")
 
-      Utente.objects.create(
-          firstname=firstname, lastname=lastname, birthday=birthday, gender=gender, risk=risk
-      )
 
       return redirect("/utentes/")
 
@@ -101,25 +96,25 @@ def adicionar_utente(request):
 
 
 def editarUtente(request,id):
-  utente = Utente.objects.get(id=id)
-  if request.method == "POST":
-      utente.firstname = request.POST.get("firstname")
-      utente.lastname = request.POST.get("lastname")
-      utente.birthday = request.POST.get("birthday")
-      utente.gender = request.POST.get("gender")
-      utente.risk = request.POST.get("risk")
-      utente.save()
+  # utente = Utente.objects.get(id=id)
+  # if request.method == "POST":
+  #     utente.firstname = request.POST.get("firstname")
+  #     utente.lastname = request.POST.get("lastname")
+  #     utente.birthday = request.POST.get("birthday")
+  #     utente.gender = request.POST.get("gender")
+  #     utente.risk = request.POST.get("risk")
+  #     utente.save()
 
-      return redirect("/utentes/")
+  #     return redirect("/utentes/")
   
   return render(request, "editarUtente.html", {"utente": utente})
 
 
 def removerUtente(request,id):
-  utente = Utente.objects.get(id=id)
-  if request.method == "POST":
-        utente.delete()
-        return redirect("/utentes/")
+  # utente = Utente.objects.get(id=id)
+  # if request.method == "POST":
+  #       utente.delete()
+  #       return redirect("/utentes/")
 
   return render(request,"details.html",{"mymember":utente})
   
@@ -149,10 +144,5 @@ def grafico_view(request, person_id):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
-@api_view(['GET'])
-def listar_utentes_api(request):
-    utentes = Utente.objects.all()
-    serializer = UtenteSerializer(utentes, many=True)
-    return Response(serializer.data)
   
 
