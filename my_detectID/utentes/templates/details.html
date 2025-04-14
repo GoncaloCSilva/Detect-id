@@ -43,7 +43,7 @@
     <br>
 
     <p>Data de Internamento: {{ mycondition.condition_start_date }}</p>
-    <p>Hora de Internamento: ""TODO"" </p>
+    <p>Hora de Internamento: {{ servico.0.visit_start_datetime.time}} </p>
     <p>Queixas de Entrada: {% for note in notes %} 
                           {% if note.note_type_concept_id == 1 %}
                           {{ note.note_text }}
@@ -58,7 +58,16 @@
                 {% endfor %}
     </p>
     <p>Antecedentes Pessoais: ""TODO""</p>
-    <p>Serviço: ""TODO"" </p>
+    <p>Serviço: {% if servico.0.care_site_id == 1 %}
+                  Urgência
+                {% else %}
+                    {% if servico.0.care_site_id == 2 %}
+                    Internamento
+                    {% else %}
+                    UCI
+                    {% endif %}
+                {% endif %}
+                 </p>
     
     <br>  
   </div>

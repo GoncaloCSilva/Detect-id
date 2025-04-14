@@ -40,6 +40,9 @@ def details(request, person_id):
         if dt not in grouped:
             grouped[dt] = []
         grouped[dt].append(m)
+
+    #Serviço
+    servico = VisitOccurrence.objects.filter(person_id=person_id)
     
     #Alergias e Queixas
     notes = Note.objects.filter(person_id=person_id)
@@ -49,7 +52,8 @@ def details(request, person_id):
         'mycondition': mycondition,
         'idade': idade,
         'grouped_measurements': grouped,
-        'notes':notes
+        'notes':notes,
+        'servico':servico
     }
     return HttpResponse(template.render(context, request))
 
@@ -67,7 +71,19 @@ def adicionar_utente(request):
       lastname = request.POST.get("lastname")
       birthday = request.POST.get("birthday")
       gender = request.POST.get("gender")
-      risk = request.POST.get("risk")
+      numeroUtente = request.POST.get("NumeroUtente")
+      queixasEntrada = request.POST.get("QueixasEntrada")
+      alergias = request.POST.get("Alergias")
+      diagnosticoPrincipal = request.POST.get("DiagnosticoPrincipal")
+      servico = request.POST.get("Serviço")
+      spO2 = request.POST.get("SpO2")
+      necessidadeO2 = request.POST.get("NecessidadeO2")
+      frequenciaCardiaca = request.POST.get("FrequenciaCardiaca")
+      tASistolica = request.POST.get("TASistolica")
+      tADiastolica = request.POST.get("TADiastolica")
+      temperatura = request.POST.get("Temperatura")
+      nívelConsciencia = request.POST.get("NívelConsciencia")
+      dor = request.POST.get("Dor")
 
       Utente.objects.create(
           firstname=firstname, lastname=lastname, birthday=birthday, gender=gender, risk=risk
@@ -77,7 +93,11 @@ def adicionar_utente(request):
 
   
   template = loader.get_template('adicionarUtente.html')
-  return HttpResponse(template.render())       
+  context = {
+    'active_page': 'adicionar_utente'
+}
+
+  return HttpResponse(template.render(context))       
 
 
 def editarUtente(request,id):

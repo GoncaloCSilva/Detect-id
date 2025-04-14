@@ -1,3 +1,10 @@
+<style>
+  .content {
+    margin-left: 20%; /* Move o conteúdo para a direita */
+  }
+</style>
+
+
 {% extends "master.html" %}
 
 {% block title %}
@@ -5,23 +12,25 @@
 {% endblock %}
 
 {% block content %}
-  <h1>Adicionar Utente</h1>
 
-  <form method="POST"action="{% url 'adicionarUtente' %}">
-    <label for="firstname">First Name:</label>
+  <h1 style="margin-left: 10%;"><u>Adicionar Utente</u></h1>
+  <h3 style="margin-left: 18%;" >Dados do Utente</h3>
+  <div class="content">
+  <form method="POST"action="{% url 'adicionar_utente' %}">
+    <label for="firstname">Primeiro Nome:</label>
     <input type="text" id="firstname" name="firstname" required>
     
     <br>
 
-    <label for="lastname">Last Name:</label>
+    <label for="lastname">Último Nome:</label>
     <input type="text" id="lastname" name="lastname" required>
     <br>
 
-    <label for="birthday">Birthday:</label>
+    <label for="birthday">Data de Nascimento:</label>
     <input type="date" id="birthday" name="birthday" required>
     <br>
 
-    <label for="gender">Gender:</label>
+    <label for="gender">Genero:</label>
     <select id="gender" name="gender" required>
       <option value="Male">Male</option>
       <option value="Female">Female</option>
@@ -29,17 +38,74 @@
     </select>
     <br>
 
-    <label for="risk">Risk:</label>
-    <select id="risk" name="risk" required>
-      <option value="High Risk">High Risk</option>
-      <option value="Some Risk">Some Risk</option>
-      <option value="No Risk">No Risk</option>
+    <label for="NumeroUtente">Número de Utente:</label>
+    <input type="text" id="NumeroUtente" name="NumeroUtente" required>
+    <br>
+
+    <label for="QueixasEntrada">Queixas de Entrada:</label>
+    <input type="text" id="QueixasEntrada" name="QueixasEntrada" required>
+    <br>
+
+    <label for="Alergias">Alergias:</label>
+    <input type="text" id="Alergias" name="Alergias" required>
+    <br>
+
+    <label for="DiagnosticoPrincipal">Diagnóstico Principal:</label>
+    <input type="text" id="DiagnosticoPrincipal" name="DiagnosticoPrincipal" required>
+    <br>
+
+    <label for="Serviço">Serviço:</label>
+    <select id="Serviço" name="Serviço" required>
+      <option value="Urgência">Urgência</option>
+      <option value="Internamento">Internamento</option>
+      <option value="UCI">UCI</option>
     </select>
     <br>
 
-    <button type="submit">Adicionar</button>
+
+    <br>
+    
+    </div>
+
+    <h3 style="margin-left: 18%;" >Medições</h3>
+    <div class="content">
+
+    <label for="SpO2">SpO2:</label>
+    <input type="text" id="SpO2" name="SpO2" >
+    
+    <br>
+
+    <label for="NecessidadeO2">Necessidade de O2:</label>
+    <input type="text" id="NecessidadeO2" name="NecessidadeO2" required>
+    <br>
+
+    <label for="FrequenciaCardiaca">Frequência Cardíaca:</label>
+    <input type="text" id="FrequenciaCardiaca" name="FrequenciaCardiaca"required >
+    <br>
+
+    <label for="TASistolica">TA Sistólica:</label>
+    <input type="text" id="TASistolica" name="TASistolica"required >
+    <br>
+
+    <label for="TADiastolica">TA Diastólica:</label>
+    <input type="text" id="TADiastolica" name="TADiastolica" required>
+    <br>
+
+    <label for="Temperatura">Temperatura:</label>
+    <input type="text" id="Temperatura" name="Temperatura" required>
+    <br>
+
+    <label for="NívelConsciencia">Nível de Consciência:</label>
+    <input type="text" id="NívelConsciencia" name="NívelConsciencia" required>
+    <br>
+
+    <label for="Dor">Dor:</label>
+    <input type="text" id="Dor" name="Dor" required>
+    <br>
+    <br>  
+    <button type="submit"style="margin-left:50%">Adicionar</button>
   </form>
 
-  <p>Back to <a href="/utentes">Utentes</a></p>
+</div>
 
 {% endblock %}

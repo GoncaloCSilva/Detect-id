@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+  {% load static %}
   <title>{% block title %}{% endblock %}</title>
+
+  <!-- FAVICON -->
+  <link rel="icon" type="image/x-icon" href="{% static 'images/favicon2.png' %}">
+
   <style>
     a.nav-link {
       color: yellow;
@@ -16,7 +21,6 @@
   </style>
 </head>
 <body>
-  {% load static %}
   <!-- NAVBAR VERDE -->
   <div style="background-color: green; display: flex; align-items: center; padding: 10px;">
     <!-- LOGO/IMAGEM À ESQUERDA -->
@@ -25,11 +29,26 @@
     <!-- LINKS AO CENTRO -->
     <div style="flex-grow: 1; text-align: center;">
       <a href="{% url 'utentes' %}" class="nav-link {% if active_page == 'utentes' %}active{% endif %}">Utentes</a>
-      <a href="{% url 'adicionar_utente' %}" class="nav-link {% if active_page == 'adicionar' %}active{% endif %}">Adicionar Utente</a>
+      <a href="{% url 'adicionar_utente' %}" class="nav-link {% if active_page == 'adicionar_utente' %}active{% endif %}">Adicionar Utente</a>
     </div>
   </div>
 
   {% block content %}
   {% endblock %}
+
+  <!-- FOOTER -->
+  <footer style="margin-top: 30px; background-color: green; padding: 0px 20px 30px 20px; text-align: center; color: white;">
+    <div style="padding-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; justify-items: center; margin-bottom: 20px;">
+      <a href="https://www.isel.pt"><img src="{% static 'images/isel_preto.png' %}" alt="ISEL Logo" style="height: 80px;"></a>
+      <img src="{% static 'images/idcare_preto.png' %}" alt="id.Care Logo" style="height: 100px;">
+      <a href="https://www.esel.pt"><img src="{% static 'images/esel_preto.png' %}" alt="ESEL Logo" style="height: 60px;"></a>
+    </div>
+
+    <!-- TEXTO MAIS EM BAIXO -->
+    <p style="margin-top: 20px; font-size: 14px;">
+      Projeto Final 2025: 48328 Gonçalo Silva, 48168 Diogo Lobo
+    </p>
+  </footer>
+
 </body>
 </html>
