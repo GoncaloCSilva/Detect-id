@@ -10,6 +10,8 @@ from .serializers import UtenteSerializer
 import matplotlib.pyplot as plt
 from io import BytesIO
 from .graficos import grafico
+from datetime import date
+from collections import defaultdict
 from .bd import *
 
 
@@ -23,25 +25,33 @@ def utentes(request):
   }
   return HttpResponse(template.render(context, request))
 
-def utentes2(request):
-  mymembers = Utente.objects.all().values()
-  template = loader.get_template('utentes2.html')
-  fetchUtentes = getUtentes()
-
-  context = {
-    'mymembers': fetchUtentes,
-  }
-  return HttpResponse(template.render(context, request))
-
 def details(request, person_id):
-  mymember = Person.objects.get(person_id=person_id)
-  mymeasurement = Measurement.objects.filter(person_id=person_id).values()
-  template = loader.get_template('details.html')
-  context = {
-    'mymember': mymember,
-    'mymeasurement': mymeasurement,
-  }
-  return HttpResponse(template.render(context, request))
+    #Utente
+    mymember = Person.objects.get(person_id=person_id)
+    # Diagnóstico
+    mycondition = ConditionOccurrence.objects.get(person_id=person_id)
+    idade = mymember.idade()
+
+    # Medições
+    measurements = Measurement.objects.filter(person_id=person_id)
+    grouped = {}
+    for m in measurements:
+        dt = m.measurement_datetime
+        if dt not in grouped:
+            grouped[dt] = []
+        grouped[dt].append(m)
+    
+    #Alergias e Queixas
+    notes = Note.objects.filter(person_id=person_id)
+    template = loader.get_template('details.html')
+    context = {
+        'mymember': mymember,
+        'mycondition': mycondition,
+        'idade': idade,
+        'grouped_measurements': grouped,
+        'notes':notes
+    }
+    return HttpResponse(template.render(context, request))
 
 
 def main(request):

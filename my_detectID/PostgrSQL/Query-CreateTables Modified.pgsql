@@ -3,10 +3,10 @@
 CREATE TABLE cdmDatabaseSchema.PERSON (
 	person_id integer PRIMARY KEY,	-- Id Utente
 	gender_concept_id integer NOT NULL, -- Genero
-	year_of_birth integer NOT NULL, -- Ano Nascimento
-	month_of_birth integer NULL, -- Mes Nascimento
-	day_of_birth integer NULL, -- Dia Nascimento
-	person_source_value varchar(50) NULL -- Numero de Utente
+	person_source_value varchar(50) NULL, -- Numero de Utente
+	birthday date NOT NULL, -- Dia Nascimento
+	first_name varchar(100) NOT NULL, -- Primeiro Nome
+	last_name varchar(100) NOT NULL   -- Último Nome
 );
 
 -- HINT DISTRIBUTE ON KEY (person_id)
@@ -43,11 +43,6 @@ CREATE TABLE cdmDatabaseSchema.VISIT_OCCURRENCE ( -- Hora e Data de Internamento
 	visit_end_datetime timestamp NULL -- Hora e Data de Alta
 );
 
--- HINT DISTRIBUTE ON RANDOM
-CREATE TABLE cdmDatabaseSchema.CARE_SITE ( -- Serviço
-	care_site_id integer PRIMARY KEY -- Id
-);
-
 -- HINT DISTRIBUTE ON KEY (person_id)
 CREATE TABLE cdmDatabaseSchema.MEASUREMENT ( -- Medição dos Parâmetros
 	measurement_id integer PRIMARY KEY,	-- Id
@@ -55,11 +50,4 @@ CREATE TABLE cdmDatabaseSchema.MEASUREMENT ( -- Medição dos Parâmetros
 	measurement_concept_id integer NOT NULL, -- Tipo de Medição
 	value_as_number NUMERIC NOT NULL,		-- Valor
 	measurement_datetime timestamp NOT NULL -- Data e hora da medição
-);
-
--- NÃO ESTÁ NO MODELO, Tabela para guardar nome das pessoas
-CREATE TABLE cdmDatabaseSchema.PERSON_DETAILS (
-	person_id integer PRIMARY KEY,             -- person_id
-	first_name varchar(100) NOT NULL,          -- Primeiro Nome
-	last_name varchar(100) NOT NULL            -- Último Nome
 );

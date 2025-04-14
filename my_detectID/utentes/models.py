@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import date
 
 # Create your models here.
 class Utente(models.Model):
@@ -54,6 +55,15 @@ class Person(models.Model):
     birthday = models.DateField(blank=True, null=True)
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
+
+    
+    def idade(self):
+        if self.birthday:
+            hoje = date.today()
+            return hoje.year - self.birthday.year - (
+                (hoje.month, hoje.day) < (self.birthday.month, self.birthday.day)
+            )
+        return None  # ou 0, ou qualquer valor padrão
 
     class Meta:
         managed = False

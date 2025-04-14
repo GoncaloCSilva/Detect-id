@@ -2,6 +2,13 @@
 
     ## Base de Dados
 
+
+############################################################# 
+                JÁ NÃO É PRECISO FAZER ISTO
+        Basta só correr os scripts sql e o teste.ipynb
+            (Texto está aqui pelo sim pelo não)
+#############################################################
+
 ## Instalação da Base de Dados no Django
 Para configurar o projeto, segue estes passos:
 1. Correr py manage.py makemigrations e migrate antes disto tudo!!!
@@ -22,23 +29,26 @@ Para configurar o projeto, segue estes passos:
     4.7 DROP TABLE cdmdatabaseschema.person_details;
 
 
-## Atualizar Tabela person com birthday
+
+
+
+## Atualizar Tabela person com birthday 
 1. No terminal do postgres correr -> ALTER TABLE cdmdatabaseschema.person ADD COLUMN birthday DATE;
 2. Correr na shell do django o seguinte codigo:
-    from datetime import date^M
-        ...: from utentes.models import Person
-        ...: ^M
-        ...: # Supondo que você tenha um queryset de pessoas^M
-        ...: pessoas = Person.objects.all()
-        ...: for p in pessoas:^M
-        ...:     if p.year_of_birth and p.month_of_birth and p.day_of_birth:^M
-        ...:         try:^M
-        ...:             # Tente criar a data de nascimento^M
-        ...:             p.birthday = date(p.year_of_birth, p.month_of_birth, p.day_of_birth)^M
-        ...:             p.save()^M
-        ...:         except Exception as e:^M
-        ...:             # Captura erros, se houver^M
-        ...:             print(f"Erro ao salvar data de nascimento para {p.id}: {e}")
+    from datetime import date
+    from utentes.models import Person
+            
+            
+             pessoas = Person.objects.all()
+             for p in pessoas:
+                 if p.year_of_birth and p.month_of_birth and p.day_of_birth:
+                     try:
+                         
+                         p.birthday = date(p.year_of_birth, p.month_of_birth, p.day_of_birth)
+                         p.save()
+                     except Exception as e:
+                         # Captura erros, se houver
+                         print(f"Erro ao salvar data de nascimento para {p.id}: {e}")
         
 (ATENÇÃO -> Isto tem que ser tudo mudado, ainda está numa versão muito pouco cuidadosa)
 

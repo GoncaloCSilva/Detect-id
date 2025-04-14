@@ -1,3 +1,24 @@
+<style>
+  table {
+    width: 75%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  table th, table td {
+    width: 11.11%; /* 100% dividido pelo número de colunas (9 neste caso) */
+    text-align: center;
+    padding: 8px;
+    border: 1px solid black;
+    word-wrap: break-word;
+  }
+
+  .content {
+    margin-left: 20%; /* Move o conteúdo para a direita */
+  }
+</style>
+
+
 {% extends "master.html" %}
 
 {% block title %}
@@ -5,24 +26,85 @@
 {% endblock %}
 
 {% block content %}
-    <h1>{{ mymember.first_name }} {{ mymember.last_name }}</h1>
-  
+    <h1 style="margin-left: 10%;"><u>{{ mymember.first_name }} {{ mymember.last_name }}</u></h1>
+    <br>  
+    
+    <h3 style="margin-left: 18%;" >Dados do Utente</h3>
+    <div class="content">
+    <p>Data de Nascimento: {{ mymember.birthday }}</p>
+    <p>Idade: {{ idade}}</p>
+    <p>Número de Utente: {{ mymember.person_source_value }}</p>
     <p>Genero:{% if mymember.gender_concept_id == 1 %}
       Masculino
       {% else %}
       Feminino
       {% endif %}</p>
-    <p>Data de Nascimento: {{ mymember.birthday }}</p>
-    <p>Número de Utente: {{ mymember.person_source_value }}</p>
-    <p>Parametro 1: {{ mymeasurement.0.value_as_number }}</p>
-    <p>Parametro 2: </p>
-    <p>Parametro 3: </p>
-    <p>Parametro 4: </p>
-    <p>Parametro 5: </p>
-    <p>Parametro 6: </p>
-    <p>Parametro 7: </p>
-    <p>Parametro 8: </p>
+    <p>Risco: ""TODO""</p>
+    <br>
+
+    <p>Data de Internamento: {{ mycondition.condition_start_date }}</p>
+    <p>Hora de Internamento: ""TODO"" </p>
+    <p>Queixas de Entrada: {% for note in notes %} 
+                          {% if note.note_type_concept_id == 1 %}
+                          {{ note.note_text }}
+                          {% endif %}
+                          {% endfor %}
+    </p>
+    <p>Diagnóstico Principal: {{ mycondition.condition_source_value }}</p>
+    <p>Alergias: {% for note in notes %} 
+                {% if note.note_type_concept_id == 2 %}
+                {{ note.note_text }}
+                {% endif %}
+                {% endfor %}
+    </p>
+    <p>Antecedentes Pessoais: ""TODO""</p>
+    <p>Serviço: ""TODO"" </p>
     
+    <br>  
+  </div>
+  <h3 style="margin-left: 18%;" >Histórico de Dados</h3>
+    <table border='1' style="margin-left: auto; margin-right: auto; text-align: center;">
+      <thead>
+        <tr>
+          <th>Dia e Hora da Medição </th>
+          <th>SpO2</th>
+          <th>Necessidade de O2</th>
+          <th>Frequência Cardíaca</th>
+          <th>TA Sistólica</th>
+          <th>TA Diastólica</th>
+          <th>Temperatura</th>
+          <th>Nível de Consciência</th>
+          <th>Dor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for datetime, measurements in grouped_measurements.items %}
+          <tr>
+            <td>{{ datetime }}</td>
+            {% for m in measurements %}
+            <td>
+              {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
+                {% if m.value_as_number == 1 %}
+                  Sim
+                  {% else %}
+                  Não
+                  {% endif %}
+              {% else %}
+                {{ m.value_as_number|floatformat:1 }}
+              {% endif %}
+            </td>
+              {% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+
+
+
+  
+  <br>
+  <h3 style="margin-left: 18%;" >Gráfico dos Dados</h3>
+  <div class="content">
     <img src="{% url 'grafico_view' mymember.person_id %}" alt="Gráfico do utente">
 
     <br>
@@ -33,8 +115,7 @@
       Remover Utente
     </button>
 
-    <p>Back to <a href="/utentes">Utentes</a></p>
-
+    </div>
     <!-- POPUP MODAL -->
     <div id="deletePopup" class="modal">
       <div class="modal-content">
