@@ -43,8 +43,6 @@ class Person(models.Model):
     gender_concept_id = models.IntegerField()
     person_source_value = models.CharField(max_length=50, blank=True, null=True)
     birthday = models.DateField(blank=True, null=True)
-    first_name = models.CharField(max_length=100, blank=True, null=True)
-    last_name = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         managed = True
@@ -57,6 +55,15 @@ class Person(models.Model):
                 (today.month, today.day) < (self.birthday.month, self.birthday.day)
             )
         return None
+
+class PersonExt(Person):  # Herança multi-tabela
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = True
+        db_table = 'person_ext'
+
 
 
 class ConditionOccurrence(models.Model):

@@ -3,9 +3,16 @@ CREATE TABLE cdmDatabaseSchema.PERSON (
 	person_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	gender_concept_id integer NOT NULL,
 	person_source_value varchar(50),
-	birthday date NOT NULL,
-	first_name varchar(100) NOT NULL,
-	last_name varchar(100) NOT NULL
+	birthday date NOT NULL --,
+	-- first_name varchar(100) NOT NULL,
+	-- last_name varchar(100) NOT NULL
+);
+
+CREATE TABLE cdmDatabaseSchema.PERSON_EXT (
+    person_ptr_id  integer PRIMARY KEY,
+    first_name varchar(100) NOT NULL,
+    last_name varchar(100) NOT NULL,
+    FOREIGN KEY (person_ptr_id) REFERENCES cdmDatabaseSchema.PERSON (person_id)
 );
 
 -- CONDITION_OCCURRENCE

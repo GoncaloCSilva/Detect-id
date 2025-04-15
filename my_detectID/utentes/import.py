@@ -1,7 +1,7 @@
 import pandas as pd
 import random
 from datetime import datetime
-from utentes.models import Person, Measurement, ConditionOccurrence, Note, Observation, VisitOccurrence
+from utentes.models import Person, Measurement, ConditionOccurrence, Note, Observation, VisitOccurrence, PersonExt
 
 file_path = "detectid.csv"
 df = pd.read_csv(file_path)
@@ -28,13 +28,14 @@ for _, row in df.iterrows():
     pid = row["person_id"]
     if pid not in pessoas_adicionadas:
         genero = 1 if row['Genero'] == 'Masculino' else 0
-        Person.objects.create(
+        person_ext = PersonExt(
             gender_concept_id=genero,
             person_source_value="12345555",
             birthday=row["Data de Nascimento"],
             first_name=row["Primeiro Nome"],
             last_name=row["Último Nome"]
         )
+        person_ext.save()
         pessoas_adicionadas.add(pid)
 
 print("Pessoas inseridas!")

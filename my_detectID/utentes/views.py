@@ -18,7 +18,7 @@ from django.utils import timezone
 
 # Create your views here.
 def utentes(request):
-  mymembers = Person.objects.all().values()
+  mymembers = PersonExt.objects.all().values()
   template = loader.get_template('utentes.html')
   context = {
     'mymembers': mymembers,
@@ -28,7 +28,7 @@ def utentes(request):
 
 def details(request, person_id):
 
-    mymember = Person.objects.get(person_id=person_id)
+    mymember = PersonExt.objects.get(person_id=person_id)
 
     mycondition = ConditionOccurrence.objects.get(person_id=person_id)
     idade = mymember.idade()
@@ -93,7 +93,7 @@ def adicionar_utente(request):
       data= date.today()
       dataHora=timezone.now()
 
-      person = Person.objects.create(
+      person = PersonExt.objects.create(
           gender_concept_id=int(gender),
           person_source_value=numeroUtente,
           birthday=birthday,
@@ -227,7 +227,7 @@ def editarUtente(request,id):
 
 
 def removerUtente(request, person_id):
-    person = Person.objects.get(person_id=person_id)
+    person = PersonExt.objects.get(person_id=person_id)
 
     if request.method == "POST":
         Measurement.objects.filter(person_id=person_id).delete()
@@ -246,7 +246,7 @@ def listarUtentes(request):
     risk_filter = request.GET.get("risk")  
     order_by = request.GET.get("order") 
 
-    utentes = Person.objects.all()
+    utentes = PersonExt.objects.all()
     # if risk_filter in ["High Risk", "Some Risk", "No Risk"]:
     #     utentes = utentes.filter(risk=risk_filter)
 

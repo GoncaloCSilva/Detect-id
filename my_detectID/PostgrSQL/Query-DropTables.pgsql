@@ -41,4 +41,4 @@ DROP TABLE IF EXISTS cdmdatabaseschema.metadata CASCADE;
 DROP TABLE IF EXISTS cdmdatabaseschema.procedure_occurrence CASCADE;
 DROP TABLE IF EXISTS cdmdatabaseschema.source_to_concept_map CASCADE;
 DROP TABLE IF EXISTS cdmdatabaseschema.vocabulary CASCADE;
-DROP TABLE IF EXISTS cdmdatabaseschema.person_details CASCADE;
+DROP TABLE IF EXISTS cdmdatabaseschema.person_ext CASCADE;
