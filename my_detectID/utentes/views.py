@@ -27,13 +27,13 @@ def utentes(request):
   return HttpResponse(template.render(context, request))
 
 def details(request, person_id):
-    #Utente
+
     mymember = Person.objects.get(person_id=person_id)
-    # Diagnóstico
+
     mycondition = ConditionOccurrence.objects.get(person_id=person_id)
     idade = mymember.idade()
 
-    # Medições
+ 
     measurements = Measurement.objects.filter(person_id=person_id)
     grouped = {}
     for m in measurements:
@@ -42,10 +42,10 @@ def details(request, person_id):
             grouped[dt] = []
         grouped[dt].append(m)
 
-    #Serviço
+  
     servico = VisitOccurrence.objects.filter(person_id=person_id)
     
-    #Alergias e Queixas
+
     notes = Note.objects.filter(person_id=person_id)
     template = loader.get_template('details.html')
     context = {
@@ -92,7 +92,7 @@ def adicionar_utente(request):
 
       data= date.today()
       dataHora=timezone.now()
-        # Criar o utente
+
       person = Person.objects.create(
           gender_concept_id=int(gender),
           person_source_value=numeroUtente,
@@ -113,34 +113,34 @@ def adicionar_utente(request):
           Note.objects.create(
               person=person,
               note_text=queixasEntrada,
-              note_type_concept_id=1  # 1 = Queixa
+              note_type_concept_id=1  
           )
       if alergias:
           Note.objects.create(
               person=person,
               note_text=alergias,
-              note_type_concept_id=2  # 2 = Alergia
+              note_type_concept_id=2  
           )
 
       # Medições
       if spO2:
           Measurement.objects.create(
               person=person,
-              measurement_concept_id=1,  # 1 = SpO2
+              measurement_concept_id=1,  
               value_as_number=Decimal(spO2),
               measurement_datetime=dataHora
           )
       if necessidadeO2:
           Measurement.objects.create(
               person=person,
-              measurement_concept_id=2,  # 2 = Necessidade de O2
+              measurement_concept_id=2, 
               value_as_number=int(necessidadeO2),
               measurement_datetime=dataHora
           )
       if frequenciaCardiaca:
           Measurement.objects.create(
               person=person,
-              measurement_concept_id=3,  # 3 = FC
+              measurement_concept_id=3,  
               value_as_number=Decimal(frequenciaCardiaca),
               measurement_datetime=dataHora
           )
@@ -162,7 +162,7 @@ def adicionar_utente(request):
       if temperatura:
           Measurement.objects.create(
               person=person,
-              measurement_concept_id=6,  # Exemplo: 3 = Temperatura
+              measurement_concept_id=6,  
               value_as_number=Decimal(temperatura),
               measurement_datetime=dataHora
             )
@@ -170,22 +170,22 @@ def adicionar_utente(request):
       if nívelConsciencia:
           Measurement.objects.create(
               person=person,
-              measurement_concept_id=7,  # 4 = Nível de Consciência
+              measurement_concept_id=7,  
               value_as_number=Decimal(nívelConsciencia),
               measurement_datetime=dataHora
           )
       if dor:
           Measurement.objects.create(
               person=person,
-              measurement_concept_id=8,  # 5 = Dor
+              measurement_concept_id=8,  
               value_as_number=int(dor),
               measurement_datetime=dataHora
           )
 
-      # Visita (se quiseres garantir uma entrada associada ao serviço)
+
       VisitOccurrence.objects.create(
           person=person,
-          care_site_id=int(servico) if servico else 1,  # por exemplo: 1 = Urgência, 2 = Cuidados
+          care_site_id=int(servico) if servico else 1, 
           visit_start_datetime=dataHora
       )
     
@@ -226,13 +226,20 @@ def editarUtente(request,id):
   return render(request, "editarUtente.html", {"utente": utente})
 
 
-def removerUtente(request,person_id):
-  person = Person.objects.get(person_id=person_id)
-  if request.method == "POST":
+def removerUtente(request, person_id):
+    person = Person.objects.get(person_id=person_id)
+
+    if request.method == "POST":
+        Measurement.objects.filter(person_id=person_id).delete()
+        ConditionOccurrence.objects.filter(person_id=person_id).delete()
+        Note.objects.filter(person_id=person_id).delete()
+        Observation.objects.filter(person_id=person_id).delete()
+        VisitOccurrence.objects.filter(person_id=person_id).delete()
+
         person.delete()
         return redirect("/utentes/")
 
-  return render(request,"details.html",{"mymember":person})
+    return render(request, "details.html", {"mymember": person})
   
 
 def listarUtentes(request):
@@ -252,7 +259,6 @@ def grafico_view(request, person_id):
 
     grafico()
 
-    # Salvar o gráfico em memória
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
