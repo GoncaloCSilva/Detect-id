@@ -11,6 +11,9 @@ from .graficos import grafico
 from datetime import date
 from collections import defaultdict
 from .bd import *
+from decimal import Decimal
+from django.utils import timezone
+
 
 
 # Create your views here.
@@ -68,12 +71,16 @@ def adicionar_utente(request):
       firstname = request.POST.get("firstname")
       lastname = request.POST.get("lastname")
       birthday = request.POST.get("birthday")
-      gender = request.POST.get("gender")
+      if request.POST.get("gender") == "Male": gender = 1 
+      else: gender = 0
       numeroUtente = request.POST.get("NumeroUtente")
       queixasEntrada = request.POST.get("QueixasEntrada")
       alergias = request.POST.get("Alergias")
       diagnosticoPrincipal = request.POST.get("DiagnosticoPrincipal")
-      servico = request.POST.get("Serviço")
+      if request.POST.get("Serviço") == "Urgência": servico = 1 
+      else: 
+        if request.POST.get("Serviço") == "Internamento": servico = 2 
+        else: servico = 3
       spO2 = request.POST.get("SpO2")
       necessidadeO2 = request.POST.get("NecessidadeO2")
       frequenciaCardiaca = request.POST.get("FrequenciaCardiaca")
@@ -83,8 +90,117 @@ def adicionar_utente(request):
       nívelConsciencia = request.POST.get("NívelConsciencia")
       dor = request.POST.get("Dor")
 
+      data= date.today()
+      dataHora=timezone.now()
+        # Criar o utente
+      person = Person.objects.create(
+          gender_concept_id=int(gender),
+          person_source_value=numeroUtente,
+          birthday=birthday,
+          first_name=firstname,
+          last_name=lastname
+      )
+
+      # Condição principal
+      ConditionOccurrence.objects.create(
+          person=person,
+          condition_start_date=data,
+          condition_source_value=diagnosticoPrincipal
+      )
+
+      # Notas (Queixas e Alergias)
+      if queixasEntrada:
+          Note.objects.create(
+              person=person,
+              note_text=queixasEntrada,
+              note_type_concept_id=1  # 1 = Queixa
+          )
+      if alergias:
+          Note.objects.create(
+              person=person,
+              note_text=alergias,
+              note_type_concept_id=2  # 2 = Alergia
+          )
+
+      # Medições
+      if spO2:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=1,  # 1 = SpO2
+              value_as_number=Decimal(spO2),
+              measurement_datetime=dataHora
+          )
+      if necessidadeO2:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=2,  # 2 = Necessidade de O2
+              value_as_number=int(necessidadeO2),
+              measurement_datetime=dataHora
+          )
+      if frequenciaCardiaca:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=3,  # 3 = FC
+              value_as_number=Decimal(frequenciaCardiaca),
+              measurement_datetime=dataHora
+          )
+       
+      if tASistolica:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=4,
+              value_as_number=Decimal(tASistolica),
+              measurement_datetime=dataHora
+          )
+      if tADiastolica:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=5,  
+              value_as_number=Decimal(tADiastolica),
+              measurement_datetime=dataHora
+          )
+      if temperatura:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=6,  # Exemplo: 3 = Temperatura
+              value_as_number=Decimal(temperatura),
+              measurement_datetime=dataHora
+            )
+
+      if nívelConsciencia:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=7,  # 4 = Nível de Consciência
+              value_as_number=Decimal(nívelConsciencia),
+              measurement_datetime=dataHora
+          )
+      if dor:
+          Measurement.objects.create(
+              person=person,
+              measurement_concept_id=8,  # 5 = Dor
+              value_as_number=int(dor),
+              measurement_datetime=dataHora
+          )
+
+      # Visita (se quiseres garantir uma entrada associada ao serviço)
+      VisitOccurrence.objects.create(
+          person=person,
+          care_site_id=int(servico) if servico else 1,  # por exemplo: 1 = Urgência, 2 = Cuidados
+          visit_start_datetime=dataHora
+      )
+    
+      # firstname = request.POST.get("firstname")
+      # lastname = request.POST.get("lastname")
+      # birthday = request.POST.get("birthday")
+      # gender = request.POST.get("gender")
+      # risk = request.POST.get("risk")
+
+      # Utente.objects.create(
+      #     firstname=firstname, lastname=lastname, birthday=birthday, gender=gender, risk=risk
+      # )
 
       return redirect("/utentes/")
+
 
   
   template = loader.get_template('adicionarUtente.html')
@@ -110,13 +226,13 @@ def editarUtente(request,id):
   return render(request, "editarUtente.html", {"utente": utente})
 
 
-def removerUtente(request,id):
-  # utente = Utente.objects.get(id=id)
-  # if request.method == "POST":
-  #       utente.delete()
-  #       return redirect("/utentes/")
+def removerUtente(request,person_id):
+  person = Person.objects.get(person_id=person_id)
+  if request.method == "POST":
+        person.delete()
+        return redirect("/utentes/")
 
-  return render(request,"details.html",{"mymember":utente})
+  return render(request,"details.html",{"mymember":person})
   
 
 def listarUtentes(request):
