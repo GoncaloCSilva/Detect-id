@@ -7,10 +7,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO
-from .graficos import grafico
-from datetime import date
+from .hd_graficos import grafico
+from datetime import date, datetime
 from collections import defaultdict
-from .bd import *
 from decimal import Decimal
 from django.utils import timezone
 
@@ -18,6 +17,11 @@ from django.utils import timezone
 
 # Create your views here.
 def utentes(request):
+  """
+  @brief: Função que retorna a lista de utentes
+  @param request: Requisição HTTP
+    @return: Renderiza o template 'utentes.html' com a lista de utentes
+  """
   mymembers = PersonExt.objects.all().values()
   template = loader.get_template('utentes.html')
   context = {
@@ -27,13 +31,18 @@ def utentes(request):
   return HttpResponse(template.render(context, request))
 
 def details(request, person_id):
-
+    """
+    @brief: Função que retorna a página de detalhes de um utente, incluindo os dados pessoais, condição,
+            histórico de medições, notas e serviço de internamento.
+    @param request: Requisição HTTP
+    @param person_id: ID do utente
+    @return: Renderiza o template 'details.html' com os dados do utente
+    """
     mymember = PersonExt.objects.get(person_id=person_id)
-
     mycondition = ConditionOccurrence.objects.get(person_id=person_id)
     idade = mymember.idade()
 
- 
+    # Agrupar medições por data e hora
     measurements = Measurement.objects.filter(person_id=person_id)
     grouped = {}
     for m in measurements:
@@ -42,19 +51,20 @@ def details(request, person_id):
             grouped[dt] = []
         grouped[dt].append(m)
 
-  
-    servico = VisitOccurrence.objects.filter(person_id=person_id)
-    
+    # Ordenar o dicionário do mais recente para o mais antigo
+    grouped = dict(sorted(grouped.items(), key=lambda item: item[0], reverse=True))
 
+    servico = VisitOccurrence.objects.filter(person_id=person_id)
     notes = Note.objects.filter(person_id=person_id)
+
     template = loader.get_template('details.html')
     context = {
         'mymember': mymember,
         'mycondition': mycondition,
         'idade': idade,
         'grouped_measurements': grouped,
-        'notes':notes,
-        'servico':servico
+        'notes': notes,
+        'servico': servico
     }
     return HttpResponse(template.render(context, request))
 
@@ -211,19 +221,40 @@ def adicionar_utente(request):
   return HttpResponse(template.render(context))       
 
 
-def editarUtente(request,id):
-  # utente = Utente.objects.get(id=id)
-  # if request.method == "POST":
-  #     utente.firstname = request.POST.get("firstname")
-  #     utente.lastname = request.POST.get("lastname")
-  #     utente.birthday = request.POST.get("birthday")
-  #     utente.gender = request.POST.get("gender")
-  #     utente.risk = request.POST.get("risk")
-  #     utente.save()
+def editarUtente(request,person_id):
+  utente = PersonExt.objects.get(person_id=person_id)
+  if request.method == "POST":
+      utente.first_name = request.POST.get("firstname")
+      utente.last_name = request.POST.get("lastname")
+      utente.birthday = request.POST.get("birthday")
+      utente.gender_concept_id = request.POST.get("gender")
+      utente.person_source_value = request.POST.get("NumeroUtente")
+      utente.save()
 
-  #     return redirect("/utentes/")
+      return redirect("/utentes/")
   
   return render(request, "editarUtente.html", {"utente": utente})
+
+def nova_medicao(request, person_id):
+    """
+    @brief: View para inserir uma nova medição para um utente específico.
+    @param request: Requisição HTTP com dados da medição
+    @param person_id: ID do utente
+    @return: Redireciona para a página de edição após inserção
+    """
+    if request.method == "POST":
+        agora = datetime.now()
+
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=agora)
+
+    return redirect('editarUtente', person_id=person_id)
 
 
 def removerUtente(request, person_id):

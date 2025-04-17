@@ -5,11 +5,88 @@
 {% endblock %}
 
 {% block content %}
-<h1 style="margin-left: 10%;"><u>Utentes</u></h1>
 
-<!-- Formulário para filtrar e ordenar -->
-<form method="GET" action="{% url 'listarUtentes' %}" style="text-align: center; margin-bottom: 20px;">
-    <!-- Filtro por Risco -->
+<style>
+  .page-title {
+    margin-left: 10%;
+    font-size: 2em;
+    text-decoration: underline;
+  }
+
+  h1, h3 {
+    color: #2c3e50;
+  }
+
+  .filter-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 20px auto;
+    flex-wrap: wrap;
+  }
+
+  .filter-form label {
+    font-weight: bold;
+  }
+
+  .filter-form select,
+  .filter-form button {
+    padding: 6px 10px;
+    font-size: 1em;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+
+  .filter-form button {
+    background-color: #007041;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+  .filter-form button:hover {
+    background-color: #0b462d;
+  }
+
+  table {
+    width: 80%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    text-align: center;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+
+  table th, table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+  }
+
+  table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  table a {
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  table a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<h1 class="page-title">Utentes</h1>
+
+<form method="GET" action="{% url 'listarUtentes' %}" class="filter-form">
     <label for="filter">Filtrar por:</label>
     <select name="filter" id="filter">
         <option value="">Todos</option>
@@ -21,7 +98,6 @@
         <option value="UCI" {% if request.GET.risk == "UCI" %}selected{% endif %}>UCI</option>
     </select>
 
-    <!-- Ordenação -->
     <label for="order">Ordenar por:</label>
     <select name="order" id="order">
         <option value="NoOrder" {% if request.GET.order == "NoOrder" %}selected{% endif %}>No Order</option>
@@ -34,25 +110,25 @@
     <button type="submit">Aplicar</button>
 </form>
 
-<table border='1' style="margin-left: auto; margin-right: auto; text-align: center;">
-    <tr>
-      <th>ID</th>
-      <th>Nome</th>
-      <th>Data de Nascimento</th>
-      <th>Genero</th>
-    </tr>
-    {% for x in mymembers %}
+<table>
+    <thead>
       <tr>
-        <td>{{ x.person_id }}</td>
-        <td><a href="details/{{ x.person_id }}">{{ x.first_name }} {{ x.last_name }}</a></td>
-        <td>{{ x.birthday }}</td>
-        {% if x.gender_concept_id == 1 %}
-        <td>Masculino</td>
-        {% else %}
-        <td>Feminino</td>
-        {% endif %}
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Data de Nascimento</th>
+        <th>Género</th>
       </tr>
-    {% endfor %}
+    </thead>
+    <tbody>
+      {% for x in mymembers %}
+        <tr>
+          <td>{{ x.person_id }}</td>
+          <td><a href="details/{{ x.person_id }}">{{ x.first_name }} {{ x.last_name }}</a></td>
+          <td>{{ x.birthday }}</td>
+          <td>{% if x.gender_concept_id == 1 %}Masculino{% else %}Feminino{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
 </table>
 
 {% endblock %}

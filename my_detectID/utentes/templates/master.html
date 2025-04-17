@@ -18,11 +18,14 @@
     a.nav-link.active {
       text-decoration: underline;
     }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
   </style>
 </head>
 <body>
   <!-- NAVBAR VERDE -->
-  <div style="background-color: green; display: flex; align-items: center; padding: 10px;">
+  <div style="background-color: #007041; display: flex; align-items: center; padding: 10px;">
     <!-- LOGO/IMAGEM À ESQUERDA -->
     <a href="/"><img src="{% static 'images/detectid.png' %}" alt="Logo" style="height: 100px; margin-right: 20px;"></a>
 
@@ -37,7 +40,7 @@
   {% endblock %}
 
   <!-- FOOTER -->
-  <footer style="margin-top: 30px; background-color: green; padding: 0px 20px 30px 20px; text-align: center; color: white;">
+  <footer style="margin-top: 30px; background-color: #007041; padding: 0px 20px 30px 20px; text-align: center; color: white;">
     <div style="padding-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; justify-items: center; margin-bottom: 20px;">
       <a href="https://www.isel.pt"><img src="{% static 'images/isel_preto.png' %}" alt="ISEL Logo" style="height: 80px;"></a>
       <img src="{% static 'images/idcare_preto.png' %}" alt="id.Care Logo" style="height: 100px;">

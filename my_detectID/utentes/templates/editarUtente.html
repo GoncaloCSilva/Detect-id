@@ -1,46 +1,148 @@
 {% extends "master.html" %}
 
 {% block title %}
-  Editar Utente
+  My Detect.Id - Editar Utente
 {% endblock %}
 
 {% block content %}
-  <h1>Editar Utente</h1>
 
-  <form method="POST" action="{% url 'editarUtente' utente.id %}">
+<style>
+  .form-container {
+    max-width: 800px;
+    margin: auto auto;
+    background-color: #ffffff; /* branco puro para mais contraste */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.2); /* sombra mais forte */
+    border: 1px solid rgba(0, 0, 0, 0.1); /* borda leve para reforçar o contorno */
+  }
+
+  h3 {
+    text-align: center;
+  }
+
+  h1 {
+    color: #2c3e50;
+    max-width: 900px;
+    margin: 20px auto auto auto;
+    padding: 20px;
+  }
+
+  form label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+  }
+
+  form input, form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    background-color: #fdfdfd; /* quase branco */
+  }
+
+  .submit-btn {
+    margin-top: 30px;
+    width: 100%;
+    padding: 12px;
+    background-color: #007041;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s ease;
+  }
+
+  .submit-btn:hover {
+    background-color: #0b462d;
+  }
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: bold;
+  }
+</style>
+
+
+<h1><u>Editar Utente</u></h1>
+
+<div class="form-container">
+  <form method="POST" action="{% url 'editarUtente' utente.person_id %}">
     {% csrf_token %}
+    <h3>Dados do Utente</h3>
 
-    <label for="firstname">First Name:</label>
-    <input type="text" id="firstname" name="firstname" value="{{ utente.firstname }}" required>
-    <br>
+    <label for="firstname">Primeiro Nome:</label>
+    <input type="text" id="firstname" name="firstname" value="{{ utente.first_name }}" required>
 
-    <label for="lastname">Last Name:</label>
-    <input type="text" id="lastname" name="lastname" value="{{ utente.lastname }}" required>
-    <br>
+    <label for="lastname">Último Nome:</label>
+    <input type="text" id="lastname" name="lastname" value="{{ utente.last_name }}" required>
 
-    <label for="birthday">Birthday:</label>
+    <label for="birthday">Data de Nascimento:</label>
     <input type="date" id="birthday" name="birthday" value="{{ utente.birthday|date:'Y-m-d' }}" required>
-    <br>
 
-    <label for="gender">Gender:</label>
+    <label for="gender">Género:</label>
     <select id="gender" name="gender" required>
-      <option value="Male" {% if utente.gender == 'Male' %}selected{% endif %}>Male</option>
-      <option value="Female" {% if utente.gender == 'Female' %}selected{% endif %}>Female</option>
-      <option value="Other" {% if utente.gender == 'Other' %}selected{% endif %}>Other</option>
+      <option value="1" {% if utente.gender_concept_id == 1 %}selected{% endif %}>Masculino</option>
+      <option value="0" {% if utente.gender_concept_id == 0 %}selected{% endif %}>Feminino</option>
     </select>
-    <br>
 
-    <label for="risk">Risk:</label>
-    <select id="risk" name="risk" required>
-      <option value="High Risk" {% if utente.risk == 'High Risk' %}selected{% endif %}>High Risk</option>
-      <option value="Some Risk" {% if utente.risk == 'Some Risk' %}selected{% endif %}>Some Risk</option>
-      <option value="No Risk" {% if utente.risk == 'No Risk' %}selected{% endif %}>No Risk</option>
-    </select>
-    <br>
+    <label for="NumeroUtente">Número de Utente:</label>
+    <input type="text" id="NumeroUtente" name="NumeroUtente" value="{{ utente.person_source_value }}" required>
 
-    <button type="submit">Guardar Alterações</button>
+    <button class="submit-btn" type="submit">Guardar Alterações</button>
   </form>
+</div>
 
-  <p><a href="/utentes/details/{{ utente.id }}">Voltar</a></p>
+<br>
+
+<div class="form-container">
+  <form method="POST" action="{% url 'nova_medicao' utente.person_id %}">
+    {% csrf_token %}
+    <h3>Nova Medição</h3>
+
+    <label for="spo2">SpO2:</label>
+    <input type="number" step="0.1" name="spo2" required>
+
+    <label for="necessidade_o2">Necessidade de O2 (1=Sim, 0=Não):</label>
+    <select name="necessidade_o2" required>
+      <option value="1">Sim</option>
+      <option value="0">Não</option>
+    </select>
+
+    <label for="fc">Frequência Cardíaca:</label>
+    <input type="number" step="0.1" name="fc" required>
+
+    <label for="ta_sistolica">TA Sistólica:</label>
+    <input type="number" step="0.1" name="ta_sistolica" required>
+
+    <label for="ta_diastolica">TA Diastólica:</label>
+    <input type="number" step="0.1" name="ta_diastolica" required>
+
+    <label for="temperatura">Temperatura:</label>
+    <input type="number" step="0.1" name="temperatura" required>
+
+    <label for="nivel_consciencia">Nível de Consciência:</label>
+    <input type="number" name="nivel_consciencia" required>
+
+    <label for="dor">Dor:</label>
+    <select name="dor" required>
+      <option value="1">Sim</option>
+      <option value="0">Não</option>
+    </select>
+
+    <button class="submit-btn" type="submit">Inserir Medição</button>
+  </form>
+  <a href="{% url 'details' utente.person_id %}" class="back-link" >← Voltar</a>
+</div>
+
+
 
 {% endblock %}
