@@ -87,24 +87,21 @@
 <h1 class="page-title">Utentes</h1>
 
 <form method="GET" action="{% url 'listarUtentes' %}" class="filter-form">
-    <label for="filter">Filtrar por:</label>
-    <select name="filter" id="filter">
+    <label for="service">Filtrar por:</label>
+    <select name="service" id="service">
         <option value="">Todos</option>
-        <option value="High Risk" {% if request.GET.risk == "High Risk" %}selected{% endif %}>High Risk</option>
-        <option value="Some Risk" {% if request.GET.risk == "Some Risk" %}selected{% endif %}>Some Risk</option>
-        <option value="No Risk" {% if request.GET.risk == "No Risk" %}selected{% endif %}>No Risk</option>
-        <option value="Urgência" {% if request.GET.risk == "Urgência" %}selected{% endif %}>Urgência</option>
-        <option value="Internamento" {% if request.GET.risk == "Internamento" %}selected{% endif %}>Internamento</option>
-        <option value="UCI" {% if request.GET.risk == "UCI" %}selected{% endif %}>UCI</option>
+        <option value="Urgência" {% if service_filter == "Urgência" %}selected{% endif %}>Urgência</option>
+        <option value="Internamento" {% if service_filter == "Internamento" %}selected{% endif %}>Internamento</option>
+        <option value="UCI" {% if service_filter == "UCI" %}selected{% endif %}>UCI</option>
     </select>
 
     <label for="order">Ordenar por:</label>
     <select name="order" id="order">
-        <option value="NoOrder" {% if request.GET.order == "NoOrder" %}selected{% endif %}>No Order</option>
-        <option value="first_name" {% if request.GET.order == "first_name" %}selected{% endif %}>Nome (A-Z)</option>
-        <option value="-first_name" {% if request.GET.order == "-first_name" %}selected{% endif %}>Nome (Z-A)</option>
-        <option value="birthday" {% if request.GET.order == "birthday" %}selected{% endif %}>Nascimento (Antigo - Novo)</option>
-        <option value="-birthday" {% if request.GET.order == "-birthday" %}selected{% endif %}>Nascimento (Novo - Antigo)</option>
+        <option value="NoOrder" {% if order_by == "NoOrder" %}selected{% endif %}>No Order</option>
+        <option value="first_name" {% if order_by == "first_name" %}selected{% endif %}>Nome (A-Z)</option>
+        <option value="-first_name" {% if order_by == "-first_name" %}selected{% endif %}>Nome (Z-A)</option>
+        <option value="birthday" {% if order_by == "birthday" %}selected{% endif %}>Nascimento (Antigo - Novo)</option>
+        <option value="-birthday" {% if order_by == "-birthday" %}selected{% endif %}>Nascimento (Novo - Antigo)</option>
     </select>
 
     <button type="submit">Aplicar</button>
