@@ -3,32 +3,59 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import *
 from django.template import loader
-from rest_framework.response import Response
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO
 from .hd_graficos import grafico
 from datetime import date, datetime
-from collections import defaultdict
 from decimal import Decimal
 from django.utils import timezone
+from .models import PersonExt, Measurement
+from django.shortcuts import render
 
 
 
 # Create your views here.
+# IDs dos conceitos de medição (para a tabela dos utentes)
+CONCEPT_IDS = {
+    'spo2': 1,
+    'o2': 2,
+    'fc': 3,
+    'tas': 4,
+    'tad': 5,
+    'temp': 6,
+    'gcs': 7,
+    'dor': 8,
+}
+
 def utentes(request):
-  """
-  @brief: Função que retorna a lista de utentes
-  @param request: Requisição HTTP
-    @return: Renderiza o template 'utentes.html' com a lista de utentes
-  """
-  mymembers = PersonExt.objects.all().values()
-  template = loader.get_template('utentes.html')
-  context = {
-    'mymembers': mymembers,
-    'active_page': 'utentes'
-  }
-  return HttpResponse(template.render(context, request))
+    """
+    @brief: Página que lista todos os utentes com a última medição clínica.
+    """
+    utentes = PersonExt.objects.all()
+    utentes_info = []
+    # Para cada utente vai buscar a última medição feita de cada parametro e guarda o seu valor,
+    # Tudo é juntado em utentes_info para ser mais facil mostrar na pagina Utentes
+    for utente in utentes:
+        last_measurements = {}
+        for key, concept_id in CONCEPT_IDS.items():
+            measurement = (
+                Measurement.objects
+                .filter(person_id=utente.person_id, measurement_concept_id=concept_id)
+                .order_by('-measurement_datetime')
+                .first()
+            )
+            last_measurements[key] = measurement.value_as_number if measurement else None
+
+        utentes_info.append({
+            'person': utente,
+            **last_measurements
+        })
+    
+    return render(request, 'utentes.html', {
+        'mymembers': utentes_info,
+        'active_page': 'utentes'
+    })
 
 def details(request, person_id):
     """

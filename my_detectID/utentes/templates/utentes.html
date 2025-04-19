@@ -1,5 +1,5 @@
 {% extends "master.html" %}
-
+{% load hd_valoresCoresVAV %}
 
 {% block title %}
   My Detect.id - List of all utentes
@@ -83,6 +83,21 @@
   table a:hover {
     text-decoration: underline;
   }
+
+.greenBoxGood {
+  background-color: #129716;
+  color: white;
+}
+
+.yellowBoxMedium {
+  background-color: #E8A310;
+  color: white;
+}
+
+.redBoxBad {
+  background-color: #C91515;
+  color: white;
+}
 </style>
 
 <h1 class="page-title">Utentes</h1>
@@ -109,24 +124,37 @@
 </form>
 
 <table>
-    <thead>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>SpO2</th>
+      <th>O2</th>
+      <th>FC</th>
+      <th>TAS</th>
+      <th>TAD</th>
+      <th>Temp</th>
+      <th>GCS</th>
+      <th>Dor</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in mymembers %}
       <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>Data de Nascimento</th>
-        <th>Género</th>
+        <td>{{ item.person.person_id }}</td>
+        <td><a href="details/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }}</a></td>
+        <td class ="{{ item.spo2|color_class:'SpO2' }}">{{ item.spo2|floatformat:1 }}</td>
+        <td class ="{{ item.o2|color_class:'O2' }}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %} </td>
+        <td class ="{{ item.fc|color_class:'FC' }}">{{ item.fc|floatformat:1 }}</td>
+        <td class ="{{ item.tas|color_class:'TAS' }}">{{ item.tas|floatformat:1 }}</td>
+        <td class ="{{ item.tad|color_class:'TAD' }}">{{ item.tad|floatformat:1 }}</td>
+        <td class ="{{ item.temp|color_class:'Temp' }}">{{ item.temp|floatformat:1 }}</td>
+        <td class ="{{ item.gcs|color_class:'GCS' }}">{{ item.gcs|floatformat:1 }}</td>
+        <td class ="{{ item.dor|color_class:'Dor' }}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %} </td>
       </tr>
-    </thead>
-    <tbody>
-      {% for x in mymembers %}
-        <tr>
-          <td>{{ x.person_id }}</td>
-          <td><a href="details/{{ x.person_id }}">{{ x.first_name }} {{ x.last_name }}</a></td>
-          <td>{{ x.birthday }}</td>
-          <td>{% if x.gender_concept_id == 1 %}Masculino{% else %}Feminino{% endif %}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
+    {% endfor %}
+  </tbody>
 </table>
+
 
 {% endblock %}
