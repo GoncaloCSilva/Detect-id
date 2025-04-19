@@ -290,7 +290,6 @@ def removerUtente(request, person_id):
     return render(request, "details.html", {"mymember": person})
   
 
-
 def listarUtentes(request):
     service_filter = request.GET.get("service")
     order_by = request.GET.get("order")
@@ -303,23 +302,72 @@ def listarUtentes(request):
 
     utentes = PersonExt.objects.all()
 
+    # Filter by service
     if service_filter in CARE_SITE_MAP.values():
         service_id = [k for k, v in CARE_SITE_MAP.items() if v == service_filter][0]
-
         person_ids = VisitOccurrence.objects.filter(
             care_site_id=service_id
         ).values_list("person_id", flat=True).distinct()
-
         utentes = utentes.filter(person_id__in=person_ids)
 
+    # Order if needed
     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
 
+    # Fetch latest measurements just like in `utentes`
+    utentes_info = []
+    for utente in utentes:
+        last_measurements = {}
+        for key, concept_id in CONCEPT_IDS.items():
+            measurement = (
+                Measurement.objects
+                .filter(person_id=utente.person_id, measurement_concept_id=concept_id)
+                .order_by('-measurement_datetime')
+                .first()
+            )
+            last_measurements[key] = measurement.value_as_number if measurement else None
+
+        utentes_info.append({
+            'person': utente,
+            **last_measurements
+        })
+
     return render(request, "utentes.html", {
-        "mymembers": utentes,
+        "mymembers": utentes_info,
         "service_filter": service_filter,
         "order_by": order_by
     })
+
+
+# def listarUtentes(request):
+#     service_filter = request.GET.get("service")
+#     order_by = request.GET.get("order")
+
+#     CARE_SITE_MAP = {
+#         1: "Urgência",
+#         2: "Internamento",
+#         3: "UCI",
+#     }
+
+#     utentes = PersonExt.objects.all()
+
+#     if service_filter in CARE_SITE_MAP.values():
+#         service_id = [k for k, v in CARE_SITE_MAP.items() if v == service_filter][0]
+
+#         person_ids = VisitOccurrence.objects.filter(
+#             care_site_id=service_id
+#         ).values_list("person_id", flat=True).distinct()
+
+#         utentes = utentes.filter(person_id__in=person_ids)
+
+#     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
+#         utentes = utentes.order_by(order_by)
+
+#     return render(request, "utentes.html", {
+#         "mymembers": utentes,
+#         "service_filter": service_filter,
+#         "order_by": order_by
+#     })
 
 
 
