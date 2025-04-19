@@ -1,4 +1,5 @@
 {% extends "master.html" %}
+{% load valoresCoresVAV %}
 
 {% block title %}
   My Detect.Id - Detalhes de {{ mymember.first_name }} {{ mymember.last_name }}
@@ -106,6 +107,22 @@
   .text-bold {
     font-weight: bold;
   }
+
+  .greenBoxGood {
+  background-color: #129716;
+  color: white;
+}
+
+.yellowBoxMedium {
+  background-color: #E8A310;
+  color: white;
+}
+
+.redBoxBad {
+  background-color: #C91515;
+  color: white;
+}
+
 </style>
 
 <div class="container">
@@ -171,14 +188,17 @@
           <tr>
             <td>{{ datetime|date:"d/m/Y H\hi" }}</td>
             {% for m in measurements %}
-              <td>
-                {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
-                  {% if m.value_as_number == 1 %} Sim {% else %} Não {% endif %}
-                {% else %}
-                  {{ m.value_as_number|floatformat:1 }}
-                {% endif %}
-              </td>
+              {% with m.measurement_concept_id|measurement_name as concept_name %}
+                <td class="{{ m.value_as_number|color_class:concept_name }}">
+                  {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
+                    {% if m.value_as_number == 1 %} Sim {% else %} Não {% endif %}
+                  {% else %}
+                    {{ m.value_as_number|floatformat:1 }}
+                  {% endif %}
+                </td>
+              {% endwith %}
             {% endfor %}
+
           </tr>
         {% endfor %}
       </tbody>
