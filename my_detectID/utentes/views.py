@@ -6,7 +6,7 @@ from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO
-from .hd_graficos import grafico
+from .hd_graficos import grafico, grafico_individual
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -372,14 +372,8 @@ def listarUtentes(request):
 
 
 def grafico_view(request, person_id):
+    return grafico_individual(person_id)
 
-    grafico()
-
-    buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-
-    return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
   

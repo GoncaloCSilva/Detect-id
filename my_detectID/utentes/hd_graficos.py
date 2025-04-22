@@ -1,6 +1,118 @@
 import pandas as pd
 from lifelines import KaplanMeierFitter
+from lifelines import KaplanMeierFitter
+from io import BytesIO
 import matplotlib.pyplot as plt
+from django.http import HttpResponse
+import pandas as pd
+from .models import Measurement, PersonExt
+
+def grafico_individual(person_id):
+    """
+    @brief Gera gráfico de sobrevivência por grupos de TA Sistólica com destaque para o utente.
+    @param person_id ID do utente.
+    @return HttpResponse com imagem PNG.
+    """
+    # CSV com os dados para construir o gráfico
+    df = pd.read_csv("./detectid.csv", encoding='utf-8')
+    person_firstname = PersonExt.objects.get(person_id=person_id).first_name
+    person_lastname = PersonExt.objects.get(person_id=person_id).last_name
+    # Limpeza
+    df["Tempo"].fillna(df["Tempo"].median(), inplace=True)
+    df["DESCOMPENSAÇÃO"].fillna(0, inplace=True)
+    df = df.dropna(subset=["Tempo", "DESCOMPENSAÇÃO", "TA Sistólica"])
+
+    # Limiares
+    limiar = 100.5
+    limiar2 = 119.5
+    limiar3 = 134.5
+    param = "TA Sistólica"
+    evento = "DESCOMPENSAÇÃO"
+
+    # Criar grupos
+    df['grupo_' + param] = df[param].apply(lambda x:
+        'Baixo' if x < limiar else
+        'Normal Baixo' if limiar <= x < limiar2 else
+        'Normal Alto' if limiar2 <= x < limiar3 else
+        'Alto'
+    )
+
+    # Medição do utente via ORM
+    medicao = (
+        Measurement.objects
+        .filter(person_id=person_id, measurement_concept_id=4)
+        .order_by('-measurement_datetime')
+        .first()
+    )
+
+    if not medicao:
+        return HttpResponse("Medição de TA Sistólica não encontrada para este utente", status=404)
+
+    valor_ta = medicao.value_as_number
+
+    # Determinar o grupo do utente
+    if valor_ta < limiar:
+        grupo_ut = 'Baixo'
+    elif valor_ta < limiar2:
+        grupo_ut = 'Normal Baixo'
+    elif valor_ta < limiar3:
+        grupo_ut = 'Normal Alto'
+    else:
+        grupo_ut = 'Alto'
+
+    # Criar gráfico
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.axhspan(0.6, 1, color='green', alpha=0.2, label="Área Segura (Verde)")
+    ax.axhspan(0.4, 0.6, color='yellow', alpha=0.2, label="Área de Atenção (Amarelo)")
+    ax.axhspan(0, 0.4, color='red', alpha=0.2, label="Área Crítica (Vermelho)")
+
+    cores = {
+        'Baixo': 'blue',
+        'Normal Baixo': 'orange',
+        'Normal Alto': 'green',
+        'Alto': 'red'
+    }
+
+    tempo_marcado = 500
+    grupos = df.groupby('grupo_' + param)
+
+    for grupo_nome, dados in grupos:
+        kmf = KaplanMeierFitter()
+        kmf.fit(dados['Tempo'], event_observed=dados[evento], label=grupo_nome)
+        kmf.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_nome, 'black'))
+
+        if grupo_nome == grupo_ut:
+            prob = kmf.predict(tempo_marcado)
+            ax.scatter(tempo_marcado, prob, color=cores[grupo_nome], s=100, zorder=3, label=f"Utente (TA={valor_ta})")
+            ax.annotate(f"{prob:.2f}", (tempo_marcado, prob), textcoords="offset points", xytext=(-10,-10), ha='center', color=cores[grupo_nome])
+
+    plt.rcParams.update({'font.size': 12, 'font.family': 'DejaVu Sans'})
+    plt.title(f"Grupo de {param} - {person_firstname} {person_lastname}", fontsize=16, weight='bold')
+    ax.set_xlabel("Tempo", fontsize=12)
+    ax.set_ylabel(f"Probabilidade de não ocorrer {evento}", fontsize=12)
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
+
+    # Imagem final
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def grafico():
     #Ler Dados
