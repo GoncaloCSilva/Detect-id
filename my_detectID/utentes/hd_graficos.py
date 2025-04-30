@@ -77,10 +77,12 @@ def grafico_individual(person_id, param_id, evento_id):
     df = pd.read_csv("./detectid.csv", encoding='utf-8')
     df["Tempo"].fillna(df["Tempo"].median(), inplace=True)
     df[evento_nome].fillna(0, inplace=True)
+    df[nome_param] = pd.to_numeric(df[nome_param], errors='coerce')
     df = df.dropna(subset=["Tempo", evento_nome, nome_param])
-    
+
     # Grupos
-    df['grupo_' + nome_param] = df[nome_param].apply(lambda x:
+    df['grupo_' + nome_param] = df[nome_param].apply(
+        lambda x:
         'Baixo' if x < limiar1 else
         'Normal Baixo' if x < limiar2 else
         'Normal Alto' if x < limiar3 else
