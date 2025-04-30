@@ -6,7 +6,7 @@ from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO
-from .hd_graficos import grafico, grafico_individual
+from .hd_graficos import grafico_individual
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -339,40 +339,13 @@ def listarUtentes(request):
     })
 
 
-# def listarUtentes(request):
-#     service_filter = request.GET.get("service")
-#     order_by = request.GET.get("order")
-
-#     CARE_SITE_MAP = {
-#         1: "Urgência",
-#         2: "Internamento",
-#         3: "UCI",
-#     }
-
-#     utentes = PersonExt.objects.all()
-
-#     if service_filter in CARE_SITE_MAP.values():
-#         service_id = [k for k, v in CARE_SITE_MAP.items() if v == service_filter][0]
-
-#         person_ids = VisitOccurrence.objects.filter(
-#             care_site_id=service_id
-#         ).values_list("person_id", flat=True).distinct()
-
-#         utentes = utentes.filter(person_id__in=person_ids)
-
-#     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
-#         utentes = utentes.order_by(order_by)
-
-#     return render(request, "utentes.html", {
-#         "mymembers": utentes,
-#         "service_filter": service_filter,
-#         "order_by": order_by
-#     })
-
-
 
 def grafico_view(request, person_id):
-    return grafico_individual(person_id)
+    parametro = request.GET.get("parametro")  
+    evento = request.GET.get("evento")
+   
+    
+    return grafico_individual(person_id, parametro, evento)
 
 
 

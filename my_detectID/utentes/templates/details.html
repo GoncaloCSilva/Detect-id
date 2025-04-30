@@ -207,13 +207,47 @@
 
   <div class="section">
     <h3>Gráfico dos Dados</h3>
-    <img src="{% url 'grafico_view' mymember.person_id %}" alt="Gráfico do utente" style="width: 100%; max-height: 500px; object-fit: contain;">
+    <form method="GET" action="{% url 'grafico_view' mymember.person_id %}" style="margin-bottom: 20px;">
+      <label for="parametro">Escolher Parâmetro:</label>
+      <select name="parametro" id="parametro" required>
+        <option value="1">SpO2</option>
+        <option value="2">O2</option>
+        <option value="3">FC</option>       
+        <option value="4">TAS</option>
+        <option value="5">TAD</option>
+        <option value="6">Temp</option>
+        <option value="7">GCS</option>
+        <option value="8">Dor</option>
+      </select>
+    
+      <label for="evento">Escolher Evento:</label>
+      <select name="evento" id="evento" required>
+        <option value="1">Descompensação</option>
+        <option value="2">Ativação Médica</option>
+        <option value="3">Aumento da Vigilância</option>
+        <option value="4">Via Aérea Ameaçada</option>
+      </select>
+    
+      <button type="button" class="btn btn-edit" onclick="atualizarGrafico()">Atualizar Gráfico</button>
+    </form>
+
+    <div id="loading" style="display:none; font-weight:bold;">Carregando gráfico...</div>
+
+    
+    <img id="graficoImagem"
+    src="{% url 'grafico_view' mymember.person_id %}?parametro={{ request.GET.parametro|default:'4' }}&evento={{ request.GET.evento|default:'1' }}"
+    alt="Gráfico do utente"
+    style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
+
+
     <br><br>
     <a href="/utentes/editarUtente/{{ mymember.person_id }}" class="btn btn-edit">Editar Utente</a>
     <button onclick="openPopup()" class="btn btn-delete">Remover Utente</button>
   </div>
 
-  <!-- Popup Modal -->
+
+
+  <!-- Popup  -->
   <div id="deletePopup" class="modal">
     <div class="modal-content">
       <h2>Confirmar Remoção</h2>
@@ -233,7 +267,32 @@
     function closePopup() {
       document.getElementById("deletePopup").style.display = "none";
     }
+
+    function atualizarGrafico() {
+    //Faz um pedido com um url grafico/person_id, assim o Django corre o codigo associado a este url que é do gráfico
+    //Fazendo isto o gráfico é atualizado na página, sendo também mostrado um texto da dizer "Carregar Grafico"
+    const parametro = document.getElementById('parametro').value;
+    const evento = document.getElementById('evento').value;
+    const img = document.getElementById('graficoImagem');
+    const personId = "{{ mymember.person_id }}";
+    const loadingDiv = document.getElementById('loading');
+
+    const novaUrl = `/grafico/${personId}?parametro=${parametro}&evento=${evento}`;
+
+    loadingDiv.style.display = 'block';
+    img.style.opacity = 0.5;
+
+   
+    img.onload = () => {
+      loadingDiv.style.display = 'none';
+      img.style.opacity = 1;
+    };
+
+    img.src = novaUrl;
+  }
   </script>
+
+
 
 </div>
 {% endblock %}
