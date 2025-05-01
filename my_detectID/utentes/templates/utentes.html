@@ -140,18 +140,35 @@
   </thead>
   <tbody>
     {% for item in mymembers %}
-      <tr>
-        <td>{{ item.person.person_id }}</td>
-        <td><a href="details/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }}</a></td>
-        <td class ="{{ item.spo2|color_class:'SpO2' }}">{{ item.spo2|floatformat:1 }}</td>
-        <td class ="{{ item.o2|color_class:'O2' }}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %} </td>
-        <td class ="{{ item.fc|color_class:'FC' }}">{{ item.fc|floatformat:1 }}</td>
-        <td class ="{{ item.tas|color_class:'TAS' }}">{{ item.tas|floatformat:1 }}</td>
-        <td class ="{{ item.tad|color_class:'TAD' }}">{{ item.tad|floatformat:1 }}</td>
-        <td class ="{{ item.temp|color_class:'Temp' }}">{{ item.temp|floatformat:1 }}</td>
-        <td class ="{{ item.gcs|color_class:'GCS' }}">{{ item.gcs|floatformat:1 }}</td>
-        <td class ="{{ item.dor|color_class:'Dor' }}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %} </td>
-      </tr>
+    <tr>
+      <td>{{ item.person.person_id }}</td>
+      <td><a href="details/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }}</a></td>
+    
+      {% color_class_value item.spo2 "SpO2" item.person.person_id as spo2_class %}
+      <td class="{{ spo2_class }}">{{ item.spo2|floatformat:1 }}</td>
+    
+      {% color_class_value item.o2 "NECESSIDADE DE O2" item.person.person_id as o2_class %}
+      <td class="{{ o2_class }}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %}</td>
+    
+      {% color_class_value item.fc "FREQUÊNCIA CARDIACA" item.person.person_id as fc_class %}
+      <td class="{{ fc_class }}">{{ item.fc|floatformat:1 }}</td>
+    
+      {% color_class_value item.tas "TA Sistólica" item.person.person_id as tas_class %}
+      <td class="{{ tas_class }}">{{ item.tas|floatformat:1 }}</td>
+    
+      {% color_class_value item.tad "TA Diastólica" item.person.person_id as tad_class %}
+      <td class="{{ tad_class }}">{{ item.tad|floatformat:1 }}</td>
+    
+      {% color_class_value item.temp "TEMPERATURA" item.person.person_id as temp_class %}
+      <td class="{{ temp_class }}">{{ item.temp|floatformat:1 }}</td>
+    
+      {% color_class_value item.gcs "NIVEL DE CONSCIÊNCIA" item.person.person_id as gcs_class %}
+      <td class="{{ gcs_class }}">{{ item.gcs|floatformat:1 }}</td>
+    
+      {% color_class_value item.dor "DOR" item.person.person_id as dor_class %}
+      <td class="{{ dor_class }}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %}</td>
+    </tr>
+    
     {% endfor %}
   </tbody>
 </table>

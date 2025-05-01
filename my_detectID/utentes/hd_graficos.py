@@ -36,6 +36,7 @@ from .models import Measurement, PersonExt, VisitOccurrence
     # 		        	    - 90.5 - 93.5	- Baixo
     # 		        	    - 93.5 - 95.5	- Normal Baixo
     # 		        	    - >= 95.5	- Normal
+    
 def grafico_individual(person_id, param_id, evento_id):
     """
     @brief Gera gráfico de sobrevivência para qualquer parâmetro clínico com destaque para o utente.

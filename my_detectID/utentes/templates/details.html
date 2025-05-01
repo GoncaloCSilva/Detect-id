@@ -189,7 +189,8 @@
             <td>{{ datetime|date:"d/m/Y H\hi" }}</td>
             {% for m in measurements %}
               {% with m.measurement_concept_id|measurement_name as concept_name %}
-                <td class="{{ m.value_as_number|color_class:concept_name }}">
+              {% color_class_value m.value_as_number concept_name mymember.person_id as color_class_value %}
+              <td class="{{ color_class_value }}">
                   {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
                     {% if m.value_as_number == 1 %} Sim {% else %} Não {% endif %}
                   {% else %}
