@@ -136,7 +136,7 @@ def get_csv_data():
 
     return _csv_data
 
-def get_kaplan_model(parametro, valor, evento_id=0):
+def get_kaplan_model(parametro, valor, evento_id=1):
     """
     @brief: Devolve o modelo Kaplan-Meier treinado para o parâmetro e grupo fornecido.
     @param parametro: ID do parâmetro clínico (ex: 1 -> 'SpO2')

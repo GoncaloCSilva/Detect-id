@@ -103,7 +103,7 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
     for grupo_nome, dados in grupos:
     
         if grupo_nome == grupo_ut:
-            kmf = get_kaplan_model(concept_id,value)
+            kmf = get_kaplan_model(concept_id,value,event_id)
             prob = kmf.predict(tempo_utente)
 
     if prob >= 0.6:
