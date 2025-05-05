@@ -1,6 +1,9 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from lifelines import KaplanMeierFitter
+
+from utentes.hd_utils import get_csv_data, get_kaplan_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
@@ -32,12 +35,24 @@ def utentes(request):
     """
     @brief: Página que lista todos os utentes com a última medição clínica.
     """
+    get_csv_data()
     utentes = PersonExt.objects.all()
     utentes_info = []
+    
     # Para cada utente vai buscar a última medição feita de cada parametro e guarda o seu valor,
     # Tudo é juntado em utentes_info para ser mais facil mostrar na pagina Utentes
+
+    
     for utente in utentes:
         last_measurements = {}
+        prob_measurements = {}
+
+        # Tempo relativo do utente (em horas)
+        visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
+        medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+        
+        tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+
         for key, concept_id in CONCEPT_IDS.items():
             measurement = (
                 Measurement.objects
@@ -47,9 +62,17 @@ def utentes(request):
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
 
+            model = get_kaplan_model(concept_id,measurement.value_as_number,1)
+            prev = model.predict(tempo_utente + 24)
+            
+            if prev > 0.6: prob_measurements[key] =  "Estável"
+            elif prev > 0.4: prob_measurements[key] =  "Moderado"
+            else: prob_measurements[key] =  "Emergência"
+
         utentes_info.append({
             'person': utente,
-            **last_measurements
+            **last_measurements,
+            'prev' : prob_measurements
         })
     
     return render(request, 'utentes.html', {
@@ -68,6 +91,7 @@ def details(request, person_id):
     mymember = PersonExt.objects.get(person_id=person_id)
     mycondition = ConditionOccurrence.objects.get(person_id=person_id)
     idade = mymember.idade()
+    event_filter = request.GET.get('evento')
 
     # Agrupar medições por data e hora
     measurements = Measurement.objects.filter(person_id=person_id)
@@ -90,7 +114,8 @@ def details(request, person_id):
         'idade': idade,
         'grouped_measurements': grouped,
         'notes': notes,
-        'servico': servico
+        'servico': servico,
+        'event_filter':event_filter
     }
     return HttpResponse(template.render(context, request))
 
@@ -293,9 +318,10 @@ def removerUtente(request, person_id):
 def listarUtentes(request):
     service_filter = request.GET.get("service")
     order_by = request.GET.get("order")
+    event_filter = request.GET.get("event")
 
     CARE_SITE_MAP = {
-        1: "Urgência",
+        1: "Urgência",                      
         2: "Internamento",
         3: "UCI",
     }
@@ -318,6 +344,14 @@ def listarUtentes(request):
     utentes_info = []
     for utente in utentes:
         last_measurements = {}
+        prob_measurements = {}
+
+        # Tempo relativo do utente (em horas)
+        visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
+        medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+        
+        tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+
         for key, concept_id in CONCEPT_IDS.items():
             measurement = (
                 Measurement.objects
@@ -327,15 +361,24 @@ def listarUtentes(request):
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
 
+            model = get_kaplan_model(concept_id,measurement.value_as_number,int(event_filter))
+            prev = model.predict(tempo_utente + 24)
+            
+            if prev > 0.6: prob_measurements[key] =  "Estável"
+            elif prev > 0.4: prob_measurements[key] =  "Moderado"
+            else: prob_measurements[key] =  "Emergência"
+
         utentes_info.append({
             'person': utente,
-            **last_measurements
+            **last_measurements,
+            'prev' : prob_measurements
         })
 
     return render(request, "utentes.html", {
         "mymembers": utentes_info,
         "service_filter": service_filter,
-        "order_by": order_by
+        "order_by": order_by,
+        "event_filter": event_filter
     })
 
 

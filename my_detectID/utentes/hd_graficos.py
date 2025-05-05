@@ -55,7 +55,7 @@ def grafico_individual(person_id, param_id, evento_id):
         "5": ("TA Diastólica", [60, 80, 90]),
         "6": ("TEMPERATURA", [35.5, 37.5, 38.5]),
         "7": ("NIVEL DE CONSCIÊNCIA", [8, 13, 15]),
-        "8": ("DOR", [3, 6, 8]),
+        "8": ("DOR", [1, 2, 3]),
     }
 
     eventos = {
