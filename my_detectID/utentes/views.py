@@ -38,6 +38,7 @@ def utentes(request):
     get_csv_data()
     utentes = PersonExt.objects.all()
     utentes_info = []
+    temp_prev = 24
     
     # Para cada utente vai buscar a última medição feita de cada parametro e guarda o seu valor,
     # Tudo é juntado em utentes_info para ser mais facil mostrar na pagina Utentes
@@ -63,7 +64,7 @@ def utentes(request):
             last_measurements[key] = measurement.value_as_number if measurement else None
 
             model = get_kaplan_model(concept_id,measurement.value_as_number,1)
-            prev = model.predict(tempo_utente + 24)
+            prev = model.predict(tempo_utente + temp_prev)
             
             if prev > 0.6: prob_measurements[key] =  "Estável"
             elif prev > 0.4: prob_measurements[key] =  "Moderado"
@@ -77,6 +78,7 @@ def utentes(request):
     
     return render(request, 'utentes.html', {
         'mymembers': utentes_info,
+        'temp_prev' : temp_prev,
         'active_page': 'utentes'
     })
 
@@ -319,6 +321,7 @@ def listarUtentes(request):
     service_filter = request.GET.get("service")
     order_by = request.GET.get("order")
     event_filter = request.GET.get("event")
+    temp_prev = request.GET.get("temp_prev")
 
     CARE_SITE_MAP = {
         1: "Urgência",                      
@@ -362,7 +365,7 @@ def listarUtentes(request):
             last_measurements[key] = measurement.value_as_number if measurement else None
 
             model = get_kaplan_model(concept_id,measurement.value_as_number,int(event_filter))
-            prev = model.predict(tempo_utente + 24)
+            prev = model.predict(tempo_utente + int(temp_prev))
             
             if prev > 0.6: prob_measurements[key] =  "Estável"
             elif prev > 0.4: prob_measurements[key] =  "Moderado"
@@ -378,7 +381,8 @@ def listarUtentes(request):
         "mymembers": utentes_info,
         "service_filter": service_filter,
         "order_by": order_by,
-        "event_filter": event_filter
+        "event_filter": event_filter,
+        "temp_prev":temp_prev
     })
 
 
