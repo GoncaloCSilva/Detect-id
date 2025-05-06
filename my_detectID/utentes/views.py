@@ -374,7 +374,6 @@ def listarUtentes(request):
                 .first()
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
-            print("DEBUG!!!!!!", concept_id," ",measurement," ",event_filter)
             model = get_kaplan_model(concept_id,measurement.value_as_number,int(event_filter))
             prev = model.predict(tempo_utente + int(temp_prev))
             
@@ -393,7 +392,9 @@ def listarUtentes(request):
         "service_filter": service_filter,
         "order_by": order_by,
         "event_filter": event_filter,
-        "temp_prev":temp_prev
+        "temp_prev":temp_prev,
+        "search_query":search_query,
+        'active_page': 'utentes'
     })
 
 

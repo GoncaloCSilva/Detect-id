@@ -114,10 +114,10 @@
 <form method="GET" action="{% url 'listarUtentes' %}" class="filter-form">
     <label for="temp_prev">Tempo de Previsão:</label>
     <select name="temp_prev" id="temp_prev">
-        <option value="24" {% if event_filter == "1" %}selected{% endif %}>24h</option>
-        <option value="48" {% if event_filter == "2" %}selected{% endif %}>48h</option>
-        <option value="72" {% if event_filter == "3" %}selected{% endif %}>72h</option>
-        <option value="96" {% if event_filter == "4" %}selected{% endif %}>96h</option>
+        <option value="24" {% if temp_prev == "24" %}selected{% endif %}>24h</option>
+        <option value="48" {% if temp_prev == "48" %}selected{% endif %}>48h</option>
+        <option value="72" {% if temp_prev == "72" %}selected{% endif %}>72h</option>
+        <option value="96" {% if temp_prev == "96" %}selected{% endif %}>96h</option>
     </select>
     <label for="service">Filtrar por:</label>
     <select name="service" id="service">
@@ -143,7 +143,7 @@
         <option value="3" {% if event_filter == "3" %}selected{% endif %}>Aumento de Vigilância</option>
         <option value="4" {% if event_filter == "4" %}selected{% endif %}>Via Área Ameaçada</option>
     </select>
-
+    <input type="hidden" name="search" value="{{ search_query }}">
     <button type="submit">Aplicar</button>
 </form>
 
