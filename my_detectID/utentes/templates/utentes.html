@@ -98,6 +98,37 @@
   background-color: #C91515;
   color: white;
 }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+    font-family: Arial, sans-serif;
+}
+
+.pagination a,
+.pagination span {
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    background-color: #f2f2f2;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+.pagination a:hover {
+    background-color: #007041;
+    color: white;
+    border-color: #007041;
+}
+
+.pagination span {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
 </style>
 
 <h1 class="page-title">Utentes</h1>
@@ -222,6 +253,17 @@
     {% endfor %}
   </tbody>
 </table>
+<div class="pagination">
+  {% if mymembers.has_previous %}
+      <a href="?page={{ mymembers.previous_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}">Anterior</a>
+  {% endif %}
+
+  <span>Página {{ mymembers.number }} de {{ mymembers.paginator.num_pages }}</span>
+
+  {% if mymembers.has_next %}
+      <a href="?page={{ mymembers.next_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}">Seguinte</a>
+  {% endif %}
+</div>
 
 
 {% endblock %}

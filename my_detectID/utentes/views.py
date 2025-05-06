@@ -14,6 +14,7 @@ from decimal import Decimal
 from django.utils import timezone
 from .models import PersonExt, Measurement
 from django.shortcuts import render
+from django.core.paginator import Paginator
 from django.db.models import Q
 
 
@@ -76,9 +77,15 @@ def utentes(request):
             **last_measurements,
             'prev' : prob_measurements
         })
+
+
+        paginator = Paginator(utentes_info, 10)  
+        page_number = request.GET.get("page") or 1
+        page_obj = paginator.get_page(page_number)
+
     
     return render(request, 'utentes.html', {
-        'mymembers': utentes_info,
+        'mymembers': page_obj,
         'temp_prev' : temp_prev,
         'active_page': 'utentes'
     })
