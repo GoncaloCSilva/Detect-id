@@ -137,7 +137,6 @@
     <p><span class="text-bold">Género:</span>
       {% if mymember.gender_concept_id == 1 %} Masculino {% else %} Feminino {% endif %}
     </p>
-    <p><span class="text-bold">Risco:</span> <i>TODO</i></p>
     <p><span class="text-bold">Data de Internamento:</span> {{ mycondition.condition_start_date }}</p>
     <p><span class="text-bold">Hora de Internamento:</span> {{ servico.0.visit_start_datetime.time|time:"H\hi" }}    </p>
     <p><span class="text-bold">Queixas de Entrada:</span>

@@ -2,7 +2,6 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-
 from utentes.hd_utils import get_csv_data, get_kaplan_model
 from .models import *
 from django.template import loader
@@ -15,6 +14,8 @@ from decimal import Decimal
 from django.utils import timezone
 from .models import PersonExt, Measurement
 from django.shortcuts import render
+from django.db.models import Q
+
 
 
 
@@ -322,6 +323,7 @@ def listarUtentes(request):
     order_by = request.GET.get("order")
     event_filter = request.GET.get("event")
     temp_prev = request.GET.get("temp_prev")
+    search_query = request.GET.get('search')
 
     CARE_SITE_MAP = {
         1: "Urgência",                      
@@ -330,6 +332,15 @@ def listarUtentes(request):
     }
 
     utentes = PersonExt.objects.all()
+
+    if search_query:
+        utentes = utentes.filter(
+            Q(first_name__icontains=search_query) | 
+            Q(last_name__icontains=search_query)
+        )
+    if not event_filter: event_filter = 1
+    if not temp_prev: temp_prev = 24
+
 
     # Filter by service
     if service_filter in CARE_SITE_MAP.values():
@@ -343,7 +354,7 @@ def listarUtentes(request):
     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
 
-    # Fetch latest measurements just like in `utentes`
+   
     utentes_info = []
     for utente in utentes:
         last_measurements = {}
@@ -363,7 +374,7 @@ def listarUtentes(request):
                 .first()
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
-
+            print("DEBUG!!!!!!", concept_id," ",measurement," ",event_filter)
             model = get_kaplan_model(concept_id,measurement.value_as_number,int(event_filter))
             prev = model.predict(tempo_utente + int(temp_prev))
             

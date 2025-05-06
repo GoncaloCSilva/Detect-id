@@ -102,6 +102,14 @@
 
 <h1 class="page-title">Utentes</h1>
 
+<form method="GET" action="{% url 'listarUtentes' %}" style="text-align: center; margin: 20px auto;">
+  <input type="text" name="search" placeholder="Pesquisar utente..." value="{{ request.GET.search }}" style="padding: 8px; width: 300px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
+  <input type="hidden" name="service" value="{{ service_filter }}">
+  <input type="hidden" name="event" value="{{ event_filter }}">
+  <input type="hidden" name="temp_prev" value="{{ temp_prev }}">
+  <button type="submit" style="padding: 8px 12px; background-color: #007041; color: white; border: none; border-radius: 6px; cursor: pointer;">Pesquisar</button>
+</form>
+
 
 <form method="GET" action="{% url 'listarUtentes' %}" class="filter-form">
     <label for="temp_prev">Tempo de Previsão:</label>
