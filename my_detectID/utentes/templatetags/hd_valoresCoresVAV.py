@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from lifelines import KaplanMeierFitter
 import pandas as pd
 
-from utentes.hd_utils import get_csv_data, get_kaplan_model
+from utentes.hd_utils import get_csv_data, get_global_kaplan_model, get_kaplan_model
 from utentes.models import Measurement, VisitOccurrence
 
 register = template.Library()
@@ -29,15 +29,13 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
     except (TypeError, ValueError):
         event_id = 1
 
-    if concept_id == 'prev':
+    if concept_id  == 'prev' or concept_id  == 'Global':
         if value == 'Estável':
             return 'greenBoxGood'
         elif value == 'Moderado':
             return 'yellowBoxMedium'
         else:
             return 'redBoxBad'
-
-
 
     nome_param = concept_id
     parametros = {
@@ -58,7 +56,6 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
         4:"Via Área Ameaçada"
     }
 
-    evento = eventos[event_id]
 
     concept_id, (limiar1, limiar2, limiar3) = parametros[str(nome_param)]
     # Dados
@@ -112,3 +109,10 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
         return 'yellowBoxMedium'
     else:
         return 'redBoxBad'
+    
+
+@register.filter
+def dict_value_first(value):
+    if isinstance(value, dict):
+        return list(value.values())[0] if value else ''
+    return ''

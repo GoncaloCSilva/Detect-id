@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import get_csv_data, get_kaplan_model
+from utentes.hd_utils import get_csv_data, get_global_kaplan_model, get_kaplan_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
@@ -49,12 +49,28 @@ def utentes(request):
     for utente in utentes:
         last_measurements = {}
         prob_measurements = {}
+        global_risk_measurements = {}
+        global_risk_measurements_prev = {}
 
         # Tempo relativo do utente (em horas)
         visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
         medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
         
         tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+
+        global_model= get_global_kaplan_model()
+
+        global_risk = global_model.predict(tempo_utente)
+        global_risk_prev = global_model.predict(tempo_utente + temp_prev)
+
+        if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
+        elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
+        else: global_risk_measurements[utente.person_id] =  "Emergência"
+
+        if global_risk_prev > 0.6: global_risk_measurements_prev[utente.person_id] =  "Estável"
+        elif global_risk_prev > 0.4: global_risk_measurements_prev[utente.person_id] =  "Moderado"
+        else: global_risk_measurements_prev[utente.person_id] =  "Emergência"
+    
 
         for key, concept_id in CONCEPT_IDS.items():
             measurement = (
@@ -75,7 +91,9 @@ def utentes(request):
         utentes_info.append({
             'person': utente,
             **last_measurements,
-            'prev' : prob_measurements
+            'prev' : prob_measurements,
+            'global':global_risk_measurements,
+            'global_prev':global_risk_measurements_prev
         })
 
 
@@ -366,12 +384,28 @@ def listarUtentes(request):
     for utente in utentes:
         last_measurements = {}
         prob_measurements = {}
+        global_risk_measurements = {}
+        global_risk_measurements_prev = {}
 
         # Tempo relativo do utente (em horas)
         visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
         medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
         
         tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+
+        global_model= get_global_kaplan_model()
+
+        global_risk = global_model.predict(tempo_utente)
+        global_risk_prev = global_model.predict(tempo_utente + int(temp_prev))
+
+        if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
+        elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
+        else: global_risk_measurements[utente.person_id] =  "Emergência"
+
+        if global_risk_prev > 0.6: global_risk_measurements_prev[utente.person_id] =  "Estável"
+        elif global_risk_prev > 0.4: global_risk_measurements_prev[utente.person_id] =  "Moderado"
+        else: global_risk_measurements_prev[utente.person_id] =  "Emergência"
+    
 
         for key, concept_id in CONCEPT_IDS.items():
             measurement = (
@@ -391,7 +425,9 @@ def listarUtentes(request):
         utentes_info.append({
             'person': utente,
             **last_measurements,
-            'prev' : prob_measurements
+            'prev' : prob_measurements,
+            'global':global_risk_measurements,
+            'global_prev':global_risk_measurements_prev
         })
 
     return render(request, "utentes.html", {

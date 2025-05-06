@@ -134,6 +134,10 @@ def get_csv_data():
                         kmf.fit(grupo_df["Tempo"], event_observed=grupo_df[evento_col], label=f"{parametro}_{grupo}")
                         MODELOS_KM[parametro][evento_col][grupo] = kmf
 
+        kmf = KaplanMeierFitter()
+        kmf.fit(_csv_data["Tempo"], _csv_data["Evento"])
+        MODELOS_KM["global"] = kmf
+
     return _csv_data
 
 def get_kaplan_model(parametro, valor, evento_id=1):
@@ -143,6 +147,7 @@ def get_kaplan_model(parametro, valor, evento_id=1):
     @param valor: Valor da medicao do parametro
     @return: Objeto KaplanMeierFitter treinado ou None
     """
+
     eventos = [
         "DESCOMPENSAÇÃO",
         "Ativação Médico",
@@ -164,3 +169,6 @@ def get_kaplan_model(parametro, valor, evento_id=1):
 
 
     return MODELOS_KM.get(nome_param, {}).get(evento, {}).get(grupo, None)
+
+def get_global_kaplan_model():
+    return MODELOS_KM.get("global")
