@@ -9,6 +9,7 @@
 <style>
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 15px;
   }
 
   h1, h3 {
@@ -61,17 +62,24 @@
   .btn-edit {
     background-color: #007041;
     color: white;
+    font-size: 15px;
   }
 
   .btn-edit:hover {
     background-color: #0b462d;
   }
 
+  .same-width-btn {
+  width: 160px;
+  text-align: center;
+}
+
   .btn-delete {
     background-color: #e74c3c;
     color: white;
     border: none;
     cursor: pointer;
+    font-size: 15px;
   }
 
   .btn-delete:hover {
@@ -255,8 +263,10 @@
 
 
     <br><br>
-    <a href="/utentes/editarUtente/{{ mymember.person_id }}" class="btn btn-edit">Editar Utente</a>
-    <button onclick="openPopup()" class="btn btn-delete">Remover Utente</button>
+    <div style="display: flex; gap: 12px; margin-top: 20px;">
+      <a href="/utentes/editarUtente/{{ mymember.person_id }}" class="btn btn-edit same-width-btn">Editar Utente</a>
+      <button onclick="openPopup()" class="btn btn-delete same-width-btn">Remover Utente</button>
+    </div>
   </div>
 
 
