@@ -429,9 +429,13 @@ def listarUtentes(request):
             'global':global_risk_measurements,
             'global_prev':global_risk_measurements_prev
         })
+    
+    paginator = Paginator(utentes_info, 10)  
+    page_number = request.GET.get("page") or 1
+    page_obj = paginator.get_page(page_number)
 
     return render(request, "utentes.html", {
-        "mymembers": utentes_info,
+        "mymembers": page_obj,
         "service_filter": service_filter,
         "order_by": order_by,
         "event_filter": event_filter,
