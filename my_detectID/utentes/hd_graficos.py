@@ -75,8 +75,7 @@ def grafico_individual(person_id, param_id, evento_id):
     evento_nome = eventos[str(evento_id)]
     
     # Dados
-    df = pd.read_csv("./detectid.csv", encoding='utf-8')
-    df["Tempo"].fillna(df["Tempo"].median(), inplace=True)
+    df = pd.read_csv("./detectid_com_tempo.csv", encoding='utf-8')
     df[evento_nome].fillna(0, inplace=True)
     df[nome_param] = pd.to_numeric(df[nome_param], errors='coerce')
     df = df.dropna(subset=["Tempo", evento_nome, nome_param])

@@ -19,7 +19,7 @@ def get_csv_data():
 
     if _csv_data is None:
         print("A Carregar o ficheiro CSV...")
-        _csv_data = pd.read_csv("./detectid.csv", encoding='utf-8')
+        _csv_data = pd.read_csv("./detectid_com_tempo.csv", encoding='utf-8')
 
         # Limpeza e transformação dos dados
         _csv_data["Tempo"].fillna(_csv_data["Tempo"].median(), inplace=True)
@@ -32,10 +32,10 @@ def get_csv_data():
         for param in parametros_clinicos:
             _csv_data[param] = pd.to_numeric(_csv_data[param], errors='coerce')
 
-        _csv_data["DESCOMPENSAÇÃO"].fillna(0, inplace=True)
-        _csv_data["Ativação Médico"].fillna(0, inplace=True)
-        _csv_data["Aumento da Vigilância"].fillna(0, inplace=True)
-        _csv_data["Via Área Ameaçada"].fillna(0, inplace=True)
+        _csv_data["DESCOMPENSAÇÃO"].fillna(_csv_data["DESCOMPENSAÇÃO"].median(), inplace=True)
+        _csv_data["Ativação Médico"].fillna(_csv_data["Ativação Médico"].median(), inplace=True)
+        _csv_data["Aumento da Vigilância"].fillna(_csv_data["Aumento da Vigilância"].median(), inplace=True)
+        _csv_data["Via Área Ameaçada"].fillna(_csv_data["Via Área Ameaçada"].median(), inplace=True)
 
         # Criar modelos Kaplan-Meier para cada parâmetro e evento
         eventos = [

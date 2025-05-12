@@ -6,20 +6,35 @@ from utentes.models import Person, Measurement, ConditionOccurrence, Note, Obser
 file_path = "detectid.csv"
 df = pd.read_csv(file_path)
 
-df.drop(columns=["Tempo", "Evento"], inplace=True)
-df.rename(columns=lambda x: x.strip().replace("\n", " "), inplace=True)
-
+# Processamento dos tipos
 numeric_cols = df.select_dtypes(include='number').columns
 df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
 
+# NIVEL DE CONSCIÊNCIA como inteiro com média preenchida
 df["NIVEL DE CONSCIÊNCIA"] = pd.to_numeric(df["NIVEL DE CONSCIÊNCIA"], errors='coerce')
 media_nivel = int(df["NIVEL DE CONSCIÊNCIA"].mean().round())
 df["NIVEL DE CONSCIÊNCIA"].fillna(media_nivel, inplace=True)
 
+# Criar datetime auxiliar para ordenação e cálculo
+df["datetime"] = pd.to_datetime(df["Dia de Medição"] + " " + df["Hora de Medição"], dayfirst=True, errors="coerce")
+
+# Extrair ID da pessoa
+df["person_id"] = df["Pessoa"].str.extract(r"(\d+)").astype(int)
+
+# Calcular tempo em horas desde a 1ª medição da pessoa
+df.sort_values(by=["person_id", "datetime"], inplace=True)
+df["Tempo"] = df.groupby("person_id")["datetime"].transform(lambda x: (x - x.min()).dt.total_seconds() / 3600)
+df["Tempo"] = df["Tempo"].round(2)
+
+# Manter a Data de Nascimento no formato original (não transformar para datetime.date)
+# Garante que a coluna é string e tem o formato correto
+df["Data de Nascimento"] = df["Data de Nascimento"].astype(str).str.strip()
+
+# Guardar novo CSV com a coluna "Tempo"
+df.to_csv("detectid_com_tempo.csv", index=False)
+
 df["Dia de Medição"] = df["Dia de Medição"].astype(str)
 df["Hora de Medição"] = df["Hora de Medição"].astype(str)
-df["datetime"] = pd.to_datetime(df["Dia de Medição"] + " " + df["Hora de Medição"], dayfirst=True, errors="coerce")
-df["person_id"] = df["Pessoa"].str.extract(r"(\d+)").astype(int)
 df["Data de Nascimento"] = pd.to_datetime(df["Data de Nascimento"], format='%d/%m/%Y', errors='coerce').dt.date
 
 # Inserir dados na tabela Person
