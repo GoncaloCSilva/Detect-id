@@ -1,7 +1,7 @@
 import pandas as pd
 import random
 from datetime import datetime
-from utentes.models import Person, Measurement, ConditionOccurrence, Note, Observation, VisitOccurrence, PersonExt
+from utentes.models import MeasurementExt, Person, Measurement, ConditionOccurrence, Note, Observation, VisitOccurrence, PersonExt
 
 file_path = "detectid.csv"
 df = pd.read_csv(file_path)
@@ -67,13 +67,28 @@ measurement_concepts = {
     "DOR": 8,
 }
 
+parametros = {
+    1: [90, 95, 98],
+    2: [1, 2, 3],
+    3: [60, 100, 120],
+    4: [100.5, 119.5, 134.5],
+    5: [60, 80, 90],
+    6: [35.5, 37.5, 38.5],
+    7: [8, 13, 15],
+    8: [1,2,3],
+    }
+
 for _, row in df.iterrows():
     for field, concept_id in measurement_concepts.items():
-        Measurement.objects.create(
+        MeasurementExt.objects.create(
             person_id=row["person_id"],
             measurement_concept_id=concept_id,
             value_as_number=row[field],
-            measurement_datetime=row["datetime"]
+            measurement_datetime=row["datetime"],
+            range_low = parametros[concept_id][0],
+            range_high = parametros[concept_id][2],
+            range_mid = parametros[concept_id][1],
+            time_field= row["Tempo"]
         )
 
 print("Medições inseridas!")

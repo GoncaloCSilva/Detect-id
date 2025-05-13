@@ -154,6 +154,3 @@ def grafico_individual(person_id, param_id, evento_id):
     plt.savefig(buffer, format='png')
     buffer.seek(0)
     return HttpResponse(buffer.getvalue(), content_type='image/png')
-
-
-
