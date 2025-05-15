@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from django.http import HttpResponse
 import pandas as pd
 
-from utentes.hd_utils import getLimiares, trainKM
+from utentes.hd_utils import get_global_kaplan_model, getLimiares, trainKM, get_kaplan_model
 from .models import Measurement, PersonExt, VisitOccurrence
 
     # TABELA DE LIMIARES PARA CADA PARAMETRO #
@@ -137,6 +137,37 @@ def grafico_individual(person_id, param_id, evento_id):
     plt.title(f"Grupos de {nome_param} - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel(f"Probabilidade de não ocorrer {evento_nome}")
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
+    plt.legend()
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+
+def grafico_global(person_id):
+    kmf = get_global_kaplan_model()
+
+    visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
+    medicao = Measurement.objects.filter(person_id=person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+        
+    tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+    prob = kmf.predict(tempo_utente)
+
+    person = PersonExt.objects.get(person_id=person_id)
+    fig, ax = plt.subplots(figsize=(7, 5))
+    kmf.plot_survival_function(ax=ax, ci_show=False, color='blue')
+    ax.axhspan(0.6, 1, color='green', alpha=0.2)
+    ax.axhspan(0.4, 0.6, color='yellow', alpha=0.2)
+    ax.axhspan(0, 0.4, color='red', alpha=0.2)
+    ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3, label=f"Utente")
+    ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
+    plt.title(f"Grupo de Risco Clinico - {person.first_name} {person.last_name}", fontsize=14)
+    ax.set_xlabel("Tempo desde entrada (horas)")
+    ax.set_ylabel(f"Probabilidade de não ocorrer um Evento")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
     plt.legend()

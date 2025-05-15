@@ -194,33 +194,38 @@
       <thead>
         <tr>
           <th style="width: 130px;">Data/Hora</th>
-          <th>SpO2</th>
-          <th>O2</th>
-          <th>FC</th>
-          <th>TAS</th>
-          <th>TAD</th>
-          <th>Temp</th>
-          <th>GCS</th>
-          <th>Dor</th>
+          <th title="Risco Clínico">RC</th>
+          <th title="Saturação de Oxigénio (SpO2)">SpO2</th>
+          <th title="Necessidade de Oxigénio (O2)">O2</th>
+          <th title="Frequência Cardíaca">FC</th>
+          <th title="Tensão Arterial Sistólica">TAS</th>
+          <th title="Tensão Arterial Diastólica">TAD</th>
+          <th title="Temperatura">Temp</th>
+          <th title="Nível de Consciência (GCS)">GCS</th>
+          <th title="Presença de Dor">Dor</th>
         </tr>
       </thead>
       <tbody>
-        {% for datetime, measurements in grouped_measurements.items %}
+
+        {% for datetime, data in grouped_measurements.items %}
           <tr>
             <td>{{ datetime|date:"d/m/Y H\hi" }}</td>
-            {% for m in measurements %}
+            {% color_class_value data.risk "Global" mymember.person_id event_filter as global_class %}
+            <td class="{{ global_class }}">{{ data.risk }}</td>
+
+            {% for m in data.measurements %}
               {% color_class_value m.value_as_number m.measurement_concept_id mymember.person_id event_filter as color_class_value %}
               <td class="{{ color_class_value }}">
-                  {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
-                    {% if m.value_as_number == 1 %} Sim {% else %} Não {% endif %}
-                  {% else %}
-                    {{ m.value_as_number|floatformat:1 }}
-                  {% endif %}
-                </td>
+                {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
+                  {% if m.value_as_number == 1 %} Sim {% else %} Não {% endif %}
+                {% else %}
+                  {{ m.value_as_number|floatformat:1 }}
+                {% endif %}
+              </td>
             {% endfor %}
-
           </tr>
         {% endfor %}
+
       </tbody>
     </table>
   </div>
@@ -230,6 +235,7 @@
     <form method="GET" action="{% url 'grafico_view' mymember.person_id %}" style="margin-bottom: 20px;">
       <label for="parametro">Escolher Parâmetro:</label>
       <select name="parametro" id="parametro" required>
+        <option value="RC">RC</option>
         <option value="1">SpO2</option>
         <option value="2">O2</option>
         <option value="3">FC</option>       

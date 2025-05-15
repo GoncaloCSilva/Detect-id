@@ -8,7 +8,7 @@ from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO
-from .hd_graficos import grafico_individual
+from .hd_graficos import grafico_global, grafico_individual
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -116,6 +116,9 @@ def details(request, person_id):
     @param person_id: ID do utente
     @return: Renderiza o template 'details.html' com os dados do utente
     """
+
+    global_model= get_global_kaplan_model()
+
     mymember = PersonExt.objects.get(person_id=person_id)
     mycondition = ConditionOccurrence.objects.get(person_id=person_id)
     idade = mymember.idade()
@@ -126,9 +129,26 @@ def details(request, person_id):
     grouped = {}
     for m in measurements:
         dt = m.measurement_datetime
+
+        # Cálculo de tempo do utente
+        visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
+        tempo_utente = (dt - visita.visit_start_datetime).total_seconds() / 3600
+
+        global_risk = global_model.predict(tempo_utente)
         if dt not in grouped:
-            grouped[dt] = []
-        grouped[dt].append(m)
+            grouped[dt] = {
+                'risk': '',  # inicializa risco
+                'measurements': []
+            }
+
+        if global_risk > 0.6:
+            grouped[dt]['risk'] = "Estável"
+        elif global_risk > 0.4:
+            grouped[dt]['risk'] = "Moderado"
+        else:
+            grouped[dt]['risk'] = "Emergência"
+
+        grouped[dt]['measurements'].append(m)
 
     grouped = dict(sorted(grouped.items(), key=lambda item: item[0], reverse=True))
 
@@ -450,6 +470,8 @@ def grafico_view(request, person_id):
     parametro = request.GET.get("parametro")  
     evento = request.GET.get("evento")
    
+    if parametro == "RC":
+        return grafico_global(person_id)
     
     return grafico_individual(person_id, parametro, evento)
 
