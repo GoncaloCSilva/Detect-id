@@ -1,15 +1,105 @@
 {% extends "master.html" %}
 
 {% block title %}
-  My Detect.Id
+  My Detect.Id - Início
 {% endblock %}
 
-
 {% block content %}
-  <h1>My Detect.Id</h1>
+<style>
+  .dashboard-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    text-align: center;
+  }
 
-  <h3>Utentes</h3>
-  
-  <p>Check out Utentes with Django only <a href="utentes/">utentes</a></p>
-  <p>Check out Utentes with Django and PostgreSQL <a href="utentes2/">utentes</a></p>
+  .dashboard-container h1 {
+    font-size: 2.5em;
+    color: #007041;
+  }
+
+  .dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 40px;
+  }
+
+  .dashboard-card {
+    background-color: #f2f2f2;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s ease;
+    width: 220px;
+  }
+
+  .dashboard-card:hover {
+    transform: scale(1.05);
+  }
+
+  .dashboard-card a {
+    text-decoration: none;
+    color: #007041;
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+
+  .csv-section {
+    margin-top: 60px;
+  }
+
+  .csv-section h3 {
+    color: #2c3e50;
+  }
+
+  .csv-section form {
+    margin-top: 10px;
+  }
+
+  .csv-section input[type="file"] {
+    margin-top: 10px;
+  }
+
+  .csv-section button, .csv-section a {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007041;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .csv-section button:hover, .csv-section a:hover {
+    background-color: #0b462d;
+  }
+
+</style>
+
+<div class="dashboard-container">
+  <h1>Bem-vindo ao detect.id!</h1>
+  <p style="margin-top: 10px; color: #555;">Aplicação web com aprendizagem automática para ajudar na decisão dos enfermeiros</p>
+
+  <div class="csv-section">
+    <h3>Importar dados a partir de CSV</h3>
+    <form method="POST" enctype="multipart/form-data" action="{% url 'importar_csv' %}">
+      {% csrf_token %}
+      <input type="file" name="csv_file" accept=".csv" required>
+      <br>
+      <button type="submit">Importar</button>
+    </form>
+
+    <h3 style="margin-top: 40px;">Exportar dados atuais</h3>
+    <a href="{% url 'exportar_csv' %}">Exportar CSV</a>
+  </div>
+</div>
+<br>
+<br>
+
 {% endblock %}

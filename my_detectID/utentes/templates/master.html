@@ -8,37 +8,98 @@
   <link rel="icon" type="image/x-icon" href="{% static 'images/favicon2.png' %}">
 
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-  }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
+    /* NAVIGATION LINKS */
     a.nav-link {
-      color: yellow;
+      color: #ffffff;
       text-decoration: none;
       font-weight: bold;
-      margin: 0 70px;
-      font-size: 25px;
-      border-radius: 0px;
+      margin: 0 50px;
+      font-size: 20px;
+      padding-bottom: 6px;
+      position: relative;
+      transition: color 0.3s ease;
     }
+
+    a.nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0%;
+      height: 3px;
+      left: 0;
+      bottom: 0;
+      background-color: yellow;
+      transition: width 0.3s ease;
+    }
+
+    a.nav-link:hover {
+      color: #ffd700;
+    }
+
+    a.nav-link:hover::after,
+    a.nav-link.active::after {
+      width: 100%;
+    }
+
     a.nav-link.active {
-      text-decoration: underline;
+      color: #ffd700;
     }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+
+    /* LOGO NAVBAR */
+    .navbar {
+      background-color: #007041;
+      display: flex;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .navbar-logo {
+      height: 100px;
+      margin-right: 20px;
+    }
+
+    .navbar-links {
+      flex-grow: 1;
+      text-align: center;
+    }
+    .logo-link {
+      display: inline-block;
+      transition: transform 0.3s ease, filter 0.3s ease;
+    }
+
+    .logo-link:hover {
+      transform: scale(1.05);
+      filter: brightness(90%);
+      cursor: pointer;
+    }
+
+    .navbar-logo {
+      height: 100px;
+      margin-right: 20px;
+      transition: transform 0.3s ease;
+    }
+
   </style>
 </head>
+
 <body>
   <!-- NAVBAR VERDE -->
-  <div style="background-color: #007041; display: flex; align-items: center; padding: 10px;">
-    <!-- LOGO/IMAGEM À ESQUERDA -->
-    <a href="/"><img src="{% static 'images/detectid.png' %}" alt="Logo" style="height: 100px; margin-right: 20px;"></a>
-
-    <!-- LINKS AO CENTRO -->
-    <div style="flex-grow: 1; text-align: center;">
+  <div class="navbar">
+    <!-- LOGO -->
+<a href="/" class="logo-link">
+  <img src="{% static 'images/detectid.png' %}" alt="Logo" class="navbar-logo">
+</a>
+    <!-- LINKS -->
+    <div class="navbar-links">
       <a href="{% url 'utentes' %}" class="nav-link {% if active_page == 'utentes' %}active{% endif %}">Utentes</a>
       <a href="{% url 'adicionar_utente' %}" class="nav-link {% if active_page == 'adicionar_utente' %}active{% endif %}">Adicionar Utente</a>
     </div>
@@ -54,12 +115,9 @@
       <img src="{% static 'images/idcare_preto.png' %}" alt="id.Care Logo" style="height: 100px;">
       <a href="https://www.esel.pt"><img src="{% static 'images/esel_preto.png' %}" alt="ESEL Logo" style="height: 60px;"></a>
     </div>
-
-    <!-- TEXTO MAIS EM BAIXO -->
     <p style="margin-top: 20px; font-size: 14px;">
       Projeto Final 2025: 48328 Gonçalo Silva, 48168 Diogo Lobo
     </p>
   </footer>
-
 </body>
 </html>

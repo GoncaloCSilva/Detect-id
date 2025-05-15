@@ -464,7 +464,11 @@ def listarUtentes(request):
         'active_page': 'utentes'
     })
 
+def importar_csv(request):
+    return None
 
+def exportar_csv(request):
+    return None
 
 def grafico_view(request, person_id):
     parametro = request.GET.get("parametro")  

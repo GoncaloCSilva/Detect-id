@@ -11,4 +11,6 @@ urlpatterns = [
     path("utentes/removerUtente/<int:person_id>/", views.removerUtente, name="removerUtente"),
     path("utentes/listarUtentes", views.listarUtentes, name="listarUtentes"),
     path('grafico/<int:person_id>/', views.grafico_view, name='grafico_view'),
+    path('importar_csv/', views.importar_csv, name='importar_csv'),
+    path('exportar_csv/', views.exportar_csv, name='exportar_csv'),
 ]
