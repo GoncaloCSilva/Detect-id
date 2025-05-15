@@ -209,8 +209,7 @@
           <tr>
             <td>{{ datetime|date:"d/m/Y H\hi" }}</td>
             {% for m in measurements %}
-              {% with m.measurement_concept_id|measurement_name as concept_name %}
-              {% color_class_value m.value_as_number concept_name mymember.person_id event_filter as color_class_value %}
+              {% color_class_value m.value_as_number m.measurement_concept_id mymember.person_id event_filter as color_class_value %}
               <td class="{{ color_class_value }}">
                   {% if m.measurement_concept_id == 2 or m.measurement_concept_id == 8 %}
                     {% if m.value_as_number == 1 %} Sim {% else %} Não {% endif %}
@@ -218,7 +217,6 @@
                     {{ m.value_as_number|floatformat:1 }}
                   {% endif %}
                 </td>
-              {% endwith %}
             {% endfor %}
 
           </tr>

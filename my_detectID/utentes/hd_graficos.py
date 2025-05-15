@@ -5,6 +5,8 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 from django.http import HttpResponse
 import pandas as pd
+
+from utentes.hd_utils import getLimiares, trainKM
 from .models import Measurement, PersonExt, VisitOccurrence
 
     # TABELA DE LIMIARES PARA CADA PARAMETRO #
@@ -45,41 +47,29 @@ def grafico_individual(person_id, param_id, evento_id):
     @param evento_id ID do evento (1 a 4).
     @return HttpResponse com imagem PNG.
     """
-
+    param_id = int(param_id)
+    evento_id = int(evento_id)
+    
     # Mapas
-    parametros = {
-        "1": ("SpO2", [90, 95, 98]),
-        "2": ("Necessidade de O2", [1, 2, 3]),
-        "3": ("Frequência Cardíaca", [60, 100, 120]),
-        "4": ("TA Sistólica", [100.5, 119.5, 134.5]),
-        "5": ("TA Diastólica", [60, 80, 90]),
-        "6": ("Temperatura", [35.5, 37.5, 38.5]),
-        "7": ("Nível de Consciência", [8, 13, 15]),
-        "8": ("Dor", [1, 2, 3]),
-    }
+    parametros = getLimiares()
 
     eventos = {
-        "1": "Descompensação",
-        "2": "Ativação Médico",
-        "3": "Aumento da Vigilância",
-        "4": "Via Área Ameaçada"
+        1: "Descompensação",
+        2: "Ativação Médico",
+        3: "Aumento da Vigilância",
+        4: "Via Área Ameaçada"
     }
 
-    if str(param_id) not in parametros:
+    if param_id not in parametros:
         return HttpResponse("Parâmetro inválido", status=400)
-
-    if str(evento_id) not in eventos:
+    if evento_id not in eventos:
         return HttpResponse("Evento inválido", status=400)
-
-    nome_param, (limiar1, limiar2, limiar3) = parametros[str(param_id)]
-    evento_nome = eventos[str(evento_id)]
+    
+    nome_param, (limiar1, limiar2, limiar3) = parametros[param_id]
+    evento_nome = eventos[evento_id]
     
     # Dados
-    df = pd.read_csv("./detectid_com_tempo.csv", encoding='utf-8')
-    df[evento_nome].fillna(0, inplace=True)
-    df[nome_param] = pd.to_numeric(df[nome_param], errors='coerce')
-    df = df.dropna(subset=["Tempo", evento_nome, nome_param])
-
+    df = trainKM()
     # Grupos
     df['grupo_' + nome_param] = df[nome_param].apply(
         lambda x:
@@ -141,7 +131,7 @@ def grafico_individual(person_id, param_id, evento_id):
 
         if grupo_nome == grupo_ut:
             prob = kmf.predict(tempo_utente)
-            ax.scatter(tempo_utente, prob, color=cores[grupo_nome], s=100, zorder=3, label=f"Utente ({valor})")
+            ax.scatter(tempo_utente, prob, color=cores[grupo_nome], s=100, zorder=3, label=f"Utente")
             ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
     plt.title(f"Grupos de {nome_param} - {person.first_name} {person.last_name}", fontsize=14)
@@ -149,6 +139,7 @@ def grafico_individual(person_id, param_id, evento_id):
     ax.set_ylabel(f"Probabilidade de não ocorrer {evento_nome}")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
+    plt.legend()
 
     buffer = BytesIO()
     plt.savefig(buffer, format='png')

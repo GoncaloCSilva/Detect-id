@@ -2,8 +2,39 @@ import pandas as pd
 from lifelines import KaplanMeierFitter
 
 _csv_data = None
+
 MODELOS_KM = {}
-__limiares = {
+
+LIMIARES = {}
+
+def get_param_group(param, value):
+    global LIMIARES
+    if pd.isna(value):
+        return None
+    
+    for x in LIMIARES:
+        nome_param, (limiar1, limiar2, limiar3) = LIMIARES[x]
+        if nome_param == param:
+            if value < limiar1:
+                return 'baixo'
+            elif value < limiar2:
+                return 'normal baixo'
+            elif value < limiar3:
+                return 'normal alto'
+            else:
+                return 'alto'
+    return None
+
+
+def trainKM():
+    global _csv_data, MODELOS_KM,LIMIARES
+
+    if _csv_data is None:
+        print("A Carregar o ficheiro CSV...")
+
+        _csv_data = getCSV()
+
+        LIMIARES = {
         1: ("SpO2", [90, 95, 98]),
         2: ("Necessidade de O2", [1, 2, 3]),
         3: ("Frequência Cardíaca", [60, 100, 120]),
@@ -12,118 +43,22 @@ __limiares = {
         6: ("Temperatura", [35.5, 37.5, 38.5]),
         7: ("Nível de Consciência", [8, 13, 15]),
         8: ("Dor", [1, 2, 3]),
-}
+        }   
 
-LIMIARES = {}
-
-def get_param_group(param, value):
-    if pd.isna(value):
-        return None
-    if param == "SpO2":
-        if value < 90:
-            return 'baixo'
-        elif value < 95:
-            return 'normal baixo'
-        elif value < 98:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "Frequência Cardíaca":
-        if value < 60:
-            return 'baixo'
-        elif value < 100:
-            return 'normal baixo'
-        elif value < 120:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "TA Sistólica":
-        if value < 100.5:
-            return 'baixo'
-        elif value < 119.5:
-            return 'normal baixo'
-        elif value < 134.5:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "TA Diastólica":
-        if value < 60:
-            return 'baixo'
-        elif value < 80:
-            return 'normal baixo'
-        elif value < 90:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "Temperatura":
-        if value < 35.5:
-            return 'baixo'
-        elif value < 37.5:
-            return 'normal baixo'
-        elif value < 38.5:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "Nível de Consciência":
-        if value < 8:
-            return 'baixo'
-        elif value < 13:
-            return 'normal baixo'
-        elif value < 15:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "Dor":
-        if value < 1:
-            return 'baixo'
-        elif value < 2:
-            return 'normal baixo'
-        elif value < 3:
-            return 'normal alto'
-        else:
-            return 'alto'
-    elif param == "Necessidade de O2":
-        if value < 1:
-            return 'baixo'
-        elif value < 2:
-            return 'normal baixo'
-        elif value < 3:
-            return 'normal alto'
-        else:
-            return 'alto'
-    return 'default'
-
-def get_csv_data():
-    global _csv_data, MODELOS_KM
-
-    if _csv_data is None:
-        print("A Carregar o ficheiro CSV...")
-        _csv_data = pd.read_csv("./detectid_com_tempo.csv", encoding='utf-8')
-
-        # Limpeza e transformação dos dados
-        _csv_data["Tempo"].fillna(_csv_data["Tempo"].median(), inplace=True)
-        parametros_clinicos = [
-            "SpO2", "Necessidade de O2", "Frequência Cardíaca",
-            "TA Sistólica", "TA Diastólica", "Temperatura",
-            "Nível de Consciência", "Dor"
-        ]
-
-        for param in parametros_clinicos:
-            _csv_data[param] = pd.to_numeric(_csv_data[param], errors='coerce')
-
-        _csv_data["Descompensação"].fillna(_csv_data["Descompensação"].median(), inplace=True)
-        _csv_data["Ativação Médico"].fillna(_csv_data["Ativação Médico"].median(), inplace=True)
-        _csv_data["Aumento da Vigilância"].fillna(_csv_data["Aumento da Vigilância"].median(), inplace=True)
-        _csv_data["Via Área Ameaçada"].fillna(_csv_data["Via Área Ameaçada"].median(), inplace=True)
-
-        # Criar modelos Kaplan-Meier para cada parâmetro e evento
+        # Criar modelos KM para cada parâmetro e evento
         eventos = [
             "Descompensação",
             "Ativação Médico",
             "Aumento da Vigilância",
             "Via Área Ameaçada"
         ]
+        parametros_clinicos = [
+            "SpO2", "Necessidade de O2", "Frequência Cardíaca",
+            "TA Sistólica", "TA Diastólica", "Temperatura",
+            "Nível de Consciência", "Dor"
+        ]
 
+        #Treinar os Modelos KM
         for parametro in parametros_clinicos:
             MODELOS_KM[parametro] = {}
             for evento_col in eventos:
@@ -142,6 +77,10 @@ def get_csv_data():
 
     return _csv_data
 
+def getLimiares():
+    global LIMIARES
+    return LIMIARES
+
 def get_kaplan_model(parametro, valor, evento_id=1):
     """
     @brief: Devolve o modelo Kaplan-Meier treinado para o parâmetro e grupo fornecido.
@@ -158,7 +97,7 @@ def get_kaplan_model(parametro, valor, evento_id=1):
     ]
     evento = eventos[evento_id - 1]
 
-    nome_param, (limiar1, limiar2, limiar3) = __limiares[parametro]
+    nome_param, (limiar1, limiar2, limiar3) = LIMIARES[parametro]
 
     if valor < limiar1:
         grupo = 'baixo'
@@ -174,3 +113,58 @@ def get_kaplan_model(parametro, valor, evento_id=1):
 
 def get_global_kaplan_model():
     return MODELOS_KM.get("global")
+
+def getCSV():
+
+    file_path = "detectid.csv"
+    df = pd.read_csv(file_path)
+
+    # Processamento dos tipos
+    numeric_cols = df.select_dtypes(include='number').columns
+    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
+
+    # NIVEL DE CONSCIÊNCIA como inteiro com média preenchida
+
+    parametros_clinicos = [
+    "SpO2", "Necessidade de O2", "Frequência Cardíaca",
+    "TA Sistólica", "TA Diastólica", "Temperatura",
+    "Nível de Consciência", "Dor"
+    ]
+
+    for param in parametros_clinicos:
+        df[param] = pd.to_numeric(df[param], errors='coerce')
+        media_nivel = int(df[param].mean().round())
+        df[param].fillna(media_nivel, inplace=True)
+
+    # Criar datetime auxiliar para ordenação e cálculo
+    df["datetime"] = pd.to_datetime(df["Dia de Medição"] + " " + df["Hora de Medição"], dayfirst=True, errors="coerce")
+
+    # Extrair ID da pessoa
+    df["person_id"] = df["Pessoa"].str.extract(r"(\d+)").astype(int)
+
+    # Calcular tempo em horas desde a 1ª medição da pessoa
+    df.sort_values(by=["person_id", "datetime"], inplace=True)
+    df["Tempo"] = df.groupby("person_id")["datetime"].transform(lambda x: (x - x.min()).dt.total_seconds() / 3600)
+    df["Tempo"] = df["Tempo"].round(2)
+    df["Tempo"].fillna(df["Tempo"].median(), inplace=True)
+
+    # Manter a Data de Nascimento no formato original (não transformar para datetime.date)
+    # Garante que a coluna é string e tem o formato correto
+    df["Data de Nascimento"] = df["Data de Nascimento"].astype(str).str.strip()
+
+    df["Dia de Medição"] = df["Dia de Medição"].astype(str)
+    df["Hora de Medição"] = df["Hora de Medição"].astype(str)
+    df["Data de Nascimento"] = pd.to_datetime(df["Data de Nascimento"], format='%d/%m/%Y', errors='coerce').dt.date
+
+    df["Descompensação"].fillna(df["Descompensação"].median(), inplace=True)
+    df["Ativação Médico"].fillna(df["Ativação Médico"].median(), inplace=True)
+    df["Aumento da Vigilância"].fillna(df["Aumento da Vigilância"].median(), inplace=True)
+    df["Via Área Ameaçada"].fillna(df["Via Área Ameaçada"].median(), inplace=True)
+
+
+    # Guardar novo CSV com a coluna "Tempo"
+    df.to_csv("detectid_com_tempo.csv", index=False)
+
+
+
+    return df

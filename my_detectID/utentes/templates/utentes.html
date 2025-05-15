@@ -215,28 +215,28 @@
         {% color_class_value item.global|dict_value_first "Global" item.person.person_id event_filter as global_class %}
         <td class="{{ global_class }}">{{ item.global|dict_value_first }}</td>
 
-        {% color_class_value item.spo2 "SpO2" item.person.person_id event_filter as spo2_class %}
+        {% color_class_value item.spo2 1 item.person.person_id event_filter as spo2_class %}
         <td class="{{ spo2_class }}">{{ item.spo2|floatformat:1 }}</td>
 
-        {% color_class_value item.o2 "Necessidade de O2" item.person.person_id event_filter as o2_class %}
+        {% color_class_value item.o2 2 item.person.person_id event_filter as o2_class %}
         <td class="{{ o2_class }}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %}</td>
 
-        {% color_class_value item.fc "Frequência Cardíaca" item.person.person_id event_filter as fc_class %}
+        {% color_class_value item.fc 3 item.person.person_id event_filter as fc_class %}
         <td class="{{ fc_class }}">{{ item.fc|floatformat:1 }}</td>
 
-        {% color_class_value item.tas "TA Sistólica" item.person.person_id event_filter as tas_class %}
+        {% color_class_value item.tas 4 item.person.person_id event_filter as tas_class %}
         <td class="{{ tas_class }}">{{ item.tas|floatformat:1 }}</td>
 
-        {% color_class_value item.tad "TA Diastólica" item.person.person_id event_filter as tad_class %}
+        {% color_class_value item.tad 5 item.person.person_id event_filter as tad_class %}
         <td class="{{ tad_class }}">{{ item.tad|floatformat:1 }}</td>
 
-        {% color_class_value item.temp "Temperatura" item.person.person_id event_filter as temp_class %}
+        {% color_class_value item.temp 6 item.person.person_id event_filter as temp_class %}
         <td class="{{ temp_class }}">{{ item.temp|floatformat:1 }}</td>
 
-        {% color_class_value item.gcs "Nível de Consciência" item.person.person_id event_filter as gcs_class %}
+        {% color_class_value item.gcs 7 item.person.person_id event_filter as gcs_class %}
         <td class="{{ gcs_class }}">{{ item.gcs|floatformat:1 }}</td>
 
-        {% color_class_value item.dor "Dor" item.person.person_id event_filter as dor_class %}
+        {% color_class_value item.dor 8 item.person.person_id event_filter as dor_class %}
         <td class="{{ dor_class }}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %}</td>
       </tr>
 

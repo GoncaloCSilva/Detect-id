@@ -3,24 +3,10 @@ from django.http import HttpResponse
 from lifelines import KaplanMeierFitter
 import pandas as pd
 
-from utentes.hd_utils import get_csv_data, get_global_kaplan_model, get_kaplan_model
+from utentes.hd_utils import getLimiares, trainKM, get_global_kaplan_model, get_kaplan_model
 from utentes.models import Measurement, VisitOccurrence
 
 register = template.Library()
-
-@register.filter
-def measurement_name(concept_id):
-    mapping = {
-        1: 'SpO2',
-        2: 'Necessidade de O2',
-        3: 'Frequência Cardíaca',
-        4: 'TA Sistólica',
-        5: 'TA Diastólica',
-        6: 'Temperatura',
-        7: 'Nível de Consciência',
-        8: 'Dor'
-    }
-    return mapping.get(concept_id, '')
 
 @register.simple_tag
 def color_class_value(value, concept_id, person_id=None, event_id=1):
@@ -37,22 +23,11 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
         else:
             return 'redBoxBad'
 
-    nome_param = concept_id
-    parametros = {
-    "SpO2": (1, [90, 95, 98]),
-    "Necessidade de O2": (2, [1, 2, 3]),
-    "Frequência Cardíaca": (3, [60, 100, 120]),
-    "TA Sistólica": (4, [100.5, 119.5, 134.5]),
-    "TA Diastólica": (5, [60, 80, 90]),
-    "Temperatura": (6, [35.5, 37.5, 38.5]),
-    "Nível de Consciência": (7, [8, 13, 15]),
-    "Dor": (8, [1,2,3]),
-    }
+    parametros = getLimiares()
 
-
-    concept_id, (limiar1, limiar2, limiar3) = parametros[str(nome_param)]
+    nome_param, (limiar1, limiar2, limiar3) = parametros[concept_id]
     # Dados
-    df = get_csv_data()
+    df = trainKM()
     
     # Grupos
     df['grupo_' + nome_param] = df[nome_param].apply(

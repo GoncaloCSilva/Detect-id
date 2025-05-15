@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import get_csv_data, get_global_kaplan_model, get_kaplan_model
+from utentes.hd_utils import trainKM, get_global_kaplan_model, get_kaplan_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
@@ -37,7 +37,7 @@ def utentes(request):
     """
     @brief: Página que lista todos os utentes com a última medição clínica.
     """
-    get_csv_data()
+    trainKM()
     utentes = PersonExt.objects.all()
     utentes_info = []
     temp_prev = 24
