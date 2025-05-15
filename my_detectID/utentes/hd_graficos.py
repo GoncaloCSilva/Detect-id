@@ -49,17 +49,17 @@ def grafico_individual(person_id, param_id, evento_id):
     # Mapas
     parametros = {
         "1": ("SpO2", [90, 95, 98]),
-        "2": ("NECESSIDADE DE O2", [1, 2, 3]),
-        "3": ("FREQUÊNCIA CARDIACA", [60, 100, 120]),
+        "2": ("Necessidade de O2", [1, 2, 3]),
+        "3": ("Frequência Cardíaca", [60, 100, 120]),
         "4": ("TA Sistólica", [100.5, 119.5, 134.5]),
         "5": ("TA Diastólica", [60, 80, 90]),
-        "6": ("TEMPERATURA", [35.5, 37.5, 38.5]),
-        "7": ("NIVEL DE CONSCIÊNCIA", [8, 13, 15]),
-        "8": ("DOR", [1, 2, 3]),
+        "6": ("Temperatura", [35.5, 37.5, 38.5]),
+        "7": ("Nível de Consciência", [8, 13, 15]),
+        "8": ("Dor", [1, 2, 3]),
     }
 
     eventos = {
-        "1": "DESCOMPENSAÇÃO",
+        "1": "Descompensação",
         "2": "Ativação Médico",
         "3": "Aumento da Vigilância",
         "4": "Via Área Ameaçada"

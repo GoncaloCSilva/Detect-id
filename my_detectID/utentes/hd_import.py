@@ -11,9 +11,9 @@ numeric_cols = df.select_dtypes(include='number').columns
 df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
 
 # NIVEL DE CONSCIÊNCIA como inteiro com média preenchida
-df["NIVEL DE CONSCIÊNCIA"] = pd.to_numeric(df["NIVEL DE CONSCIÊNCIA"], errors='coerce')
-media_nivel = int(df["NIVEL DE CONSCIÊNCIA"].mean().round())
-df["NIVEL DE CONSCIÊNCIA"].fillna(media_nivel, inplace=True)
+df["Nível de Consciência"] = pd.to_numeric(df["Nível de Consciência"], errors='coerce')
+media_nivel = int(df["Nível de Consciência"].mean().round())
+df["Nível de Consciência"].fillna(media_nivel, inplace=True)
 
 # Criar datetime auxiliar para ordenação e cálculo
 df["datetime"] = pd.to_datetime(df["Dia de Medição"] + " " + df["Hora de Medição"], dayfirst=True, errors="coerce")
@@ -58,13 +58,13 @@ print("Pessoas inseridas!")
 # Tabela MEASUREMENT
 measurement_concepts = {
     "SpO2": 1,
-    "NECESSIDADE DE O2": 2,
-    "FREQUÊNCIA CARDIACA": 3,
+    "Necessidade de O2": 2,
+    "Frequência Cardíaca": 3,
     "TA Sistólica": 4,
     "TA Diastólica": 5,
-    "TEMPERATURA": 6,
-    "NIVEL DE CONSCIÊNCIA": 7,
-    "DOR": 8,
+    "Temperatura": 6,
+    "Nível de Consciência": 7,
+    "Dor": 8,
 }
 
 parametros = {
@@ -135,7 +135,7 @@ print("Notas inseridas!")
 
 # Tabela OBSERVATION
 events = {
-    "DESCOMPENSAÇÃO": 1,
+    "Descompensação": 1,
     "Ativação Médico": 2,
     "Aumento da Vigilância": 3,
     "Via Área Ameaçada": 4

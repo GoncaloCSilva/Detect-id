@@ -1,4 +1,4 @@
-Pessoa,Primeiro Nome,Último Nome,Dia de Medição,Hora de Medição,Data de Nascimento,Genero,Serviço,NIVEL DE CONSCIÊNCIA,FREQUÊNCIA CARDIACA,TA Sistólica,TA Diastólica,TEMPERATURA,SpO2,NECESSIDADE DE O2,DOR,DESCOMPENSAÇÃO,Ativação Médico,Aumento da Vigilância,Via Área Ameaçada,Evento,"Area
+Pessoa,Primeiro Nome,Último Nome,Dia de Medição,Hora de Medição,Data de Nascimento,Genero,Serviço,Nível de Consciência,Frequência Cardíaca,TA Sistólica,TA Diastólica,Temperatura,SpO2,Necessidade de O2,Dor,Descompensação,Ativação Médico,Aumento da Vigilância,Via Área Ameaçada,Evento,"Area
 Monotorizada",datetime,person_id,Tempo
 Pessoa 1,Miguel,Almeida,11/11/2023,11:00,04/08/1965,Masculino,1,15.0,103.0,109.0,61.0,37.1,94.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.08888888888888889,2023-11-11 11:00:00,1,0.0
 Pessoa 1,Miguel,Almeida,16/11/2023,18:30,04/08/1965,Masculino,2,15.0,99.0,110.0,74.0,37.1,96.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-11-16 18:30:00,1,127.5
@@ -49,9 +49,9 @@ Pessoa 5,Bruno,Carvalho,17/11/2023,9:00,04/08/1940,Masculino,2,13.0,58.0,114.0,5
 Pessoa 5,Bruno,Carvalho,23/11/2023,9:00,04/08/1940,Masculino,2,13.0,62.0,135.0,67.0,36.9,96.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-11-23 09:00:00,5,343.25
 Pessoa 5,Bruno,Carvalho,28/11/2023,9:00,04/08/1940,Masculino,2,14.0,55.0,124.0,61.0,36.2,89.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-11-28 09:00:00,5,463.25
 Pessoa 5,Bruno,Carvalho,30/11/2023,9:00,04/08/1940,Masculino,2,13.0,55.0,122.0,65.0,35.0,93.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-11-30 09:00:00,5,511.25
-Pessoa 5,Bruno,Carvalho,2/12/2023,18:00,04/08/1940,Masculino,2,13.0,69.0,136.0,76.0,36.7,93.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-12-02 18:00:00,5,568.25
-Pessoa 5,Bruno,Carvalho,3/12/2023,9:00,04/08/1940,Masculino,2,13.0,60.0,113.0,65.0,36.3,95.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-12-03 09:00:00,5,583.25
-Pessoa 5,Bruno,Carvalho,3/12/2023,19:00,04/08/1940,Masculino,2,30.0,74.0,132.0,81.0,35.9,78.0,1.0,0.0,1.0,1.0,0.0,0.0,0,0.0,2023-12-03 19:00:00,5,593.25
+Pessoa 5,Bruno,Carvalho,2/12/2024,18:00,04/08/1940,Masculino,2,13.0,69.0,136.0,76.0,36.7,93.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2024-12-02 18:00:00,5,9352.25
+Pessoa 5,Bruno,Carvalho,3/12/2024,9:00,04/08/1940,Masculino,2,13.0,60.0,113.0,65.0,36.3,95.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2024-12-03 09:00:00,5,9367.25
+Pessoa 5,Bruno,Carvalho,3/12/2024,19:00,04/08/1940,Masculino,2,30.0,74.0,132.0,81.0,35.9,78.0,1.0,0.0,1.0,1.0,0.0,0.0,0,0.0,2024-12-03 19:00:00,5,9377.25
 Pessoa 6,Sofia,Martins,29/11/2023,16:55,04/08/1942,Feminino,1,13.0,86.04371584699453,87.0,60.0,36.7,90.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.08888888888888889,2023-11-29 16:55:00,6,0.0
 Pessoa 6,Sofia,Martins,6/12/2023,0:40,04/08/1942,Feminino,2,14.0,89.0,141.0,83.0,35.7,97.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-12-06 00:40:00,6,151.75
 Pessoa 6,Sofia,Martins,7/12/2023,09:00,04/08/1942,Feminino,2,14.0,60.0,146.0,70.0,36.0,98.0,1.0,0.0,0.0,0.0,0.0,0.0,0,0.0,2023-12-07 09:00:00,6,184.08

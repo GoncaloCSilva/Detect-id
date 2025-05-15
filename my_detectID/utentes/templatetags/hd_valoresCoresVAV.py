@@ -12,13 +12,13 @@ register = template.Library()
 def measurement_name(concept_id):
     mapping = {
         1: 'SpO2',
-        2: 'NECESSIDADE DE O2',
-        3: 'FREQUÊNCIA CARDIACA',
+        2: 'Necessidade de O2',
+        3: 'Frequência Cardíaca',
         4: 'TA Sistólica',
         5: 'TA Diastólica',
-        6: 'TEMPERATURA',
-        7: 'NIVEL DE CONSCIÊNCIA',
-        8: 'DOR'
+        6: 'Temperatura',
+        7: 'Nível de Consciência',
+        8: 'Dor'
     }
     return mapping.get(concept_id, '')
 
@@ -40,20 +40,13 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
     nome_param = concept_id
     parametros = {
     "SpO2": (1, [90, 95, 98]),
-    "NECESSIDADE DE O2": (2, [1, 2, 3]),
-    "FREQUÊNCIA CARDIACA": (3, [60, 100, 120]),
+    "Necessidade de O2": (2, [1, 2, 3]),
+    "Frequência Cardíaca": (3, [60, 100, 120]),
     "TA Sistólica": (4, [100.5, 119.5, 134.5]),
     "TA Diastólica": (5, [60, 80, 90]),
-    "TEMPERATURA": (6, [35.5, 37.5, 38.5]),
-    "NIVEL DE CONSCIÊNCIA": (7, [8, 13, 15]),
-    "DOR": (8, [1,2,3]),
-    }
-
-    eventos = {
-        1:"DESCOMPENSAÇÃO",
-        2:"Ativação Médico",
-        3:"Aumento da Vigilância",
-        4:"Via Área Ameaçada"
+    "Temperatura": (6, [35.5, 37.5, 38.5]),
+    "Nível de Consciência": (7, [8, 13, 15]),
+    "Dor": (8, [1,2,3]),
     }
 
 
