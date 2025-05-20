@@ -1,13 +1,15 @@
+import csv
+from django.contrib import messages
 from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import trainKM, get_global_kaplan_model, get_kaplan_model
+from utentes.hd_utils import getCSV, trainKM, get_global_kaplan_model, get_kaplan_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
-from io import BytesIO
+from io import BytesIO, StringIO, TextIOWrapper
 from .hd_graficos import grafico_global, grafico_individual
 from datetime import date, datetime
 from decimal import Decimal
@@ -464,11 +466,33 @@ def listarUtentes(request):
         'active_page': 'utentes'
     })
 
+@csrf_exempt
 def importar_csv(request):
-    return None
+    if request.method == "POST":
+        try:
+            csv_file = request.FILES["csv_file"]
+            df = getCSV(csv_file)
+
+            messages.success(request, "✅ Ficheiro importado com sucesso!")
+        except Exception as e:
+            messages.error(request, f"❌ Erro ao importar: {e}")
+
+        return render(request, 'main.html')
+
+    return render(request, 'main.html')
 
 def exportar_csv(request):
-    return None
+    df = trainKM()
+
+    # Usar buffer em memória
+    buffer = StringIO()
+    df.to_csv(buffer, index=False)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=detectid_export.csv'
+    return response
+
 
 def grafico_view(request, person_id):
     parametro = request.GET.get("parametro")  

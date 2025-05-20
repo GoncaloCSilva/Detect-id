@@ -114,9 +114,8 @@ def get_kaplan_model(parametro, valor, evento_id=1):
 def get_global_kaplan_model():
     return MODELOS_KM.get("global")
 
-def getCSV():
+def getCSV(file_path = "detectid.csv"):
 
-    file_path = "detectid.csv"
     df = pd.read_csv(file_path)
 
     # Processamento dos tipos

@@ -83,6 +83,26 @@
 </style>
 
 <div class="dashboard-container">
+
+  {% if messages %}
+  <div style="margin-bottom: 20px;">
+    {% for message in messages %}
+      <div style="
+        background-color: #d4edda;
+        color: #155724;
+        padding: 12px 20px;
+        border-radius: 6px;
+        max-width: 600px;
+        margin: 0 auto 10px auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        font-weight: bold;
+      ">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
   <h1>Bem-vindo ao detect.id!</h1>
   <p style="margin-top: 10px; color: #555;">Aplicação web com aprendizagem automática para ajudar na decisão dos enfermeiros</p>
 
@@ -99,6 +119,7 @@
     <a href="{% url 'exportar_csv' %}">Exportar CSV</a>
   </div>
 </div>
+
 <br>
 <br>
 
