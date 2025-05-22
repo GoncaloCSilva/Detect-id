@@ -244,7 +244,7 @@
     <tbody>
       {% for item in mymembers %}
       <tr>
-        <td><a href="details/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }} 
+        <td><a href="utente/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }} 
           {% if item.global_prev|dict_value_first != item.global|dict_value_first %}
             <span title="Alteração de estado clínico" style="margin-left: 5px; color: red; font-weight: bold;"> ⚠️</span>
           {% endif %}

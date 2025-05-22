@@ -37,61 +37,64 @@ CONCEPT_IDS = {
 
 def utentes(request):
     """
-    @brief: Página que lista todos os utentes com a última medição clínica.
+    @brief: Page that lists all patients with their latest clinical measurements.
+
+    @param request: HttpRequest object representing a GET request to view the patients ("utentes") page.
+    @return: HttpResponse rendering the 'utentes.html' template with the paginated patient data, including measurement values and deterioration risk levels (current and predicted).
     """
     trainKM()
-    utentes = PersonExt.objects.all()
-    utentes_info = []
-    temp_prev = 24
+    patients = PersonExt.objects.all()
+    patients_info = []
+    time_prev = 24
     
-    # Para cada utente vai buscar a última medição feita de cada parametro e guarda o seu valor,
-    # Tudo é juntado em utentes_info para ser mais facil mostrar na pagina Utentes
-
+    # For each patient, retrieve the latest measurement of each clinical parameter,
+    # estimate deterioration risk using survival models,
+    # and store everything in `patients_info` for display on the "Utentes" page.
     
-    for utente in utentes:
+    for patient in patients:
         last_measurements = {}
         prob_measurements = {}
         global_risk_measurements = {}
         global_risk_measurements_prev = {}
 
-        # Tempo relativo do utente (em horas)
-        visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
-        medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+        # Time relative to patient (in hours)
+        visit = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
+        measurement = Measurement.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
         
-        tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+        time_patient = (measurement.measurement_datetime - visit.visit_start_datetime).total_seconds() / 3600
 
         global_model= get_global_kaplan_model()
 
-        global_risk = global_model.predict(tempo_utente)
-        global_risk_prev = global_model.predict(tempo_utente + temp_prev)
+        global_risk = global_model.predict(time_patient)
+        global_risk_prev = global_model.predict(time_patient + time_prev)
 
-        if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
-        elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
-        else: global_risk_measurements[utente.person_id] =  "Emergência"
+        if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
+        elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
+        else: global_risk_measurements[patient.person_id] =  "Emergência"
 
-        if global_risk_prev > 0.6: global_risk_measurements_prev[utente.person_id] =  "Estável"
-        elif global_risk_prev > 0.4: global_risk_measurements_prev[utente.person_id] =  "Moderado"
-        else: global_risk_measurements_prev[utente.person_id] =  "Emergência"
+        if global_risk_prev > 0.6: global_risk_measurements_prev[patient.person_id] =  "Estável"
+        elif global_risk_prev > 0.4: global_risk_measurements_prev[patient.person_id] =  "Moderado"
+        else: global_risk_measurements_prev[patient.person_id] =  "Emergência"
     
 
         for key, concept_id in CONCEPT_IDS.items():
             measurement = (
                 Measurement.objects
-                .filter(person_id=utente.person_id, measurement_concept_id=concept_id)
+                .filter(person_id=patient.person_id, measurement_concept_id=concept_id)
                 .order_by('-measurement_datetime')
                 .first()
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
 
             model = get_kaplan_model(concept_id,measurement.value_as_number,1)
-            prev = model.predict(tempo_utente + temp_prev)
+            prev = model.predict(time_patient + time_prev)
             
             if prev > 0.6: prob_measurements[key] =  "Estável"
             elif prev > 0.4: prob_measurements[key] =  "Moderado"
             else: prob_measurements[key] =  "Emergência"
 
-        utentes_info.append({
-            'person': utente,
+        patients_info.append({
+            'person': patient,
             **last_measurements,
             'prev' : prob_measurements,
             'global':global_risk_measurements,
@@ -99,24 +102,24 @@ def utentes(request):
         })
 
 
-        paginator = Paginator(utentes_info, 10)  
+        paginator = Paginator(patients_info, 10)  
         page_number = request.GET.get("page") or 1
         page_obj = paginator.get_page(page_number)
 
     
     return render(request, 'utentes.html', {
         'mymembers': page_obj,
-        'temp_prev' : temp_prev,
+        'temp_prev' : time_prev,
         'active_page': 'utentes'
     })
 
-def details(request, person_id):
+def utente(request, person_id):
     """
-    @brief: Função que retorna a página de detalhes de um utente, incluindo os dados pessoais, condição,
-            histórico de medições, notas e serviço de internamento.
-    @param request: Requisição HTTP
-    @param person_id: ID do utente
-    @return: Renderiza o template 'details.html' com os dados do utente
+    @brief: View that returns the details page for a specific patient (utente), including personal data,
+            clinical condition, measurement history, clinical notes, and hospitalization records.
+    @param request: HTTP request (GET)
+    @param person_id: Unique identifier of the patient (utente)
+    @return: Renders the 'utente.html' template with the corresponding patient data
     """
 
     global_model= get_global_kaplan_model()
@@ -157,7 +160,7 @@ def details(request, person_id):
     servico = VisitOccurrence.objects.filter(person_id=person_id)
     notes = Note.objects.filter(person_id=person_id)
 
-    template = loader.get_template('details.html')
+    template = loader.get_template('utente.html')
     context = {
         'mymember': mymember,
         'mycondition': mycondition,
