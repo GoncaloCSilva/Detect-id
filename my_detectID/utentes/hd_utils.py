@@ -50,7 +50,10 @@ def trainKM():
             "Descompensação",
             "Ativação Médico",
             "Aumento da Vigilância",
-            "Via Área Ameaçada"
+            "Via Área Ameaçada",
+            "Suporte Ventilatório",
+            "Suporte Circulatório",
+            "Mortalidade"
         ]
         parametros_clinicos = [
             "SpO2", "Necessidade de O2", "Frequência Cardíaca",
@@ -93,7 +96,10 @@ def get_kaplan_model(parametro, valor, evento_id=1):
         "Descompensação",
         "Ativação Médico",
         "Aumento da Vigilância",
-        "Via Área Ameaçada"
+        "Via Área Ameaçada",
+        "Suporte Ventilatório",
+        "Suporte Circulatório",
+        "Mortalidade"
     ]
     evento = eventos[evento_id - 1]
 
@@ -159,6 +165,11 @@ def getCSV(file_path = "detectid.csv"):
     df["Ativação Médico"].fillna(df["Ativação Médico"].median(), inplace=True)
     df["Aumento da Vigilância"].fillna(df["Aumento da Vigilância"].median(), inplace=True)
     df["Via Área Ameaçada"].fillna(df["Via Área Ameaçada"].median(), inplace=True)
+    df["Suporte Ventilatório"].fillna(df["Suporte Ventilatório"].median(), inplace=True)
+    df["Suporte Circulatório"].fillna(df["Suporte Circulatório"].median(), inplace=True)
+    df["Mortalidade"].fillna(0, inplace=True)
+
+    
 
 
     # Guardar novo CSV com a coluna "Tempo"

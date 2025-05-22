@@ -57,7 +57,10 @@ def grafico_individual(person_id, param_id, evento_id):
         1: "Descompensação",
         2: "Ativação Médico",
         3: "Aumento da Vigilância",
-        4: "Via Área Ameaçada"
+        4: "Via Área Ameaçada",
+        5: "Suporte Ventilatório",
+        6: "Suporte Circulatório",
+        7:  "Mortalidade"
     }
 
     if param_id not in parametros:

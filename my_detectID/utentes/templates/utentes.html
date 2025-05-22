@@ -186,6 +186,9 @@
     <option value="2" {% if event_filter == "2" %}selected{% endif %}>Ativação Médica</option>
     <option value="3" {% if event_filter == "3" %}selected{% endif %}>Aumento de Vigilância</option>
     <option value="4" {% if event_filter == "4" %}selected{% endif %}>Via Área Ameaçada</option>
+    <option value="5" {% if event_filter == "5" %}selected{% endif %}>Suporte Ventilatório</option>
+    <option value="6" {% if event_filter == "6" %}selected{% endif %}>Suporte Circulatório</option>
+    <option value="7" {% if event_filter == "7" %}selected{% endif %}>Mortalidade</option>
   </select>
   <input type="hidden" name="search" value="{{ search_query }}">
   <button type="submit">Aplicar</button>

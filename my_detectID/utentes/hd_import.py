@@ -106,7 +106,10 @@ events = {
     "Descompensação": 1,
     "Ativação Médico": 2,
     "Aumento da Vigilância": 3,
-    "Via Área Ameaçada": 4
+    "Via Área Ameaçada": 4,
+    "Suporte Ventilatório": 5,
+    "Suporte Circulatório":6,
+    "Mortalidade":7
 }
 
 for _, row in df.iterrows():
