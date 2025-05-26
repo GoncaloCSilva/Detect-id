@@ -75,7 +75,7 @@
 <h1><u>Editar Utente</u></h1>
 
 <div class="form-container">
-  <form method="POST" action="{% url 'editarUtente' utente.person_id %}">
+  <form method="POST" action="{% url 'editPatient' utente.person_id %}">
     {% csrf_token %}
     <h3>Dados do Utente</h3>
 
@@ -104,7 +104,7 @@
 <br>
 
 <div class="form-container">
-  <form method="POST" action="{% url 'nova_medicao' utente.person_id %}">
+  <form method="POST" action="{% url 'newMeasurement' utente.person_id %}">
     {% csrf_token %}
     <h3>Nova Medição</h3>
 
@@ -140,7 +140,7 @@
 
     <button class="submit-btn" type="submit">Inserir Medição</button>
   </form>
-  <a href="{% url 'details' utente.person_id %}" class="back-link" >← Voltar</a>
+  <a href="{% url 'patient' utente.person_id %}" class="back-link" >← Voltar</a>
 </div>
 
 

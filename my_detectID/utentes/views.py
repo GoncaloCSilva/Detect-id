@@ -10,7 +10,7 @@ from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO, StringIO, TextIOWrapper
-from .hd_graficos import grafico_global, grafico_individual
+from .hd_graficos import graphicPatientGlobal, graphicPatient
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -35,7 +35,7 @@ CONCEPT_IDS = {
     'dor': 8,
 }
 
-def utentes(request):
+def patients(request):
     """
     @brief: Page that lists all patients with their latest clinical measurements.
 
@@ -110,10 +110,10 @@ def utentes(request):
     return render(request, 'utentes.html', {
         'mymembers': page_obj,
         'temp_prev' : time_prev,
-        'active_page': 'utentes'
+        'active_page': 'patients'
     })
 
-def utente(request, person_id):
+def patient(request, person_id):
     """
     @brief: View that returns the details page for a specific patient (utente), including personal data,
             clinical condition, measurement history, clinical notes, and hospitalization records.
@@ -124,9 +124,9 @@ def utente(request, person_id):
 
     global_model= get_global_kaplan_model()
 
-    mymember = PersonExt.objects.get(person_id=person_id)
-    mycondition = ConditionOccurrence.objects.get(person_id=person_id)
-    idade = mymember.idade()
+    patient = PersonExt.objects.get(person_id=person_id)
+    condition = ConditionOccurrence.objects.get(person_id=person_id)
+    age = patient.idade()
     event_filter = request.GET.get('evento')
 
     # Agrupar medições por data e hora
@@ -136,13 +136,13 @@ def utente(request, person_id):
         dt = m.measurement_datetime
 
         # Cálculo de tempo do utente
-        visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
-        tempo_utente = (dt - visita.visit_start_datetime).total_seconds() / 3600
+        visit = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
+        time_patient = (dt - visit.visit_start_datetime).total_seconds() / 3600
 
-        global_risk = global_model.predict(tempo_utente)
+        global_risk = global_model.predict(time_patient)
         if dt not in grouped:
             grouped[dt] = {
-                'risk': '',  # inicializa risco
+                'risk': '', 
                 'measurements': []
             }
 
@@ -157,17 +157,17 @@ def utente(request, person_id):
 
     grouped = dict(sorted(grouped.items(), key=lambda item: item[0], reverse=True))
 
-    servico = VisitOccurrence.objects.filter(person_id=person_id)
+    service = VisitOccurrence.objects.filter(person_id=person_id)
     notes = Note.objects.filter(person_id=person_id)
 
     template = loader.get_template('utente.html')
     context = {
-        'mymember': mymember,
-        'mycondition': mycondition,
-        'idade': idade,
+        'mymember': patient,
+        'mycondition': condition,
+        'idade': age,
         'grouped_measurements': grouped,
         'notes': notes,
-        'servico': servico,
+        'servico': service,
         'event_filter':event_filter
     }
     return HttpResponse(template.render(context, request))
@@ -178,182 +178,202 @@ def main(request):
   return HttpResponse(template.render()) 
 
 @csrf_exempt  # Desativa a verificação CSRF para esta view
-def adicionar_utente(request):
+def addPatient(request):
+    """
+    @brief: Handles the creation of a new patient and their associated clinical data.
 
-  if request.method == "POST":
+    @param request: HttpRequest object representing a POST request with the patient's information.
+    @return: Redirects to the patients listing page after successful insertion, or renders the 'adicionarUtente.html' template if GET request.
+    """
 
-      firstname = request.POST.get("firstname")
-      lastname = request.POST.get("lastname")
-      birthday = request.POST.get("birthday")
-      if request.POST.get("gender") == "Male": gender = 1 
-      else: gender = 0
-      numeroUtente = request.POST.get("NumeroUtente")
-      queixasEntrada = request.POST.get("QueixasEntrada")
-      alergias = request.POST.get("Alergias")
-      diagnosticoPrincipal = request.POST.get("DiagnosticoPrincipal")
-      if request.POST.get("Serviço") == "Urgência": servico = 1 
-      else: 
-        if request.POST.get("Serviço") == "Internamento": servico = 2 
-        else: servico = 3
-      spO2 = request.POST.get("SpO2")
-      necessidadeO2 = request.POST.get("NecessidadeO2")
-      frequenciaCardiaca = request.POST.get("FrequenciaCardiaca")
-      tASistolica = request.POST.get("TASistolica")
-      tADiastolica = request.POST.get("TADiastolica")
-      temperatura = request.POST.get("Temperatura")
-      nívelConsciencia = request.POST.get("NívelConsciencia")
-      dor = request.POST.get("Dor")
+    if request.method == "POST":
 
-      data= date.today()
-      dataHora=timezone.now()
+        firstname = request.POST.get("firstname")
+        lastname = request.POST.get("lastname")
+        birthday = request.POST.get("birthday")
+        if request.POST.get("gender") == "Male": gender = 1 
+        else: gender = 0
+        numeroUtente = request.POST.get("NumeroUtente")
+        queixasEntrada = request.POST.get("QueixasEntrada")
+        alergies = request.POST.get("Alergias")
+        diagnosis = request.POST.get("DiagnosticoPrincipal")
+        if request.POST.get("Serviço") == "Urgência": servico = 1 
+        else: 
+            if request.POST.get("Serviço") == "Internamento": servico = 2 
+            else: servico = 3
+        spO2 = request.POST.get("SpO2")
+        o2 = request.POST.get("NecessidadeO2")
+        heartRate = request.POST.get("FrequenciaCardiaca")
+        tAS = request.POST.get("TASistolica")
+        tAD = request.POST.get("TADiastolica")
+        temperature = request.POST.get("Temperatura")
+        gcs = request.POST.get("NívelConsciencia")
+        pain = request.POST.get("Dor")
 
-      person = PersonExt.objects.create(
-          gender_concept_id=int(gender),
-          person_source_value=numeroUtente,
-          birthday=birthday,
-          first_name=firstname,
-          last_name=lastname
-      )
+        date= date.today()
+        dateTime=timezone.now()
 
-      # Condição principal
-      ConditionOccurrence.objects.create(
-          person=person,
-          condition_start_date=data,
-          condition_source_value=diagnosticoPrincipal
-      )
+        person = PersonExt.objects.create(
+            gender_concept_id=int(gender),
+            person_source_value=numeroUtente,
+            birthday=birthday,
+            first_name=firstname,
+            last_name=lastname
+        )
 
-      # Notas (Queixas e Alergias)
-      if queixasEntrada:
-          Note.objects.create(
-              person=person,
-              note_text=queixasEntrada,
-              note_type_concept_id=1  
-          )
-      if alergias:
-          Note.objects.create(
-              person=person,
-              note_text=alergias,
-              note_type_concept_id=2  
-          )
+        # Condição principal
+        ConditionOccurrence.objects.create(
+            person=person,
+            condition_start_date=date,
+            condition_source_value=diagnosis
+        )
 
-      # Medições
-      if spO2:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=1,  
-              value_as_number=Decimal(spO2),
-              measurement_datetime=dataHora
-          )
-      if necessidadeO2:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=2, 
-              value_as_number=int(necessidadeO2),
-              measurement_datetime=dataHora
-          )
-      if frequenciaCardiaca:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=3,  
-              value_as_number=Decimal(frequenciaCardiaca),
-              measurement_datetime=dataHora
-          )
-       
-      if tASistolica:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=4,
-              value_as_number=Decimal(tASistolica),
-              measurement_datetime=dataHora
-          )
-      if tADiastolica:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=5,  
-              value_as_number=Decimal(tADiastolica),
-              measurement_datetime=dataHora
-          )
-      if temperatura:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=6,  
-              value_as_number=Decimal(temperatura),
-              measurement_datetime=dataHora
+        # Notas (Queixas e Alergias)
+        if queixasEntrada:
+            Note.objects.create(
+                person=person,
+                note_text=queixasEntrada,
+                note_type_concept_id=1  
+            )
+        if alergies:
+            Note.objects.create(
+                person=person,
+                note_text=alergies,
+                note_type_concept_id=2  
             )
 
-      if nívelConsciencia:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=7,  
-              value_as_number=Decimal(nívelConsciencia),
-              measurement_datetime=dataHora
-          )
-      if dor:
-          Measurement.objects.create(
-              person=person,
-              measurement_concept_id=8,  
-              value_as_number=int(dor),
-              measurement_datetime=dataHora
-          )
+        # Medições
+        if spO2:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=1,  
+                value_as_number=Decimal(spO2),
+                measurement_datetime=dateTime
+            )
+        if o2:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=2, 
+                value_as_number=int(o2),
+                measurement_datetime=dateTime
+            )
+        if heartRate:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=3,  
+                value_as_number=Decimal(heartRate),
+                measurement_datetime=dateTime
+            )
+        
+        if tAS:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=4,
+                value_as_number=Decimal(tAS),
+                measurement_datetime=dateTime
+            )
+        if tAD:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=5,  
+                value_as_number=Decimal(tAD),
+                measurement_datetime=dateTime
+            )
+        if temperature:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=6,  
+                value_as_number=Decimal(temperature),
+                measurement_datetime=dateTime
+                )
+
+        if gcs:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=7,  
+                value_as_number=Decimal(gcs),
+                measurement_datetime=dateTime
+            )
+        if pain:
+            Measurement.objects.create(
+                person=person,
+                measurement_concept_id=8,  
+                value_as_number=int(pain),
+                measurement_datetime=dateTime
+            )
 
 
-      VisitOccurrence.objects.create(
-          person=person,
-          care_site_id=int(servico) if servico else 1, 
-          visit_start_datetime=dataHora
-      )
+        VisitOccurrence.objects.create(
+            person=person,
+            care_site_id=int(servico) if servico else 1, 
+            visit_start_datetime=dateTime
+        )
+        
+
+        return redirect("/utentes/")
+
+
     
+    template = loader.get_template('adicionarUtente.html')
+    context = {
+        'active_page': 'addPatient'
+    }
 
-      return redirect("/utentes/")
-
-
-  
-  template = loader.get_template('adicionarUtente.html')
-  context = {
-    'active_page': 'adicionar_utente'
-}
-
-  return HttpResponse(template.render(context))       
+    return HttpResponse(template.render(context))       
 
 
-def editarUtente(request,person_id):
-  utente = PersonExt.objects.get(person_id=person_id)
-  if request.method == "POST":
-      utente.first_name = request.POST.get("firstname")
-      utente.last_name = request.POST.get("lastname")
-      utente.birthday = request.POST.get("birthday")
-      utente.gender_concept_id = request.POST.get("gender")
-      utente.person_source_value = request.POST.get("NumeroUtente")
-      utente.save()
-
-      return redirect("/utentes/")
-  
-  return render(request, "editarUtente.html", {"utente": utente})
-
-def nova_medicao(request, person_id):
+def editPatient(request,person_id):
     """
-    @brief: View para inserir uma nova medição para um utente específico.
-    @param request: Requisição HTTP com dados da medição
-    @param person_id: ID do utente
-    @return: Redireciona para a página de edição após inserção
+    @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
+
+    @param request: HttpRequest object. Can be GET (to show the form) or POST (to save changes).
+    @param person_id: ID of the patient to be edited.
+    @return: Redirects to the patient list upon successful update, or renders the edit form if GET request.
+    """
+    patient = PersonExt.objects.get(person_id=person_id)
+    if request.method == "POST":
+        patient.first_name = request.POST.get("firstname")
+        patient.last_name = request.POST.get("lastname")
+        patient.birthday = request.POST.get("birthday")
+        patient.gender_concept_id = request.POST.get("gender")
+        patient.person_source_value = request.POST.get("NumeroUtente")
+        patient.save()
+
+        return redirect("/utentes/")
+    
+    return render(request, "editarUtente.html", {"utente": patient})
+
+def newMeasurement(request, person_id):
+    """
+    @brief: Handles the creation of a new measurement for a specific patient
+    @param request: HTTP request with POST data containing the measurement values
+    @param person_id: The ID of the patient
+    @return: Redirects to the patient's edit page after successful insertion.
     """
     if request.method == "POST":
-        agora = datetime.now()
+        dateTime = datetime.now()
 
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=agora)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=agora)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=dateTime)
 
     return redirect('editarUtente', person_id=person_id)
 
 
-def removerUtente(request, person_id):
-    person = PersonExt.objects.get(person_id=person_id)
+def removePatient(request, person_id):
+    """
+    @brief Handles the deletion of a patient and all related clinical records from the database.
+    @param request: HTTP request object.
+    @param person_id: ID of the patient to be removed.
+    @return: Redirects to the patient list page after deletion.
+    """
+
+    patient = PersonExt.objects.get(person_id=person_id)
 
     if request.method == "POST":
         Measurement.objects.filter(person_id=person_id).delete()
@@ -362,13 +382,19 @@ def removerUtente(request, person_id):
         Observation.objects.filter(person_id=person_id).delete()
         VisitOccurrence.objects.filter(person_id=person_id).delete()
 
-        person.delete()
+        patient.delete()
         return redirect("/utentes/")
 
-    return render(request, "details.html", {"mymember": person})
+    return render(request, "details.html", {"mymember": patient})
   
 
-def listarUtentes(request):
+def listPatients(request):
+    """
+    @brief Displays a paginated and optionally filtered list of patients with their latest clinical data and survival risk assessments.
+    @param request: HTTP request containing optional filters (service, ordering, events, prediction time, search).
+    @return: Renders the patient list page with relevant clinical and risk data.
+    """
+
     service_filter = request.GET.get("service")
     order_by = request.GET.get("order")
     event_filter = request.GET.get("event")
@@ -466,11 +492,17 @@ def listarUtentes(request):
         "event_filter": event_filter,
         "temp_prev":temp_prev,
         "search_query":search_query,
-        'active_page': 'utentes'
+        'active_page': 'patients'
     })
 
 @csrf_exempt
-def importar_csv(request):
+def importCSV(request):
+    """
+    @brief Handles the import of a CSV file uploaded via POST request and displays a success or error message.
+    @param request: HTTP request object, expects a file under 'csv_file' in POST data.
+    @return: Renders the main page with a status message.
+    """
+
     if request.method == "POST":
         try:
             csv_file = request.FILES["csv_file"]
@@ -484,7 +516,13 @@ def importar_csv(request):
 
     return render(request, 'main.html')
 
-def exportar_csv(request):
+def exportCSV(request):
+    """
+    @brief Generates and returns a CSV file containing the output of the Kaplan-Meier training results.
+    @param request: HTTP request object.
+    @return: HTTP response with CSV file attached for download.
+    """
+
     df = trainKM()
 
     # Usar buffer em memória
@@ -497,14 +535,21 @@ def exportar_csv(request):
     return response
 
 
-def grafico_view(request, person_id):
-    parametro = request.GET.get("parametro")  
-    evento = request.GET.get("evento")
+def graphicView(request, person_id):
+    """
+    @brief Selects and renders the appropriate survival chart for a given patient based on the selected parameter and event.
+    @param request: HTTP request object containing 'parametro' and 'evento' in GET parameters.
+    @param person_id: ID of the patient for whom the chart is generated.
+    @return: HTTP response with the rendered chart (global or individual).
+    """
+
+    parameter = request.GET.get("parametro")  
+    event = request.GET.get("evento")
    
-    if parametro == "RC":
-        return grafico_global(person_id)
+    if parameter == "RC":
+        return graphicPatientGlobal(person_id)
     
-    return grafico_individual(person_id, parametro, evento)
+    return graphicPatient(person_id, parameter, event)
 
 
 

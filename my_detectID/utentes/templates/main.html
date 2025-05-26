@@ -108,7 +108,7 @@
 
   <div class="csv-section">
     <h3>Importar dados a partir de CSV</h3>
-    <form method="POST" enctype="multipart/form-data" action="{% url 'importar_csv' %}">
+    <form method="POST" enctype="multipart/form-data" action="{% url 'importCSV' %}">
       {% csrf_token %}
       <input type="file" name="csv_file" accept=".csv" required>
       <br>
@@ -116,7 +116,7 @@
     </form>
 
     <h3 style="margin-top: 40px;">Exportar dados atuais</h3>
-    <a href="{% url 'exportar_csv' %}">Exportar CSV</a>
+    <a href="{% url 'exportCSV' %}">Exportar CSV</a>
   </div>
 </div>
 

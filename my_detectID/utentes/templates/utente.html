@@ -177,7 +177,7 @@
   <div class="section">
     <h3>Histórico de Dados</h3>
 
-    <form method="GET" action="{% url 'utente' mymember.person_id %}" style="margin-bottom: 20px;">
+    <form method="GET" action="{% url 'patient' mymember.person_id %}" style="margin-bottom: 20px;">
 
       <label for="evento">Escolher Evento:</label>
       <select name="evento" id="evento" required>
@@ -261,7 +261,7 @@
 
   <div class="section">
     <h3>Gráfico dos Dados</h3>
-    <form method="GET" action="{% url 'grafico_view' mymember.person_id %}" style="margin-bottom: 20px;">
+    <form method="GET" action="{% url 'graphic_view' mymember.person_id %}" style="margin-bottom: 20px;">
       <label for="parametro">Escolher Parâmetro:</label>
       <select name="parametro" id="parametro" required>
         <option value="RC">RC</option>
@@ -293,7 +293,7 @@
 
     
     <img id="graficoImagem"
-    src="{% url 'grafico_view' mymember.person_id %}?parametro={{ request.GET.parametro|default:'4' }}&evento={{ request.GET.evento|default:'1' }}"
+    src="{% url 'graphic_view' mymember.person_id %}?parametro={{ request.GET.parametro|default:'4' }}&evento={{ request.GET.evento|default:'1' }}"
     alt="Gráfico do utente"
     style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
 
@@ -312,7 +312,7 @@
     <div class="modal-content">
       <h2>Confirmar Remoção</h2>
       <p>Tem certeza que deseja remover <strong>{{ mymember.first_name }} {{ mymember.last_name }}</strong>?</p>
-      <form method="POST" action="{% url 'removerUtente' mymember.person_id %}">
+      <form method="POST" action="{% url 'removePatient' mymember.person_id %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-delete">Sim, remover</button>
         <button type="button" onclick="closePopup()">Cancelar</button>

@@ -146,7 +146,7 @@
 
 <h1 class="page-title">Utentes</h1>
 
-<form method="GET" action="{% url 'listarUtentes' %}" style="text-align: center; margin: 20px auto;">
+<form method="GET" action="{% url 'listPatients' %}" style="text-align: center; margin: 20px auto;">
   <input type="text" name="search" placeholder="Pesquisar utente..." value="{{ request.GET.search }}" style="padding: 8px; width: 300px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
   <input type="hidden" name="service" value="{{ service_filter }}">
   <input type="hidden" name="event" value="{{ event_filter }}">
@@ -154,7 +154,7 @@
   <button type="submit" style="padding: 8px 12px; background-color: #007041; color: white; border: none; border-radius: 6px; cursor: pointer;">Pesquisar</button>
 </form>
 
-<form method="GET" action="{% url 'listarUtentes' %}" class="filter-form">
+<form method="GET" action="{% url 'listPatients' %}" class="filter-form">
   <label for="temp_prev">Tempo de Previsão:</label>
   <select name="temp_prev" id="temp_prev">
     <option value="24" {% if temp_prev == "24" %}selected{% endif %}>24h</option>

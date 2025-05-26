@@ -39,7 +39,7 @@ from .models import Measurement, PersonExt, VisitOccurrence
     # 		        	    - 93.5 - 95.5	- Normal Baixo
     # 		        	    - >= 95.5	- Normal
     
-def grafico_individual(person_id, param_id, evento_id):
+def graphicPatient(person_id, param_id, evento_id):
     """
     @brief Gera gráfico de sobrevivência para qualquer parâmetro clínico com destaque para o utente.
     @param person_id ID do utente.
@@ -150,7 +150,7 @@ def grafico_individual(person_id, param_id, evento_id):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
-def grafico_global(person_id):
+def graphicPatientGlobal(person_id):
     kmf = get_global_kaplan_model()
 
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
