@@ -13,14 +13,12 @@ def get_param_group(param, value):
         return None
     
     for x in LIMIARES:
-        nome_param, (limiar1, limiar2, limiar3) = LIMIARES[x]
+        nome_param, (limiar1, limiar2) = LIMIARES[x]
         if nome_param == param:
             if value < limiar1:
                 return 'baixo'
             elif value < limiar2:
-                return 'normal baixo'
-            elif value < limiar3:
-                return 'normal alto'
+                return 'normal'
             else:
                 return 'alto'
     return None
@@ -35,14 +33,14 @@ def trainKM():
         _csv_data = getCSV()
 
         LIMIARES = {
-        1: ("SpO2", [90, 95, 98]),
-        2: ("Necessidade de O2", [1, 2, 3]),
-        3: ("Frequência Cardíaca", [60, 100, 120]),
-        4: ("TA Sistólica", [100.5, 119.5, 134.5]),
-        5: ("TA Diastólica", [60, 80, 90]),
-        6: ("Temperatura", [35.5, 37.5, 38.5]),
-        7: ("Nível de Consciência", [8, 13, 15]),
-        8: ("Dor", [1, 2, 3]),
+        1: ("SpO2", [90, 98]),
+        2: ("Necessidade de O2", [0,1]),
+        3: ("Frequência Cardíaca", [60, 99]),
+        4: ("TA Sistólica", [100, 130]),
+        5: ("TA Diastólica", [60,90]),
+        6: ("Temperatura", [35, 38]),
+        7: ("Nível de Consciência", [8, 15]),
+        8: ("Dor", [0,1]),
         }   
 
         # Criar modelos KM para cada parâmetro e evento
@@ -66,7 +64,7 @@ def trainKM():
             MODELOS_KM[parametro] = {}
             for evento_col in eventos:
                 MODELOS_KM[parametro][evento_col] = {}
-                for grupo in ['baixo', 'normal baixo', 'normal alto', 'alto']:
+                for grupo in ['baixo', 'normal', 'alto']:
                     # Filtrar os dados para este grupo
                     grupo_df = _csv_data[_csv_data[parametro].apply(lambda x: get_param_group(parametro, x)) == grupo]
                     if not grupo_df.empty:
@@ -103,17 +101,25 @@ def get_kaplan_model(parametro, valor, evento_id=1):
     ]
     evento = eventos[evento_id - 1]
 
-    nome_param, (limiar1, limiar2, limiar3) = LIMIARES[parametro]
+    nome_param, (limiar1, limiar2) = LIMIARES[parametro]
 
-    if valor < limiar1:
-        grupo = 'baixo'
-    elif valor < limiar2:
-        grupo = 'normal baixo'
-    elif valor < limiar3:
-        grupo = 'normal alto'
+    if parametro == 8:
+        grupo='normal'
     else:
-        grupo = 'alto'
+        if valor < limiar1:
+            grupo = 'baixo'
+        elif valor < limiar2:
+            grupo = 'normal'
+        else:
+            grupo = 'alto'
 
+    print(f"Value {valor}")
+    print(f"Evento {evento}")
+    print(f"Grupo {grupo}")
+    print(f"Parametro {parametro}")
+    print(f"ModelosKM {MODELOS_KM}")
+    
+    
 
     return MODELOS_KM.get(nome_param, {}).get(evento, {}).get(grupo, None)
 
@@ -169,7 +175,9 @@ def getCSV(file_path = "detectid.csv"):
     df["Suporte Circulatório"].fillna(df["Suporte Circulatório"].median(), inplace=True)
     df["Mortalidade"].fillna(0, inplace=True)
 
-    
+    # Manter apenas a última medição por pessoa
+    df = df.groupby("person_id", as_index=False).last()
+
 
 
     # Guardar novo CSV com a coluna "Tempo"

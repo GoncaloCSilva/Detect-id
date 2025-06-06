@@ -68,20 +68,9 @@ def graphicPatient(person_id, param_id, evento_id):
     if evento_id not in eventos:
         return HttpResponse("Evento inválido", status=400)
     
-    nome_param, (limiar1, limiar2, limiar3) = parametros[param_id]
+    nome_param, (limiar1, limiar2) = parametros[param_id]
     evento_nome = eventos[evento_id]
     
-    # Dados
-    df = trainKM()
-    # Grupos
-    df['grupo_' + nome_param] = df[nome_param].apply(
-        lambda x:
-        'Baixo' if x < limiar1 else
-        'Normal Baixo' if x < limiar2 else
-        'Normal Alto' if x < limiar3 else
-        'Alto'
-    )
-
     # Medição do utente
     medicao = (
         Measurement.objects
@@ -97,12 +86,25 @@ def graphicPatient(person_id, param_id, evento_id):
 
     if valor < limiar1:
         grupo_ut = 'Baixo'
+        valor2 = limiar1
+        grupo_2 = 'Normal'
+        valor3 = limiar2
+        grupo_3 = 'Alto'
+
     elif valor < limiar2:
-        grupo_ut = 'Normal Baixo'
-    elif valor < limiar3:
-        grupo_ut = 'Normal Alto'
+        grupo_ut = 'Normal'
+        valor2 = 0
+        grupo_2 = 'Baixo'
+        valor3 = limiar2
+        grupo_3 = 'Alto'
+        
     else:
         grupo_ut = 'Alto'
+        valor2 = 0
+        grupo_2 = 'Baixo'
+        valor3 = limiar1
+        grupo_3 = 'Normal'
+
 
     # Tempo relativo do utente (em horas)
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
@@ -118,24 +120,26 @@ def graphicPatient(person_id, param_id, evento_id):
     ax.axhspan(0.4, 0.6, color='yellow', alpha=0.2)
     ax.axhspan(0, 0.4, color='red', alpha=0.2)
 
+    
     cores = {
         'Baixo': 'blue',
-        'Normal Baixo': 'orange',
-        'Normal Alto': 'green',
+        'Normal': 'green',
         'Alto': 'red'
     }
 
-    grupos = df.groupby('grupo_' + nome_param)
+    kmf = get_kaplan_model(param_id,valor,evento_id)
+    kmf.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_ut, 'black'))
+    
+    if param_id!=2 and param_id !=8:
+        kmf2 = get_kaplan_model(param_id,valor2,evento_id)
+        kmf2.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_2, 'black'))
+    if param_id!= 8:
+        kmf3 = get_kaplan_model(param_id,valor3,evento_id)
+        kmf3.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_3, 'black'))
 
-    for grupo_nome, dados in grupos:
-        kmf = KaplanMeierFitter()
-        kmf.fit(dados['Tempo'], event_observed=dados[evento_nome], label=grupo_nome)
-        kmf.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_nome, 'black'))
-
-        if grupo_nome == grupo_ut:
-            prob = kmf.predict(tempo_utente)
-            ax.scatter(tempo_utente, prob, color=cores[grupo_nome], s=100, zorder=3, label=f"Utente")
-            ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+    prob = kmf.predict(tempo_utente)
+    ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3, label=f"Utente")   
+    ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
     plt.title(f"Grupos de {nome_param} - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")

@@ -23,21 +23,6 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
         else:
             return 'redBoxBad'
 
-    parametros = getLimiares()
-
-    nome_param, (limiar1, limiar2, limiar3) = parametros[concept_id]
-    # Dados
-    df = trainKM()
-    
-    # Grupos
-    df['grupo_' + nome_param] = df[nome_param].apply(
-        lambda x:
-        'Baixo' if x < limiar1 else
-        'Normal Baixo' if x < limiar2 else
-        'Normal Alto' if x < limiar3 else
-        'Alto'
-    )
-
     # Obter medicao do utente
     medicao = (
         Measurement.objects
@@ -46,16 +31,6 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
         .first()
     )
 
-
-    if value < limiar1:
-        grupo_ut = 'Baixo'
-    elif value < limiar2:
-        grupo_ut = 'Normal Baixo'
-    elif value < limiar3:
-        grupo_ut = 'Normal Alto'
-    else:
-        grupo_ut = 'Alto'
-
     # Tempo relativo do utente (em horas)
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
     if not visita:
@@ -63,13 +38,9 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
 
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-    grupos = df.groupby('grupo_' + nome_param)
 
-    for grupo_nome, dados in grupos:
-    
-        if grupo_nome == grupo_ut:
-            kmf = get_kaplan_model(concept_id,value,event_id)
-            prob = kmf.predict(tempo_utente)
+    km = get_kaplan_model(concept_id,value,event_id)
+    prob = km.predict(tempo_utente)
 
     if prob >= 0.6:
         return 'greenBoxGood'
