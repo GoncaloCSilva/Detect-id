@@ -1,11 +1,23 @@
+import os
+import numpy as np
 import pandas as pd
 from lifelines import KaplanMeierFitter
+from sklearn.model_selection import train_test_split
+from sksurv.ensemble import RandomSurvivalForest
+from sksurv.util import Surv
+from sklearn.preprocessing import StandardScaler
+import pickle
+
 
 _csv_data = None
 
 MODELOS_KM = {}
 
+MODELOS_RSF = {}
+
 LIMIARES = {}
+
+CURRENT_MODEL = 1 # 1-> KM 2-> RSF
 
 def get_param_group(param, value):
     global LIMIARES
@@ -23,14 +35,57 @@ def get_param_group(param, value):
                 return 'alto'
     return None
 
+def getCurrentModel():
+    global CURRENT_MODEL
+    return CURRENT_MODEL
 
-def trainKM():
-    global _csv_data, MODELOS_KM,LIMIARES
+def setCurrentModel(model):
+    global CURRENT_MODEL
+    CURRENT_MODEL = model
 
-    if _csv_data is None:
+def predict_survival(model,time):
+    """
+    @brief Predict survival probability at a given time using either KM or RSF.
+    @param model: KM or RSF model
+    @param X: Input data (may be ignored by KM)
+    @param time: Time at which to predict survival
+    @return: Estimated survival probability at the given time
+    """
+    if CURRENT_MODEL == 1:  # KM
+        return model.predict(time)
+    else:  # RSF
+        try:
+            prob = np.interp(time, model[0].x, model[0].y)
+        except:
+            prob = 0.5
+            print(model)
+            print("FKSAHFIASHFAILSJFLIASFJLAIFJLAIFJAILSJFAILSHFAÇLSIFHALKSUDHASULKHDKUL")
+        return prob
+def trainModels():
+    global _csv_data, MODELOS_KM,MODELOS_RSF,LIMIARES
+
+    if os.path.exists("./pickle/rsf_modelos.pkl") and os.path.exists("./pickle/km_modelos.pkl"):
+        LIMIARES = {
+        1: ("SpO2", [90, 98]),
+        2: ("Necessidade de O2", [0,1]),
+        3: ("Frequência Cardíaca", [60, 99]),
+        4: ("TA Sistólica", [100, 130]),
+        5: ("TA Diastólica", [60,90]),
+        6: ("Temperatura", [35, 38]),
+        7: ("Nível de Consciência", [8, 15]),
+        8: ("Dor", [0,1]),
+        }   
+        print("A carregar modelos...")
+        with open("./pickle/rsf_modelos.pkl", "rb") as f:
+            MODELOS_RSF = pickle.load(f)
+        with open("./pickle/km_modelos.pkl", "rb") as f:
+            MODELOS_KM = pickle.load(f)
+    else:
         print("A Carregar o ficheiro CSV...")
 
         _csv_data = getCSV()
+        _csv_data['datetime'] = pd.to_datetime(_csv_data['datetime'])
+        _csv_data = _csv_data.sort_values(by=["person_id", "datetime"])
 
         LIMIARES = {
         1: ("SpO2", [90, 98]),
@@ -62,19 +117,77 @@ def trainKM():
         #Treinar os Modelos KM
         for parametro in parametros_clinicos:
             MODELOS_KM[parametro] = {}
+            MODELOS_RSF[parametro] = {}
             for evento_col in eventos:
                 MODELOS_KM[parametro][evento_col] = {}
+                MODELOS_RSF[parametro][evento_col] = {}
                 for grupo in ['baixo', 'normal', 'alto']:
                     # Filtrar os dados para este grupo
                     grupo_df = _csv_data[_csv_data[parametro].apply(lambda x: get_param_group(parametro, x)) == grupo]
                     if not grupo_df.empty:
+
+                        #### KaplanMeier ####
+                        
                         kmf = KaplanMeierFitter()
                         kmf.fit(grupo_df["Tempo"], event_observed=grupo_df[evento_col], label=f"{parametro}_{grupo}")
                         MODELOS_KM[parametro][evento_col][grupo] = kmf
 
+                        #### Random Surival Forest ####
+                        X = _csv_data[[parametro]]
+                        y = Surv.from_dataframe("Evento", "Tempo", _csv_data)
+
+                        # Normalizar
+                        scaler = StandardScaler()
+                        X_scaled = scaler.fit_transform(X)
+
+                        # Dividir treino/teste
+                        X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=33)
+                        X_val_train, X_val_test, y_val_train, y_val_test = train_test_split(X_train, y_train, test_size=0.3, random_state=33)
+
+
+                        # Treinar modelo
+                        rsf = RandomSurvivalForest()
+                        
+                        rsf.fit(X_val_train, y_val_train)
+
+                        rsf.fit(X_train, y_train)
+                        rsf = rsf.predict_survival_function(X_test[:1])
+
+                        MODELOS_RSF[parametro][evento_col][grupo] = rsf
+
         kmf = KaplanMeierFitter()
         kmf.fit(_csv_data["Tempo"], _csv_data["Evento"])
         MODELOS_KM["global"] = kmf
+
+
+        X = _csv_data[parametros_clinicos]
+        y = Surv.from_dataframe("Evento", "Tempo", _csv_data)
+
+        # Normalizar
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+        # Dividir treino/teste
+        X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=33)
+        X_val_train, X_val_test, y_val_train, y_val_test = train_test_split(X_train, y_train, test_size=0.3, random_state=33)
+
+
+        # Treinar modelo
+        rsf = RandomSurvivalForest()
+
+
+        rsf.fit(X_val_train, y_val_train)
+
+        rsf.fit(X_train, y_train)
+        rsf = rsf.predict_survival_function(X_test[:1])
+
+        MODELOS_RSF["global"] = rsf
+
+
+        with open("./pickle/rsf_modelos.pkl", "wb") as f:
+            pickle.dump(MODELOS_RSF,f)
+        with open("./pickle/km_modelos.pkl", "wb") as f:
+            pickle.dump(MODELOS_KM,f)
 
     return _csv_data
 
@@ -82,7 +195,7 @@ def getLimiares():
     global LIMIARES
     return LIMIARES
 
-def get_kaplan_model(parametro, valor, evento_id=1):
+def get_model(parametro, valor, evento_id=1):
     """
     @brief: Devolve o modelo Kaplan-Meier treinado para o parâmetro e grupo fornecido.
     @param parametro: ID do parâmetro clínico (ex: 1 -> 'SpO2')
@@ -112,19 +225,19 @@ def get_kaplan_model(parametro, valor, evento_id=1):
             grupo = 'normal'
         else:
             grupo = 'alto'
-
-    print(f"Value {valor}")
-    print(f"Evento {evento}")
-    print(f"Grupo {grupo}")
-    print(f"Parametro {parametro}")
-    print(f"ModelosKM {MODELOS_KM}")
     
     
+    if CURRENT_MODEL == 1:
+        return MODELOS_KM.get(nome_param, {}).get(evento, {}).get(grupo, None)
+    else:
+        return MODELOS_RSF.get(nome_param, {}).get(evento, {}).get(grupo, None)
 
-    return MODELOS_KM.get(nome_param, {}).get(evento, {}).get(grupo, None)
+def get_global_model():
+    if CURRENT_MODEL == 1:
+        return MODELOS_KM.get("global") 
+    else:
+        return MODELOS_RSF.get("global")
 
-def get_global_kaplan_model():
-    return MODELOS_KM.get("global")
 
 def getCSV(file_path = "detectid.csv"):
 

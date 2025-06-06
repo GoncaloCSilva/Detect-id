@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from lifelines import KaplanMeierFitter
 import pandas as pd
 
-from utentes.hd_utils import getLimiares, trainKM, get_global_kaplan_model, get_kaplan_model
+from utentes.hd_utils import getLimiares, predict_survival, trainModels, get_global_model, get_model
 from utentes.models import Measurement, VisitOccurrence
 
 register = template.Library()
@@ -39,8 +39,8 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
 
-    km = get_kaplan_model(concept_id,value,event_id)
-    prob = km.predict(tempo_utente)
+    model = get_model(concept_id,value,event_id)
+    prob = predict_survival(model,tempo_utente)
 
     if prob >= 0.6:
         return 'greenBoxGood'

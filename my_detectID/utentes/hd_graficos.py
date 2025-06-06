@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from django.http import HttpResponse
 import pandas as pd
 
-from utentes.hd_utils import get_global_kaplan_model, getLimiares, trainKM, get_kaplan_model
+from utentes.hd_utils import get_global_model, getLimiares, trainModels, get_model
 from .models import Measurement, PersonExt, VisitOccurrence
 
     # TABELA DE LIMIARES PARA CADA PARAMETRO #
@@ -39,7 +39,7 @@ from .models import Measurement, PersonExt, VisitOccurrence
     # 		        	    - 93.5 - 95.5	- Normal Baixo
     # 		        	    - >= 95.5	- Normal
     
-def graphicPatient(person_id, param_id, evento_id):
+def graphicPatient_km(person_id, param_id, evento_id):
     """
     @brief Gera gráfico de sobrevivência para qualquer parâmetro clínico com destaque para o utente.
     @param person_id ID do utente.
@@ -127,14 +127,14 @@ def graphicPatient(person_id, param_id, evento_id):
         'Alto': 'red'
     }
 
-    kmf = get_kaplan_model(param_id,valor,evento_id)
+    kmf = get_model(param_id,valor,evento_id)
     kmf.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_ut, 'black'))
     
     if param_id!=2 and param_id !=8:
-        kmf2 = get_kaplan_model(param_id,valor2,evento_id)
+        kmf2 = get_model(param_id,valor2,evento_id)
         kmf2.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_2, 'black'))
     if param_id!= 8:
-        kmf3 = get_kaplan_model(param_id,valor3,evento_id)
+        kmf3 = get_model(param_id,valor3,evento_id)
         kmf3.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_3, 'black'))
 
     prob = kmf.predict(tempo_utente)
@@ -153,9 +153,112 @@ def graphicPatient(person_id, param_id, evento_id):
     buffer.seek(0)
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
+def graphicPatient_rsf(person_id, param_id, evento_id):
+    """
+    @brief Gera gráfico de sobrevivência RSF para qualquer parâmetro clínico com destaque para o utente.
+    @param person_id ID do utente.
+    @param param_id ID do parâmetro (1 a 8).
+    @param evento_id ID do evento (1 a 7).
+    @return HttpResponse com imagem PNG.
+    """
+    import numpy as np
+    from matplotlib import pyplot as plt
+    from io import BytesIO
+    from lifelines.utils import datetimes_to_durations
+
+    param_id = int(param_id)
+    evento_id = int(evento_id)
+    
+    parametros = getLimiares()
+    eventos = {
+        1: "Descompensação",
+        2: "Ativação Médico",
+        3: "Aumento da Vigilância",
+        4: "Via Área Ameaçada",
+        5: "Suporte Ventilatório",
+        6: "Suporte Circulatório",
+        7: "Mortalidade"
+    }
+
+    if param_id not in parametros or evento_id not in eventos:
+        return HttpResponse("Parâmetro ou evento inválido", status=400)
+
+    nome_param, (limiar1, limiar2) = parametros[param_id]
+    evento_nome = eventos[evento_id]
+
+    medicao = (
+        Measurement.objects
+        .filter(person_id=person_id, measurement_concept_id=param_id)
+        .order_by('-measurement_datetime')
+        .first()
+    )
+    if not medicao:
+        return HttpResponse(f"Medição de {nome_param} não encontrada para este utente", status=404)
+
+    valor = medicao.value_as_number
+    if valor < limiar1:
+        grupo_ut = 'Baixo'
+    elif valor < limiar2:
+        grupo_ut = 'Normal'
+    else:
+        grupo_ut = 'Alto'
+
+    visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
+    if not visita:
+        return HttpResponse("Visita não encontrada", status=404)
+
+    tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+
+    # Preparar X com os atributos relevantes do utente (ex: valor do parâmetro)
+    X_utente = np.array([[valor]])  # ajustar conforme as features usadas no treino do RSF
+
+    # Obter modelo RSF
+    rsf = get_model(param_id, evento_id)
+    if rsf is None:
+        return HttpResponse("Modelo RSF não encontrado", status=404)
+
+    # Previsão da função de sobrevivência
+    surv_fn = rsf.predict_survival_function(X_utente)[0]
+
+    # Gráfico
+    person = PersonExt.objects.get(person_id=person_id)
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.axhspan(0.6, 1, color='green', alpha=0.2)
+    ax.axhspan(0.4, 0.6, color='yellow', alpha=0.2)
+    ax.axhspan(0, 0.4, color='red', alpha=0.2)
+
+    cores = {
+        'Baixo': 'blue',
+        'Normal': 'green',
+        'Alto': 'red'
+    }
+
+    ax.step(surv_fn.x, surv_fn.y, where="post", color=cores.get(grupo_ut, 'black'), label='Utente')
+    
+    # Adicionar ponto do utente
+    try:
+        prob = np.interp(tempo_utente, surv_fn.x, surv_fn.y)
+    except:
+        prob = 0.0
+
+    ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3)
+    ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
+    plt.title(f"RSF - {nome_param} ({grupo_ut}) - {person.first_name} {person.last_name}", fontsize=14)
+    ax.set_xlabel("Tempo desde entrada (horas)")
+    ax.set_ylabel(f"Probabilidade de não ocorrer {evento_nome}")
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+
 
 def graphicPatientGlobal(person_id):
-    kmf = get_global_kaplan_model()
+    kmf = get_global_model()
 
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
     medicao = Measurement.objects.filter(person_id=person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
@@ -178,6 +281,67 @@ def graphicPatientGlobal(person_id):
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
     plt.legend()
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+
+def graphicPatientGlobal_rsf(person_id):
+    """
+    @brief Gera gráfico de sobrevivência RSF global com destaque para o utente.
+    @param person_id ID do utente.
+    @return HttpResponse com imagem PNG.
+    """
+    import numpy as np
+    from matplotlib import pyplot as plt
+    from io import BytesIO
+
+    # Obter modelo RSF global
+    rsf = get_global_model()
+    if rsf is None:
+        return HttpResponse("Modelo global RSF não encontrado", status=404)
+
+    # Dados do utente
+    visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
+    medicao = Measurement.objects.filter(person_id=person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+
+    if not visita or not medicao:
+        return HttpResponse("Dados de visita ou medição em falta", status=404)
+
+    tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+
+    # Preparar X do utente (ajusta conforme as features usadas no treino do modelo global)
+    valor = medicao.value_as_number
+    X_utente = np.array([[valor]])
+
+    # Prever função de sobrevivência
+    surv_fn = rsf.predict_survival_function(X_utente)[0]
+
+    # Calcular probabilidade estimada via interpolação
+    try:
+        prob = np.interp(tempo_utente, surv_fn.x, surv_fn.y)
+    except:
+        prob = 0.0
+
+    # Gráfico
+    person = PersonExt.objects.get(person_id=person_id)
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.step(surv_fn.x, surv_fn.y, where="post", color='blue', label='Utente')
+
+    ax.axhspan(0.6, 1, color='green', alpha=0.2)
+    ax.axhspan(0.4, 0.6, color='yellow', alpha=0.2)
+    ax.axhspan(0, 0.4, color='red', alpha=0.2)
+
+    ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3)
+    ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
+    plt.title(f"Grupo de Risco Clínico - {person.first_name} {person.last_name}", fontsize=14)
+    ax.set_xlabel("Tempo desde entrada (horas)")
+    ax.set_ylabel("Probabilidade de não ocorrer um Evento")
+    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
 
     buffer = BytesIO()
     plt.savefig(buffer, format='png')

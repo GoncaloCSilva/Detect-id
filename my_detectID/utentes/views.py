@@ -4,13 +4,13 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import getCSV, trainKM, get_global_kaplan_model, get_kaplan_model
+from utentes.hd_utils import getCSV, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO, StringIO, TextIOWrapper
-from .hd_graficos import graphicPatientGlobal, graphicPatient
+from .hd_graficos import graphicPatientGlobal, graphicPatient_km
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -42,7 +42,8 @@ def patients(request):
     @param request: HttpRequest object representing a GET request to view the patients ("utentes") page.
     @return: HttpResponse rendering the 'utentes.html' template with the paginated patient data, including measurement values and deterioration risk levels (current and predicted).
     """
-    trainKM()
+    trainModels()
+    
     patients = PersonExt.objects.all()
     patients_info = []
     time_prev = 24
@@ -63,7 +64,7 @@ def patients(request):
         
         time_patient = (measurement.measurement_datetime - visit.visit_start_datetime).total_seconds() / 3600
 
-        global_model= get_global_kaplan_model()
+        global_model= get_global_model()
 
         global_risk = global_model.predict(time_patient)
         global_risk_prev = global_model.predict(time_patient + time_prev)
@@ -86,7 +87,7 @@ def patients(request):
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
 
-            model = get_kaplan_model(concept_id,measurement.value_as_number,1)
+            model = get_model(concept_id,measurement.value_as_number,1)
             prev = model.predict(time_patient + time_prev)
             
             if prev > 0.6: prob_measurements[key] =  "Estável"
@@ -122,7 +123,7 @@ def patient(request, person_id):
     @return: Renders the 'utente.html' template with the corresponding patient data
     """
 
-    global_model= get_global_kaplan_model()
+    global_model= get_global_model()
 
     patient = PersonExt.objects.get(person_id=person_id)
     condition = ConditionOccurrence.objects.get(person_id=person_id)
@@ -400,6 +401,13 @@ def listPatients(request):
     event_filter = request.GET.get("event")
     temp_prev = request.GET.get("temp_prev")
     search_query = request.GET.get('search')
+    model = request.GET.get('model', 'km') 
+
+    
+    if model == 'km':
+        setCurrentModel(1)
+    else:
+        setCurrentModel(2)
 
     CARE_SITE_MAP = {
         1: "Urgência",                      
@@ -444,10 +452,10 @@ def listPatients(request):
         
         tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-        global_model= get_global_kaplan_model()
+        global_model= get_global_model()
 
-        global_risk = global_model.predict(tempo_utente)
-        global_risk_prev = global_model.predict(tempo_utente + int(temp_prev))
+        global_risk = predict_survival(global_model, tempo_utente)
+        global_risk_prev = predict_survival(global_model,tempo_utente + int(temp_prev))
 
         if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
         elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
@@ -466,8 +474,8 @@ def listPatients(request):
                 .first()
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
-            model = get_kaplan_model(concept_id,measurement.value_as_number,int(event_filter))
-            prev = model.predict(tempo_utente + int(temp_prev))
+            model = get_model(concept_id,measurement.value_as_number,int(event_filter))
+            prev = predict_survival(global_model,tempo_utente + int(temp_prev))
             
             if prev > 0.6: prob_measurements[key] =  "Estável"
             elif prev > 0.4: prob_measurements[key] =  "Moderado"
@@ -523,7 +531,7 @@ def exportCSV(request):
     @return: HTTP response with CSV file attached for download.
     """
 
-    df = trainKM()
+    df = trainModels()
 
     # Usar buffer em memória
     buffer = StringIO()
@@ -549,7 +557,7 @@ def graphicView(request, person_id):
     if parameter == "RC":
         return graphicPatientGlobal(person_id)
     
-    return graphicPatient(person_id, parameter, event)
+    return graphicPatient_km(person_id, parameter, event)
 
 
 
