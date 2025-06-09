@@ -51,8 +51,8 @@ def graphicPatient_km(person_id, param_id, evento_id):
     try:
         evento_id = int(evento_id)
     except:
-        evento_id = 1  # Default para descompensação se não for fornecido
-    # Mapas
+        evento_id = 1  
+        
     parametros = getLimiares()
 
     eventos = {
@@ -73,7 +73,7 @@ def graphicPatient_km(person_id, param_id, evento_id):
     nome_param, (limiar1, limiar2) = parametros[param_id]
     evento_nome = eventos[evento_id]
     
-    # Medição do utente
+
     medicao = (
         Measurement.objects
         .filter(person_id=person_id, measurement_concept_id=param_id)
@@ -108,14 +108,13 @@ def graphicPatient_km(person_id, param_id, evento_id):
         grupo_3 = 'Normal'
 
 
-    # Tempo relativo do utente (em horas)
+
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
     if not visita:
         return HttpResponse("Visita não encontrada", status=404)
 
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-    # Gráfico
     person = PersonExt.objects.get(person_id=person_id)
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.axhspan(0.6, 1, color='green', alpha=0.2)
@@ -226,13 +225,12 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
 
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-    # Obter modelo RSF
     rsf = get_model(param_id, evento_id)
     if rsf is None:
         return HttpResponse("Modelo RSF não encontrado", status=404)
 
 
-    # Gráfico
+  
     person = PersonExt.objects.get(person_id=person_id)
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.axhspan(0.6, 1, color='green', alpha=0.2)
@@ -253,7 +251,7 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
     if param_id!= 8:
         rsf3 = get_model(param_id,valor3,evento_id)
         ax.step(rsf3[0].x, rsf3[0].y, where="post", color=cores.get(grupo_3, 'black'), label=grupo_3)
-    # Adicionar ponto do utente
+
     try:
         prob = np.interp(tempo_utente, rsf[0].x, rsf[0].y)
     except:
@@ -317,12 +315,12 @@ def graphicPatientGlobal_rsf(person_id):
     from matplotlib import pyplot as plt
     from io import BytesIO
 
-    # Obter modelo RSF global
+
     rsf = get_global_model()
     if rsf is None:
         return HttpResponse("Modelo global RSF não encontrado", status=404)
 
-    # Dados do utente
+
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
     medicao = Measurement.objects.filter(person_id=person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
 
@@ -331,16 +329,16 @@ def graphicPatientGlobal_rsf(person_id):
 
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-    # Preparar X do utente (ajusta conforme as features usadas no treino do modelo global)
+
     valor = medicao.value_as_number
 
-    # Calcular probabilidade estimada via interpolação
+
     try:
         prob = np.interp(tempo_utente, rsf[0].x, rsf[0].y)
     except:
         prob = 0.0
 
-    # Gráfico
+
     person = PersonExt.objects.get(person_id=person_id)
     fig, ax = plt.subplots(figsize=(7, 5))
     ax.step(rsf[0].x, rsf[0].y, where="post", color='blue', label='Utente')
