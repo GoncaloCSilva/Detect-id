@@ -162,14 +162,15 @@
   
   <div name="models" style="display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;margin-top: 20px;">
   <label for="models"> <b>Modelo de Previsão:</b></label>
-  <label>
-    <input type="radio" name="model" value="rsf" onchange="this.form.submit()" {% if request.GET.model == "rsf"%}checked{% endif %}>
-    RSF
-  </label>
-  <label>
-    <input type="radio" name="model" value="km" onchange="this.form.submit()" {% if request.GET.model or not request.GET.model  == "km" %}checked{% endif %}>
-    Kaplan-Meier
-  </label>
+    <label>
+      <input type="radio" name="model" value="km" onchange="this.form.submit()" id="km" {% if selected_model == "km" %}checked{% endif %}>
+       Estatistico
+    </label>
+
+    <label>
+      <input type="radio" name="model" value="rsf" onchange="this.form.submit()" id="rsf" {% if selected_model == "rsf" %}checked{% endif %}>
+        Aprendizagem Automática
+    </label>
 </div>
 </form>
 
@@ -213,6 +214,9 @@
   </select>
   <input type="hidden" name="search" value="{{ search_query }}">
   <button type="submit">Aplicar</button>
+
+
+  <input type="hidden" name="model" value="{{ selected_model }}">
 </form>
 
 <div class="table-container">
@@ -273,31 +277,40 @@
 
 
         {% color_class_value item.global|dict_value_first "Global" item.person.person_id event_filter as global_class %}
-        <td class="{{ global_class }}">{{ item.global|dict_value_first }}</td>
+        <td class="{{ global_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="RC" data-evento="1">{{ item.global|dict_value_first }}</td>
 
         {% color_class_value item.spo2 1 item.person.person_id event_filter as spo2_class %}
-        <td class="{{ spo2_class }}">{{ item.spo2|floatformat:1 }}</td>
+        <td class="{{ spo2_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="1" data-evento="{{event_filter}}">{{ item.spo2|floatformat:1 }}</td>
 
         {% color_class_value item.o2 2 item.person.person_id event_filter as o2_class %}
-        <td class="{{ o2_class }}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %}</td>
+        <td class="{{ o2_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="2" data-evento="{{event_filter}}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %}</td>
 
         {% color_class_value item.fc 3 item.person.person_id event_filter as fc_class %}
-        <td class="{{ fc_class }}">{{ item.fc|floatformat:1 }}</td>
+        <td class="{{ fc_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="3" data-evento="{{event_filter}}">{{ item.fc|floatformat:1 }}</td>
 
         {% color_class_value item.tas 4 item.person.person_id event_filter as tas_class %}
-        <td class="{{ tas_class }}">{{ item.tas|floatformat:1 }}</td>
+        <td class="{{ tas_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="4" data-evento="{{event_filter}}">{{ item.tas|floatformat:1 }}</td>
 
         {% color_class_value item.tad 5 item.person.person_id event_filter as tad_class %}
-        <td class="{{ tad_class }}">{{ item.tad|floatformat:1 }}</td>
+        <td class="{{ tad_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="5" data-evento="{{event_filter}}">{{ item.tad|floatformat:1 }}</td>
 
         {% color_class_value item.temp 6 item.person.person_id event_filter as temp_class %}
-        <td class="{{ temp_class }}">{{ item.temp|floatformat:1 }}</td>
+        <td class="{{ temp_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="6" data-evento="{{event_filter}}">{{ item.temp|floatformat:1 }}</td>
 
         {% color_class_value item.gcs 7 item.person.person_id event_filter as gcs_class %}
-        <td class="{{ gcs_class }}">{{ item.gcs|floatformat:1 }}</td>
+        <td class="{{ gcs_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="7" data-evento="{{event_filter}}">{{ item.gcs|floatformat:1 }}</td>
 
         {% color_class_value item.dor 8 item.person.person_id event_filter as dor_class %}
-        <td class="{{ dor_class }}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %}</td>
+        <td class="{{ dor_class }} clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="8" data-evento="{{event_filter}}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %}</td>
       </tr>
 
       <tr>
@@ -334,6 +347,75 @@
     </tbody>
   </table>
 </div>
+<!-- Modal -->
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" class="close">&times;</span>
+    <img id="graficoImagem"
+         src=""
+         alt="Gráfico do utente"
+         style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
+  </div>
+</div>
+
+
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 12px;
+    width: 50%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: black;
+  }
+
+  @keyframes fadeIn {
+    from {opacity: 0}
+    to {opacity: 1}
+  }
+
+  td.clickable {
+    cursor: pointer;
+  }
+
+  td.clickable {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  td.clickable:hover {
+    background-color: #4597a0; /* Um verde um pouco mais escuro no hover */
+  }
+</style>
+
+
+
 
 <div class="pagination">
   {% if mymembers.has_previous %}
@@ -347,4 +429,45 @@
   {% endif %}
 </div>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById("myModal");
+    const graficoImagem = document.getElementById("graficoImagem");
+    const closeModal = document.getElementById("closeModal");
+
+
+    document.querySelectorAll(".clickable").forEach(td => {
+      td.addEventListener("click", function () {
+        const personId = this.getAttribute("data-person-id");
+        const parametro = this.getAttribute("data-parametro");
+        const evento = this.getAttribute("data-evento");
+        if(document.getElementById('km').checked) {
+          var modele = 'km';
+        }else if(document.getElementById('rsf').checked) {
+          var modele = 'rsf';
+        }   
+
+        // Atualiza o src da imagem com os parâmetros corretos
+        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}`;
+
+        // Mostra o modal
+        modal.style.display = "block";
+      });
+    });
+
+    // Fecha o modal ao clicar no X
+    closeModal.addEventListener("click", function () {
+      modal.style.display = "none";
+    });
+
+    // Fecha ao clicar fora do modal
+    window.addEventListener("click", function (event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    });
+  });
+</script>
+
 {% endblock %}
+

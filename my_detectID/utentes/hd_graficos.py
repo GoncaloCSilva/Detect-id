@@ -48,8 +48,10 @@ def graphicPatient_km(person_id, param_id, evento_id):
     @return HttpResponse com imagem PNG.
     """
     param_id = int(param_id)
-    evento_id = int(evento_id)
-    
+    try:
+        evento_id = int(evento_id)
+    except:
+        evento_id = 1  # Default para descompensação se não for fornecido
     # Mapas
     parametros = getLimiares()
 
@@ -141,7 +143,7 @@ def graphicPatient_km(person_id, param_id, evento_id):
     ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3, label=f"Utente")   
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
-    plt.title(f"Grupos de {nome_param} - {person.first_name} {person.last_name}", fontsize=14)
+    plt.title(f"Estatistico - {nome_param} ({grupo_ut}) - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel(f"Probabilidade de não ocorrer {evento_nome}")
     ax.grid(True, linestyle='--', alpha=0.5)
@@ -196,12 +198,27 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
         return HttpResponse(f"Medição de {nome_param} não encontrada para este utente", status=404)
 
     valor = medicao.value_as_number
+
     if valor < limiar1:
         grupo_ut = 'Baixo'
+        valor2 = limiar1
+        grupo_2 = 'Normal'
+        valor3 = limiar2
+        grupo_3 = 'Alto'
+
     elif valor < limiar2:
         grupo_ut = 'Normal'
+        valor2 = 0
+        grupo_2 = 'Baixo'
+        valor3 = limiar2
+        grupo_3 = 'Alto'
+        
     else:
         grupo_ut = 'Alto'
+        valor2 = 0
+        grupo_2 = 'Baixo'
+        valor3 = limiar1
+        grupo_3 = 'Normal'
 
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
     if not visita:
@@ -209,16 +226,11 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
 
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-    # Preparar X com os atributos relevantes do utente (ex: valor do parâmetro)
-    X_utente = np.array([[valor]])  # ajustar conforme as features usadas no treino do RSF
-
     # Obter modelo RSF
     rsf = get_model(param_id, evento_id)
     if rsf is None:
         return HttpResponse("Modelo RSF não encontrado", status=404)
 
-    # Previsão da função de sobrevivência
-    surv_fn = rsf.predict_survival_function(X_utente)[0]
 
     # Gráfico
     person = PersonExt.objects.get(person_id=person_id)
@@ -233,23 +245,30 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
         'Alto': 'red'
     }
 
-    ax.step(surv_fn.x, surv_fn.y, where="post", color=cores.get(grupo_ut, 'black'), label='Utente')
-    
+    ax.step(rsf[0].x, rsf[0].y, where="post", color=cores.get(grupo_ut, 'black'), label=grupo_ut)
+
+    if param_id!=2 and param_id !=8:
+        rsf2 = get_model(param_id,valor2,evento_id)
+        ax.step(rsf2[0].x, rsf2[0].y, where="post", color=cores.get(grupo_2, 'black'), label=grupo_2)
+    if param_id!= 8:
+        rsf3 = get_model(param_id,valor3,evento_id)
+        ax.step(rsf3[0].x, rsf3[0].y, where="post", color=cores.get(grupo_3, 'black'), label=grupo_3)
     # Adicionar ponto do utente
     try:
-        prob = np.interp(tempo_utente, surv_fn.x, surv_fn.y)
+        prob = np.interp(tempo_utente, rsf[0].x, rsf[0].y)
     except:
         prob = 0.0
 
-    ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3)
+    ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3, label=f"Utente")
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
-    plt.title(f"RSF - {nome_param} ({grupo_ut}) - {person.first_name} {person.last_name}", fontsize=14)
+    plt.title(f"Aprendizagem Automática - {nome_param} ({grupo_ut}) - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel(f"Probabilidade de não ocorrer {evento_nome}")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
-
+    plt.legend()
+    
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
@@ -275,7 +294,7 @@ def graphicPatientGlobal(person_id):
     ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3, label=f"Utente")
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
-    plt.title(f"Grupo de Risco Clinico - {person.first_name} {person.last_name}", fontsize=14)
+    plt.title(f"Estatistico - Risco Clinico - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel(f"Probabilidade de não ocorrer um Evento")
     ax.grid(True, linestyle='--', alpha=0.5)
@@ -314,35 +333,31 @@ def graphicPatientGlobal_rsf(person_id):
 
     # Preparar X do utente (ajusta conforme as features usadas no treino do modelo global)
     valor = medicao.value_as_number
-    X_utente = np.array([[valor]])
-
-    # Prever função de sobrevivência
-    surv_fn = rsf.predict_survival_function(X_utente)[0]
 
     # Calcular probabilidade estimada via interpolação
     try:
-        prob = np.interp(tempo_utente, surv_fn.x, surv_fn.y)
+        prob = np.interp(tempo_utente, rsf[0].x, rsf[0].y)
     except:
         prob = 0.0
 
     # Gráfico
     person = PersonExt.objects.get(person_id=person_id)
     fig, ax = plt.subplots(figsize=(7, 5))
-    ax.step(surv_fn.x, surv_fn.y, where="post", color='blue', label='Utente')
+    ax.step(rsf[0].x, rsf[0].y, where="post", color='blue', label='Utente')
 
     ax.axhspan(0.6, 1, color='green', alpha=0.2)
     ax.axhspan(0.4, 0.6, color='yellow', alpha=0.2)
     ax.axhspan(0, 0.4, color='red', alpha=0.2)
 
-    ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3)
+    ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3, label=f"Utente")
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
-    plt.title(f"Grupo de Risco Clínico - {person.first_name} {person.last_name}", fontsize=14)
+    plt.title(f"Aprendizagem Automática - Risco Clínico - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel("Probabilidade de não ocorrer um Evento")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
-
+    plt.legend()
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)

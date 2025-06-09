@@ -58,9 +58,9 @@ def predict_survival(model,time):
             prob = np.interp(time, model[0].x, model[0].y)
         except:
             prob = 0.5
-            print(model)
-            print("FKSAHFIASHFAILSJFLIASFJLAIFJLAIFJAILSJFAILSHFAÇLSIFHALKSUDHASULKHDKUL")
+
         return prob
+    
 def trainModels():
     global _csv_data, MODELOS_KM,MODELOS_RSF,LIMIARES
 

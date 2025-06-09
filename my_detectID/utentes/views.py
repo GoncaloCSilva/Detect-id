@@ -4,13 +4,13 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import getCSV, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
+from utentes.hd_utils import getCSV, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO, StringIO, TextIOWrapper
-from .hd_graficos import graphicPatientGlobal, graphicPatient_km
+from .hd_graficos import graphicPatient_rsf, graphicPatientGlobal, graphicPatient_km, graphicPatientGlobal_rsf
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -47,6 +47,11 @@ def patients(request):
     patients = PersonExt.objects.all()
     patients_info = []
     time_prev = 24
+
+    if getCurrentModel() == 1:
+        selected_model = 'km'   
+    else:
+        selected_model = 'rsf'
     
     # For each patient, retrieve the latest measurement of each clinical parameter,
     # estimate deterioration risk using survival models,
@@ -66,8 +71,8 @@ def patients(request):
 
         global_model= get_global_model()
 
-        global_risk = global_model.predict(time_patient)
-        global_risk_prev = global_model.predict(time_patient + time_prev)
+        global_risk = predict_survival(global_model, time_patient)
+        global_risk_prev = predict_survival(global_model, time_patient + time_prev)
 
         if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
         elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
@@ -88,7 +93,7 @@ def patients(request):
             last_measurements[key] = measurement.value_as_number if measurement else None
 
             model = get_model(concept_id,measurement.value_as_number,1)
-            prev = model.predict(time_patient + time_prev)
+            prev = predict_survival(model, time_patient + time_prev)
             
             if prev > 0.6: prob_measurements[key] =  "Estável"
             elif prev > 0.4: prob_measurements[key] =  "Moderado"
@@ -111,7 +116,8 @@ def patients(request):
     return render(request, 'utentes.html', {
         'mymembers': page_obj,
         'temp_prev' : time_prev,
-        'active_page': 'patients'
+        'active_page': 'patients',
+        'selected_model': selected_model
     })
 
 def patient(request, person_id):
@@ -122,7 +128,20 @@ def patient(request, person_id):
     @param person_id: Unique identifier of the patient (utente)
     @return: Renders the 'utente.html' template with the corresponding patient data
     """
+    model = request.GET.get('model') 
 
+    
+    if model == 'km':
+        setCurrentModel(1)
+        selected_model = 'km'
+    elif model == 'rsf':
+        setCurrentModel(2)
+        selected_model = 'rsf'
+    elif getCurrentModel() == 1:
+        selected_model = 'km'
+    else:
+        selected_model = 'rsf'
+    
     global_model= get_global_model()
 
     patient = PersonExt.objects.get(person_id=person_id)
@@ -140,7 +159,7 @@ def patient(request, person_id):
         visit = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
         time_patient = (dt - visit.visit_start_datetime).total_seconds() / 3600
 
-        global_risk = global_model.predict(time_patient)
+        global_risk = predict_survival(global_model, time_patient)
         if dt not in grouped:
             grouped[dt] = {
                 'risk': '', 
@@ -169,7 +188,8 @@ def patient(request, person_id):
         'grouped_measurements': grouped,
         'notes': notes,
         'servico': service,
-        'event_filter':event_filter
+        'event_filter':event_filter,
+        'selected_model': selected_model
     }
     return HttpResponse(template.render(context, request))
 
@@ -401,13 +421,19 @@ def listPatients(request):
     event_filter = request.GET.get("event")
     temp_prev = request.GET.get("temp_prev")
     search_query = request.GET.get('search')
-    model = request.GET.get('model', 'km') 
+    model = request.GET.get('model') 
 
     
     if model == 'km':
         setCurrentModel(1)
-    else:
+        selected_model = 'km'
+    elif model == 'rsf':
         setCurrentModel(2)
+        selected_model = 'rsf'
+    elif getCurrentModel() == 1:
+        selected_model = 'km'
+    else:
+        selected_model = 'rsf'
 
     CARE_SITE_MAP = {
         1: "Urgência",                      
@@ -500,7 +526,8 @@ def listPatients(request):
         "event_filter": event_filter,
         "temp_prev":temp_prev,
         "search_query":search_query,
-        'active_page': 'patients'
+        'active_page': 'patients',
+        'selected_model': selected_model
     })
 
 @csrf_exempt
@@ -553,11 +580,30 @@ def graphicView(request, person_id):
 
     parameter = request.GET.get("parametro")  
     event = request.GET.get("evento")
-   
-    if parameter == "RC":
-        return graphicPatientGlobal(person_id)
+    model = request.GET.get('model')
+
+    if model == 'km':
+        setCurrentModel(1)
+        if parameter == "RC":
+            return graphicPatientGlobal(person_id)
     
-    return graphicPatient_km(person_id, parameter, event)
+        return graphicPatient_km(person_id, parameter, event)
+    elif model == 'rsf':
+        setCurrentModel(2)
+        if parameter == "RC":
+            return graphicPatientGlobal_rsf(person_id)
+    
+        return graphicPatient_rsf(person_id, parameter, event)
+    elif getCurrentModel() == 1:
+        if parameter == "RC":
+            return graphicPatientGlobal(person_id)
+    
+        return graphicPatient_km(person_id, parameter, event)
+    else:
+        if parameter == "RC":
+            return graphicPatientGlobal_rsf(person_id)
+    
+        return graphicPatient_rsf(person_id, parameter, event)
 
 
 
