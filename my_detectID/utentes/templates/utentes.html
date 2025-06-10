@@ -434,6 +434,7 @@
     const modal = document.getElementById("myModal");
     const graficoImagem = document.getElementById("graficoImagem");
     const closeModal = document.getElementById("closeModal");
+    const timePrev = document.getElementById("temp_prev").value;
 
 
     document.querySelectorAll(".clickable").forEach(td => {
@@ -447,7 +448,7 @@
           var modele = 'rsf';
         }   
 
-        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}`;
+        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}&temp_prev=${timePrev}`;
 
         modal.style.display = "block";
       });

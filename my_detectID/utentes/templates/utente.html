@@ -209,7 +209,7 @@
       <thead>
         <tr>
           <th style="width: 130px;">Data/Hora</th>
-<th title="Risco Clínico">
+<th title="Risco Clínico" style="width: 90px;">
   RC
   <div style="font-size: 0.75em; color: #666;">categorias</div>
 </th>
@@ -318,19 +318,19 @@
 
     <div id="loading" style="display:none; font-weight:bold;">Carregando gráfico...</div>
 
-    
-    <img id="graficoImagem"
-    src="{% url 'graphic_view' mymember.person_id %}?parametro={{ request.GET.parametro|default:'4' }}&evento={{ request.GET.evento|default:'1' }}"
-    alt="Gráfico do utente"
-    style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
+  <img id="graficoImagem"
+       src="{% url 'graphic_view' mymember.person_id %}?parametro={{ request.GET.parametro|default:'4' }}&evento={{ request.GET.evento|default:'1' }}"
+       alt="Gráfico do utente"
+       style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
 
+  <button onclick="printChart()" class="btn btn-edit" style="margin-top: 10px; float: right;">Imprimir Gráfico</button>
 
-    <br><br>
-    <div style="display: flex; gap: 12px; margin-top: 20px;">
-      <a href="/utentes/editarUtente/{{ mymember.person_id }}" class="btn btn-edit same-width-btn">Editar Utente</a>
-      <button onclick="openPopup()" class="btn btn-delete same-width-btn">Remover Utente</button>
-    </div>
+  <br><br>
+  <div style="display: flex; gap: 12px; margin-top: 20px;">
+    <a href="/utentes/editarUtente/{{ mymember.person_id }}" class="btn btn-edit same-width-btn">Editar Utente</a>
+    <button onclick="openPopup()" class="btn btn-delete same-width-btn">Remover Utente</button>
   </div>
+</div>
 
 
 
@@ -383,9 +383,31 @@
 
     img.src = novaUrl;
   }
+function printChart() {
+  const imgSrc = document.getElementById('graficoImagem').src;
+  const printWindow = window.open('', '', 'width=800,height=600');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Imprimir Gráfico</title>
+        <style>
+          body { text-align: center; margin: 0; }
+          img { max-width: 100%; height: auto; }
+        </style>
+      </head>
+      <body>
+        <img src="${imgSrc}" alt="Gráfico para imprimir" />
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() { window.close(); };
+          };
+        <\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
   </script>
-
-
-
 </div>
 {% endblock %}

@@ -80,6 +80,9 @@ def trainModels():
             MODELOS_RSF = pickle.load(f)
         with open("./pickle/km_modelos.pkl", "rb") as f:
             MODELOS_KM = pickle.load(f)
+        _csv_data = getCSV()
+        _csv_data['datetime'] = pd.to_datetime(_csv_data['datetime'])
+        _csv_data = _csv_data.sort_values(by=["person_id", "datetime"])
     else:
         print("A Carregar o ficheiro CSV...")
 

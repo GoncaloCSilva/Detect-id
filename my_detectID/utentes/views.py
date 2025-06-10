@@ -581,29 +581,30 @@ def graphicView(request, person_id):
     parameter = request.GET.get("parametro")  
     event = request.GET.get("evento")
     model = request.GET.get('model')
+    timePrev = request.GET.get("temp_prev",None)
 
     if model == 'km':
         setCurrentModel(1)
         if parameter == "RC":
-            return graphicPatientGlobal(person_id)
+            return graphicPatientGlobal(person_id,timePrev)
     
-        return graphicPatient_km(person_id, parameter, event)
+        return graphicPatient_km(person_id, parameter, event,timePrev)
     elif model == 'rsf':
         setCurrentModel(2)
         if parameter == "RC":
-            return graphicPatientGlobal_rsf(person_id)
+            return graphicPatientGlobal_rsf(person_id,timePrev)
     
-        return graphicPatient_rsf(person_id, parameter, event)
+        return graphicPatient_rsf(person_id, parameter, event,timePrev)
     elif getCurrentModel() == 1:
         if parameter == "RC":
-            return graphicPatientGlobal(person_id)
+            return graphicPatientGlobal(person_id,timePrev)
     
-        return graphicPatient_km(person_id, parameter, event)
+        return graphicPatient_km(person_id, parameter, event,timePrev)
     else:
         if parameter == "RC":
-            return graphicPatientGlobal_rsf(person_id)
+            return graphicPatientGlobal_rsf(person_id,timePrev)
     
-        return graphicPatient_rsf(person_id, parameter, event)
+        return graphicPatient_rsf(person_id, parameter, event,timePrev)
 
 
 

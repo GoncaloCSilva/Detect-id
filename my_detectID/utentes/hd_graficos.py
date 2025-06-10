@@ -39,7 +39,7 @@ from .models import Measurement, PersonExt, VisitOccurrence
     # 		        	    - 93.5 - 95.5	- Normal Baixo
     # 		        	    - >= 95.5	- Normal
     
-def graphicPatient_km(person_id, param_id, evento_id):
+def graphicPatient_km(person_id, param_id, evento_id, tempoPrev = None):
     """
     @brief Gera gráfico de sobrevivência para qualquer parâmetro clínico com destaque para o utente.
     @param person_id ID do utente.
@@ -141,6 +141,12 @@ def graphicPatient_km(person_id, param_id, evento_id):
     prob = kmf.predict(tempo_utente)
     ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3, label=f"Utente")   
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+    
+    if tempoPrev is not None:
+        tempoPrev = int(tempoPrev)
+        prob = kmf.predict(tempo_utente+tempoPrev)
+        ax.scatter(tempo_utente+tempoPrev, prob, color='yellow', s=100, zorder=3, label=f"Previsão")   
+        ax.annotate(f"{prob:.2f}", (tempo_utente+tempoPrev, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
     plt.title(f"Estatistico - {nome_param} ({grupo_ut}) - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
@@ -154,7 +160,7 @@ def graphicPatient_km(person_id, param_id, evento_id):
     buffer.seek(0)
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
-def graphicPatient_rsf(person_id, param_id, evento_id):
+def graphicPatient_rsf(person_id, param_id, evento_id,tempoPrev = None):
     """
     @brief Gera gráfico de sobrevivência RSF para qualquer parâmetro clínico com destaque para o utente.
     @param person_id ID do utente.
@@ -260,6 +266,17 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
     ax.scatter(tempo_utente, prob, color=cores[grupo_ut], s=100, zorder=3, label=f"Utente")
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
+    if tempoPrev is not None:
+        tempoPrev = int(tempoPrev)
+        try:
+            prob = np.interp(tempo_utente+tempoPrev, rsf[0].x, rsf[0].y)
+        except:
+            prob = 0.0
+        
+        ax.scatter(tempo_utente+tempoPrev, prob, color='yellow', s=100, zorder=3, label=f"Previsão")
+        ax.annotate(f"{prob:.2f}", (tempo_utente+tempoPrev, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
+
     plt.title(f"Aprendizagem Automática - {nome_param} ({grupo_ut}) - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel(f"Probabilidade de não ocorrer {evento_nome}")
@@ -274,7 +291,7 @@ def graphicPatient_rsf(person_id, param_id, evento_id):
 
 
 
-def graphicPatientGlobal(person_id):
+def graphicPatientGlobal(person_id,tempoPrev=None):
     kmf = get_global_model()
 
     visita = VisitOccurrence.objects.filter(person_id=person_id).order_by('-visit_start_datetime').first()
@@ -292,6 +309,14 @@ def graphicPatientGlobal(person_id):
     ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3, label=f"Utente")
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
+       
+    if tempoPrev is not None:
+        tempoPrev = int(tempoPrev)
+        prob = kmf.predict(tempo_utente+tempoPrev)
+        ax.scatter(tempo_utente+tempoPrev, prob, color='yellow', s=100, zorder=3, label=f"Previsão")   
+        ax.annotate(f"{prob:.2f}", (tempo_utente+tempoPrev, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
+
     plt.title(f"Estatistico - Risco Clinico - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
     ax.set_ylabel(f"Probabilidade de não ocorrer um Evento")
@@ -305,7 +330,7 @@ def graphicPatientGlobal(person_id):
     return HttpResponse(buffer.getvalue(), content_type='image/png')
 
 
-def graphicPatientGlobal_rsf(person_id):
+def graphicPatientGlobal_rsf(person_id,tempoPrev=None):
     """
     @brief Gera gráfico de sobrevivência RSF global com destaque para o utente.
     @param person_id ID do utente.
@@ -349,6 +374,17 @@ def graphicPatientGlobal_rsf(person_id):
 
     ax.scatter(tempo_utente, prob, color='blue', s=100, zorder=3, label=f"Utente")
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
+    if tempoPrev is not None:
+        tempoPrev = int(tempoPrev)
+        try:
+            prob = np.interp(tempo_utente+tempoPrev, rsf[0].x, rsf[0].y)
+        except:
+            prob = 0.0
+        
+        ax.scatter(tempo_utente+tempoPrev, prob, color='yellow', s=100, zorder=3, label=f"Previsão")
+        ax.annotate(f"{prob:.2f}", (tempo_utente+tempoPrev, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
+
 
     plt.title(f"Aprendizagem Automática - Risco Clínico - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
