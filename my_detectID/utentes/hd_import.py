@@ -4,7 +4,7 @@ from datetime import datetime
 from utentes.hd_utils import getCSV
 from utentes.models import MeasurementExt, Person, Measurement, ConditionOccurrence, Note, Observation, VisitOccurrence, PersonExt
 
-df = getCSV()
+df = getCSV(importBD=True)
 # Inserir dados na tabela Person
 pessoas_adicionadas = set()
 for _, row in df.iterrows():
@@ -36,14 +36,14 @@ measurement_concepts = {
 }
 
 parametros = {
-    1: [90, 95, 98],
-    2: [1, 2, 3],
-    3: [60, 100, 120],
-    4: [100.5, 119.5, 134.5],
-    5: [60, 80, 90],
-    6: [35.5, 37.5, 38.5],
-    7: [8, 13, 15],
-    8: [1,2,3],
+    1: [90, 98],
+    2: [0,1],
+    3: [60,99],
+    4: [100, 130],
+    5: [60, 90],
+    6: [35, 38],
+    7: [8, 15],
+    8: [0,1],
     }
 
 for _, row in df.iterrows():
@@ -54,7 +54,7 @@ for _, row in df.iterrows():
             value_as_number=row[field],
             measurement_datetime=row["datetime"],
             range_low = parametros[concept_id][0],
-            range_high = parametros[concept_id][2],
+            range_high = parametros[concept_id][1],
             range_mid = parametros[concept_id][1],
             time_field= row["Tempo"]
         )

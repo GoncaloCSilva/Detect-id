@@ -242,7 +242,7 @@ def get_global_model():
         return MODELOS_RSF.get("global")
 
 
-def getCSV(file_path = "detectid.csv"):
+def getCSV(file_path = "detectid.csv", importBD=False):
 
     df = pd.read_csv(file_path)
 
@@ -292,7 +292,8 @@ def getCSV(file_path = "detectid.csv"):
     df["Mortalidade"].fillna(0, inplace=True)
 
     # Manter apenas a última medição por pessoa
-    df = df.groupby("person_id", as_index=False).last()
+    if not importBD:
+        df = df.groupby("person_id", as_index=False).last()
 
 
 

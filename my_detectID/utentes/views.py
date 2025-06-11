@@ -91,7 +91,7 @@ def patients(request):
                 .first()
             )
             last_measurements[key] = measurement.value_as_number if measurement else None
-
+            print(f"DEBUG -> {concept_id}, {measurement.value_as_number}, {time_patient} ,{patient.person_id}")
             model = get_model(concept_id,measurement.value_as_number,1)
             prev = predict_survival(model, time_patient + time_prev)
             
@@ -130,6 +130,17 @@ def patient(request, person_id):
     """
     model = request.GET.get('model') 
 
+    patient = PersonExt.objects.get(person_id=person_id)
+    if request.method == "POST":
+        patient.first_name = request.POST.get("firstname")
+        patient.last_name = request.POST.get("lastname")
+        patient.birthday = request.POST.get("birthday")
+        patient.gender_concept_id = request.POST.get("gender")
+        patient.person_source_value = request.POST.get("NumeroUtente")
+        patient.save()
+
+        return redirect("/utentes/")
+
     
     if model == 'km':
         setCurrentModel(1)
@@ -144,7 +155,6 @@ def patient(request, person_id):
     
     global_model= get_global_model()
 
-    patient = PersonExt.objects.get(person_id=person_id)
     condition = ConditionOccurrence.objects.get(person_id=person_id)
     age = patient.idade()
     event_filter = request.GET.get('evento')
@@ -374,16 +384,16 @@ def newMeasurement(request, person_id):
     if request.method == "POST":
         dateTime = datetime.now()
 
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=dateTime)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=dateTime)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=dateTime, range_low=90, range_high=98)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=dateTime, range_low=0, range_high=1)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=dateTime, range_low=60, range_high=99)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=dateTime, range_low=100, range_high=130)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=dateTime, range_low=60, range_high=90)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=dateTime, range_low=35, range_high=38)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=dateTime, range_low=8, range_high=15)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=dateTime, range_low=0, range_high=1)
 
-    return redirect('editarUtente', person_id=person_id)
+    return redirect('patient', person_id=person_id)
 
 
 def removePatient(request, person_id):
