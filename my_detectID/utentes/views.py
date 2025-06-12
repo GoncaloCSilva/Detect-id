@@ -1,10 +1,11 @@
+from collections import defaultdict
 import csv
 from django.contrib import messages
 from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import getCSV, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
+from utentes.hd_utils import getCSV, getCurrentModel, getEvento, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
@@ -65,52 +66,53 @@ def patients(request):
 
         # Time relative to patient (in hours)
         visit = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
-        measurement = Measurement.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
-        
-        time_patient = (measurement.measurement_datetime - visit.visit_start_datetime).total_seconds() / 3600
-
-        global_model= get_global_model()
-
-        global_risk = predict_survival(global_model, time_patient)
-        global_risk_prev = predict_survival(global_model, time_patient + time_prev)
-
-        if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
-        elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
-        else: global_risk_measurements[patient.person_id] =  "Emergência"
-
-        if global_risk_prev > 0.6: global_risk_measurements_prev[patient.person_id] =  "Estável"
-        elif global_risk_prev > 0.4: global_risk_measurements_prev[patient.person_id] =  "Moderado"
-        else: global_risk_measurements_prev[patient.person_id] =  "Emergência"
-    
-
-        for key, concept_id in CONCEPT_IDS.items():
-            measurement = (
-                Measurement.objects
-                .filter(person_id=patient.person_id, measurement_concept_id=concept_id)
-                .order_by('-measurement_datetime')
-                .first()
-            )
-            last_measurements[key] = measurement.value_as_number if measurement else None
-            print(f"DEBUG -> {concept_id}, {measurement.value_as_number}, {time_patient} ,{patient.person_id}")
-            model = get_model(concept_id,measurement.value_as_number,1)
-            prev = predict_survival(model, time_patient + time_prev)
+        visit_end = VisitOccurrence.objects.filter(person_id=patient.person_id,visit_end_datetime__isnull=False).exists()
+        if  not visit_end:
+            measurement = Measurement.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
-            if prev > 0.6: prob_measurements[key] =  "Estável"
-            elif prev > 0.4: prob_measurements[key] =  "Moderado"
-            else: prob_measurements[key] =  "Emergência"
+            time_patient = (measurement.measurement_datetime - visit.visit_start_datetime).total_seconds() / 3600
 
-        patients_info.append({
-            'person': patient,
-            **last_measurements,
-            'prev' : prob_measurements,
-            'global':global_risk_measurements,
-            'global_prev':global_risk_measurements_prev
-        })
+            global_model= get_global_model()
+
+            global_risk = predict_survival(global_model, time_patient)
+            global_risk_prev = predict_survival(global_model, time_patient + time_prev)
+
+            if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
+            elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
+            else: global_risk_measurements[patient.person_id] =  "Emergência"
+
+            if global_risk_prev > 0.6: global_risk_measurements_prev[patient.person_id] =  "Estável"
+            elif global_risk_prev > 0.4: global_risk_measurements_prev[patient.person_id] =  "Moderado"
+            else: global_risk_measurements_prev[patient.person_id] =  "Emergência"
+        
+
+            for key, concept_id in CONCEPT_IDS.items():
+                measurement = (
+                    Measurement.objects
+                    .filter(person_id=patient.person_id, measurement_concept_id=concept_id)
+                    .order_by('-measurement_datetime')
+                    .first()
+                )
+                last_measurements[key] = measurement.value_as_number if measurement else None
+                model = get_model(concept_id,measurement.value_as_number,1)
+                prev = predict_survival(model, time_patient + time_prev)
+                
+                if prev > 0.6: prob_measurements[key] =  "Estável"
+                elif prev > 0.4: prob_measurements[key] =  "Moderado"
+                else: prob_measurements[key] =  "Emergência"
+
+            patients_info.append({
+                'person': patient,
+                **last_measurements,
+                'prev' : prob_measurements,
+                'global':global_risk_measurements,
+                'global_prev':global_risk_measurements_prev
+            })
 
 
-        paginator = Paginator(patients_info, 10)  
-        page_number = request.GET.get("page") or 1
-        page_obj = paginator.get_page(page_number)
+            paginator = Paginator(patients_info, 10)  
+            page_number = request.GET.get("page") or 1
+            page_obj = paginator.get_page(page_number)
 
     
     return render(request, 'utentes.html', {
@@ -189,9 +191,26 @@ def patient(request, person_id):
 
     service = VisitOccurrence.objects.filter(person_id=person_id)
     notes = Note.objects.filter(person_id=person_id)
+    # Filtrar observações da pessoa
+    observacoes = Observation.objects.filter(person_id=person_id).order_by('-observation_datetime')
+
+    # Agrupar por timestamp e juntar os eventos (usando defaultdict para lista)
+    eventos_por_data = defaultdict(list)
+    for obs in observacoes:
+        data_hora = obs.observation_datetime
+        evento = getEvento(obs.observation_concept_id)
+        eventos_por_data[data_hora].append(evento)
+
+    # Reorganizar como lista de dicionários para usar no template
+    eventos = [
+        {"timestamp": data, "lista_eventos": eventos_por_data[data]}
+        for data in sorted(eventos_por_data.keys(), reverse=True)
+    ]
+
 
     template = loader.get_template('utente.html')
     context = {
+        'eventos': eventos,
         'mymember': patient,
         'mycondition': condition,
         'idade': age,
@@ -232,18 +251,17 @@ def addPatient(request):
         else: 
             if request.POST.get("Serviço") == "Internamento": servico = 2 
             else: servico = 3
-        spO2 = request.POST.get("SpO2")
-        o2 = request.POST.get("NecessidadeO2")
-        heartRate = request.POST.get("FrequenciaCardiaca")
-        tAS = request.POST.get("TASistolica")
-        tAD = request.POST.get("TADiastolica")
-        temperature = request.POST.get("Temperatura")
-        gcs = request.POST.get("NívelConsciencia")
-        pain = request.POST.get("Dor")
+        spO2 = request.POST.get("spo2")
+        o2 = request.POST.get("necessidade_o2")
+        heartRate = request.POST.get("fc")
+        tAS = request.POST.get("ta_sistolica")
+        tAD = request.POST.get("ta_diastolica")
+        temperature = request.POST.get("temperatura")
+        gcs = request.POST.get("nivel_consciencia")
+        pain = request.POST.get("dor")
 
-        date= date.today()
-        dateTime=timezone.now()
-
+        dateTime=datetime.now()
+        date = dateTime.date()
         person = PersonExt.objects.create(
             gender_concept_id=int(gender),
             person_source_value=numeroUtente,
@@ -274,65 +292,14 @@ def addPatient(request):
             )
 
         # Medições
-        if spO2:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=1,  
-                value_as_number=Decimal(spO2),
-                measurement_datetime=dateTime
-            )
-        if o2:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=2, 
-                value_as_number=int(o2),
-                measurement_datetime=dateTime
-            )
-        if heartRate:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=3,  
-                value_as_number=Decimal(heartRate),
-                measurement_datetime=dateTime
-            )
-        
-        if tAS:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=4,
-                value_as_number=Decimal(tAS),
-                measurement_datetime=dateTime
-            )
-        if tAD:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=5,  
-                value_as_number=Decimal(tAD),
-                measurement_datetime=dateTime
-            )
-        if temperature:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=6,  
-                value_as_number=Decimal(temperature),
-                measurement_datetime=dateTime
-                )
-
-        if gcs:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=7,  
-                value_as_number=Decimal(gcs),
-                measurement_datetime=dateTime
-            )
-        if pain:
-            Measurement.objects.create(
-                person=person,
-                measurement_concept_id=8,  
-                value_as_number=int(pain),
-                measurement_datetime=dateTime
-            )
-
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=1, value_as_number=Decimal(spO2), measurement_datetime=dateTime, range_low=90, range_high=98)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=2, value_as_number=int(o2), measurement_datetime=dateTime, range_low=0, range_high=1)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=3, value_as_number=Decimal(heartRate), measurement_datetime=dateTime, range_low=60, range_high=99)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=4, value_as_number=Decimal(tAS), measurement_datetime=dateTime, range_low=100, range_high=130)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=5, value_as_number=Decimal(tAD), measurement_datetime=dateTime, range_low=60, range_high=90)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=6, value_as_number=Decimal(temperature), measurement_datetime=dateTime, range_low=35, range_high=38)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=7, value_as_number=Decimal(gcs), measurement_datetime=dateTime, range_low=8, range_high=15)
+        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=8, value_as_number=Decimal(pain), measurement_datetime=dateTime, range_low=0, range_high=1)
 
         VisitOccurrence.objects.create(
             person=person,
@@ -370,9 +337,46 @@ def editPatient(request,person_id):
         patient.person_source_value = request.POST.get("NumeroUtente")
         patient.save()
 
-        return redirect("/utentes/")
+        return redirect('patient', person_id=person_id)
     
-    return render(request, "editarUtente.html", {"utente": patient})
+    return redirect('patient', person_id=person_id)
+
+
+def registEvent(request,person_id):
+    """
+    @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
+
+    @param request: HttpRequest object. Can be GET (to show the form) or POST (to save changes).
+    @param person_id: ID of the patient to be edited.
+    @return: Redirects to the patient list upon successful update, or renders the edit form if GET request.
+    """
+    patient = PersonExt.objects.get(person_id=person_id)
+    if request.method == "POST":
+        dateTime = datetime.now()
+
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=dateTime, range_low=90, range_high=98)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=dateTime, range_low=0, range_high=1)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=dateTime, range_low=60, range_high=99)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=dateTime, range_low=100, range_high=130)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=dateTime, range_low=60, range_high=90)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=dateTime, range_low=35, range_high=38)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=dateTime, range_low=8, range_high=15)
+        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=dateTime, range_low=0, range_high=1)
+
+        eventos_selecionados = request.POST.getlist('eventos')
+        for evento in eventos_selecionados:
+            Observation.objects.create(
+                person_id=person_id,
+                observation_concept_id=int(evento),
+                observation_datetime=dateTime
+            )
+            print(f"DEBUG -> Evento {evento} adicionado para o paciente {person_id}.")
+
+
+        return redirect('patient', person_id=person_id)
+    
+    return render(request, "registarEvento.html", {"utente": patient})
+
 
 def newMeasurement(request, person_id):
     """
@@ -407,13 +411,10 @@ def removePatient(request, person_id):
     patient = PersonExt.objects.get(person_id=person_id)
 
     if request.method == "POST":
-        Measurement.objects.filter(person_id=person_id).delete()
-        ConditionOccurrence.objects.filter(person_id=person_id).delete()
-        Note.objects.filter(person_id=person_id).delete()
-        Observation.objects.filter(person_id=person_id).delete()
-        VisitOccurrence.objects.filter(person_id=person_id).delete()
-
-        patient.delete()
+        dateTime = datetime.now()
+        visit = VisitOccurrence.objects.filter(person_id=person_id).last()
+        visit.visit_end_datetime = dateTime
+        visit.save()
         return redirect("/utentes/")
 
     return render(request, "details.html", {"mymember": patient})
@@ -484,46 +485,48 @@ def listPatients(request):
 
         # Tempo relativo do utente (em horas)
         visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
-        medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
-        
-        tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
-
-        global_model= get_global_model()
-
-        global_risk = predict_survival(global_model, tempo_utente)
-        global_risk_prev = predict_survival(global_model,tempo_utente + int(temp_prev))
-
-        if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
-        elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
-        else: global_risk_measurements[utente.person_id] =  "Emergência"
-
-        if global_risk_prev > 0.6: global_risk_measurements_prev[utente.person_id] =  "Estável"
-        elif global_risk_prev > 0.4: global_risk_measurements_prev[utente.person_id] =  "Moderado"
-        else: global_risk_measurements_prev[utente.person_id] =  "Emergência"
-    
-
-        for key, concept_id in CONCEPT_IDS.items():
-            measurement = (
-                Measurement.objects
-                .filter(person_id=utente.person_id, measurement_concept_id=concept_id)
-                .order_by('-measurement_datetime')
-                .first()
-            )
-            last_measurements[key] = measurement.value_as_number if measurement else None
-            model = get_model(concept_id,measurement.value_as_number,int(event_filter))
-            prev = predict_survival(global_model,tempo_utente + int(temp_prev))
+        visit_end = VisitOccurrence.objects.filter(person_id=utente.person_id,visit_end_datetime__isnull=False).exists()
+        if not visit_end:
+            medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
-            if prev > 0.6: prob_measurements[key] =  "Estável"
-            elif prev > 0.4: prob_measurements[key] =  "Moderado"
-            else: prob_measurements[key] =  "Emergência"
+            tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
-        utentes_info.append({
-            'person': utente,
-            **last_measurements,
-            'prev' : prob_measurements,
-            'global':global_risk_measurements,
-            'global_prev':global_risk_measurements_prev
-        })
+            global_model= get_global_model()
+
+            global_risk = predict_survival(global_model, tempo_utente)
+            global_risk_prev = predict_survival(global_model,tempo_utente + int(temp_prev))
+
+            if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
+            elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
+            else: global_risk_measurements[utente.person_id] =  "Emergência"
+
+            if global_risk_prev > 0.6: global_risk_measurements_prev[utente.person_id] =  "Estável"
+            elif global_risk_prev > 0.4: global_risk_measurements_prev[utente.person_id] =  "Moderado"
+            else: global_risk_measurements_prev[utente.person_id] =  "Emergência"
+        
+
+            for key, concept_id in CONCEPT_IDS.items():
+                measurement = (
+                    Measurement.objects
+                    .filter(person_id=utente.person_id, measurement_concept_id=concept_id)
+                    .order_by('-measurement_datetime')
+                    .first()
+                )
+                last_measurements[key] = measurement.value_as_number if measurement else None
+                model = get_model(concept_id,measurement.value_as_number,int(event_filter))
+                prev = predict_survival(global_model,tempo_utente + int(temp_prev))
+                
+                if prev > 0.6: prob_measurements[key] =  "Estável"
+                elif prev > 0.4: prob_measurements[key] =  "Moderado"
+                else: prob_measurements[key] =  "Emergência"
+
+            utentes_info.append({
+                'person': utente,
+                **last_measurements,
+                'prev' : prob_measurements,
+                'global':global_risk_measurements,
+                'global_prev':global_risk_measurements_prev
+            })
     
     paginator = Paginator(utentes_info, 10)  
     page_number = request.GET.get("page") or 1

@@ -48,15 +48,13 @@ parametros = {
 
 for _, row in df.iterrows():
     for field, concept_id in measurement_concepts.items():
-        MeasurementExt.objects.create(
+        Measurement.objects.create(
             person_id=row["person_id"],
             measurement_concept_id=concept_id,
             value_as_number=row[field],
             measurement_datetime=row["datetime"],
             range_low = parametros[concept_id][0],
-            range_high = parametros[concept_id][1],
-            range_mid = parametros[concept_id][1],
-            time_field= row["Tempo"]
+            range_high = parametros[concept_id][1]
         )
 
 print("Medições inseridas!")
@@ -114,12 +112,15 @@ events = {
 
 for _, row in df.iterrows():
     for field, concept_id in events.items():
-        Observation.objects.create(
-            person_id=row["person_id"],
-            observation_concept_id=concept_id,
-            value_as_number=row[field],
-            observation_datetime=row["datetime"]
-        )
+        if row[field] == 1:
+            Observation.objects.create(
+                person_id=row["person_id"],
+                observation_concept_id=concept_id,
+                value_as_number=row[field],
+                observation_datetime=row["datetime"]
+            )
+            print(f"Observação {field} inserida para o utente {row['person_id']} com o valor {row[field]}")
+            
 
 print("Observações inseridas!")
 

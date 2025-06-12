@@ -42,7 +42,7 @@ DROP TABLE IF EXISTS cdmdatabaseschema.procedure_occurrence CASCADE;
 DROP TABLE IF EXISTS cdmdatabaseschema.source_to_concept_map CASCADE;
 DROP TABLE IF EXISTS cdmdatabaseschema.vocabulary CASCADE;
 DROP TABLE IF EXISTS cdmdatabaseschema.person_ext CASCADE;
-
+DROP TABLE IF EXISTS cdmdatabaseschema.MEASUREMENT_EXT CASCADE;
 -- PERSON
 CREATE TABLE cdmDatabaseSchema.PERSON (
 	person_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -100,7 +100,15 @@ CREATE TABLE cdmDatabaseSchema.MEASUREMENT (
 	person_id integer NOT NULL,
 	measurement_concept_id integer NOT NULL,
 	value_as_number NUMERIC NOT NULL,
-	measurement_datetime timestamp NOT NULL
+	measurement_datetime timestamp NOT NULL,
+	range_low NUMERIC NOT NULL,
+	range_high NUMERIC NOT NULL
+);
+
+-- MEASUREMENT
+CREATE TABLE cdmDatabaseSchema.MEASUREMENT_EXT (
+    measurement_ptr_id  integer PRIMARY KEY,
+	state_id integer
 );
 
 -- FOREIGN KEYS
