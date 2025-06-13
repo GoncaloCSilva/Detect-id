@@ -187,9 +187,13 @@
   <label for="service">Filtrar por:</label>
   <select name="service" id="service">
     <option value="">Todos</option>
-    <option value="Urgência" {% if service_filter == "Urgência" %}selected{% endif %}>Urgência</option>
-    <option value="Internamento" {% if service_filter == "Internamento" %}selected{% endif %}>Internamento</option>
-    <option value="UCI" {% if service_filter == "UCI" %}selected{% endif %}>UCI</option>
+    <option value="Urgência" {% if service_filter == "Urgência" %}selected{% endif %}>Serviço Urgência</option>
+    <option value="Internamento" {% if service_filter == "Internamento" %}selected{% endif %}>Serviço Internamento</option>
+    <option value="UCI" {% if service_filter == "UCI" %}selected{% endif %}>Serviço UCI</option>
+    <option value="Estável" {% if service_filter == "Estável" %}selected{% endif %}>Estado Estável</option>
+    <option value="Moderado" {% if service_filter == "Moderado" %}selected{% endif %}>Estado Moderado</option>
+    <option value="Emergência" {% if service_filter == "Emergência" %}selected{% endif %}>Estado Emergência</option>
+    
   </select>
 
   <label for="order">Ordenar por:</label>

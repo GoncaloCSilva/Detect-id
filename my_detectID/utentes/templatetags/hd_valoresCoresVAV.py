@@ -3,8 +3,8 @@ from django.http import HttpResponse
 from lifelines import KaplanMeierFitter
 import pandas as pd
 
-from utentes.hd_utils import getLimiares, predict_survival, trainModels, get_global_model, get_model
-from utentes.models import Measurement, VisitOccurrence
+from utentes.hd_utils import getCurrentModel, getLimiares, predict_survival, trainModels, get_global_model, get_model
+from utentes.models import Measurement, MeasurementExt, VisitOccurrence
 
 register = template.Library()
 
@@ -25,7 +25,7 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
 
     # Obter medicao do utente
     medicao = (
-        Measurement.objects
+        MeasurementExt.objects
         .filter(person_id=person_id, measurement_concept_id=concept_id)
         .order_by('-measurement_datetime')
         .first()
@@ -37,10 +37,22 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
         return HttpResponse("Visita não encontrada", status=404)
 
     tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
-
-
-    model = get_model(concept_id,value,event_id)
-    prob = predict_survival(model,tempo_utente)
+    if getCurrentModel() == 1:
+        if medicao.probability_km is None:
+            model = get_model(concept_id,value,event_id)
+            prob = predict_survival(model,tempo_utente)
+            medicao.probability_km = prob
+            medicao.save()
+        else:
+            prob = medicao.probability_km
+    else:
+        if medicao.probability_rsf is None:
+            model = get_global_model(concept_id, value, event_id)
+            prob = predict_survival(model, tempo_utente)
+            medicao.probability_rsf = prob
+            medicao.save()
+        else:
+            prob = medicao.probability_rsf
 
     if prob >= 0.6:
         return 'greenBoxGood'

@@ -19,6 +19,7 @@ for _, row in df.iterrows():
             last_name=row["Último Nome"]
         )
         person_ext.save()
+        print(f"Pessoa -> {person_ext.first_name} {person_ext.last_name} (ID: {person_ext.person_id})")
         pessoas_adicionadas.add(pid)
 
 print("Pessoas inseridas!")
@@ -48,7 +49,7 @@ parametros = {
 
 for _, row in df.iterrows():
     for field, concept_id in measurement_concepts.items():
-        Measurement.objects.create(
+        MeasurementExt.objects.create(
             person_id=row["person_id"],
             measurement_concept_id=concept_id,
             value_as_number=row[field],
@@ -123,6 +124,18 @@ for _, row in df.iterrows():
             
 
 print("Observações inseridas!")
+
+# Tabela Care Site
+from utentes.models import CareSite
+
+nomes_servicos={1: "Urgência", 2: "Internamento", 3: "UCI"}
+
+servicos = df["Serviço"].unique()
+for servico in servicos:
+    CareSite.objects.create(
+        care_site_id=servico,
+        care_site_name=nomes_servicos.get(servico)
+    )
 
 # Tabela VISIT_OCCURRENCE
 visitas = df.loc[df.groupby("person_id")["datetime"].idxmin(), ["person_id", "datetime", "Serviço"]].reset_index(drop=True)

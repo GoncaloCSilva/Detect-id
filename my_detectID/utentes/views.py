@@ -68,13 +68,28 @@ def patients(request):
         visit = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
         visit_end = VisitOccurrence.objects.filter(person_id=patient.person_id,visit_end_datetime__isnull=False).exists()
         if  not visit_end:
-            measurement = Measurement.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+            measurement = MeasurementExt.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
             time_patient = (measurement.measurement_datetime - visit.visit_start_datetime).total_seconds() / 3600
 
             global_model= get_global_model()
 
-            global_risk = predict_survival(global_model, time_patient)
+            
+            if getCurrentModel() == 1:
+                if patient.probability_km is not None:
+                    global_risk = patient.probability_km
+                else:
+                    global_risk = predict_survival(global_model, time_patient)
+                    patient.probability_km = global_risk
+                    patient.save()
+            else:
+                if patient.probability_rsf is not None:
+                    global_risk = patient.probability_rsf
+                else:
+                    global_risk = predict_survival(global_model, time_patient)
+                    patient.probability_rsf = global_risk
+                    patient.save()
+            
             global_risk_prev = predict_survival(global_model, time_patient + time_prev)
 
             if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
@@ -471,44 +486,65 @@ def listPatients(request):
         ).values_list("person_id", flat=True).distinct()
         utentes = utentes.filter(person_id__in=person_ids)
 
+    elif service_filter == "Estável":
+        utentes = utentes.filter(probability_km__gt=0.6) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gt=0.6)
+    elif service_filter == "Moderado":
+        utentes = utentes.filter(probability_km__gt=0.4, probability_km__lte=0.6) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gt=0.4, probability_rsf__lte=0.6)
+    elif service_filter == "Emergência":
+        utentes = utentes.filter(probability_km__lte=0.4) if getCurrentModel() == 1 else utentes.filter(probability_rsf__lte=0.4)
+
     # Order if needed
     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
 
    
     utentes_info = []
-    for utente in utentes:
+    for patient in utentes:
         last_measurements = {}
         prob_measurements = {}
         global_risk_measurements = {}
         global_risk_measurements_prev = {}
 
         # Tempo relativo do utente (em horas)
-        visita = VisitOccurrence.objects.filter(person_id=utente.person_id).order_by('-visit_start_datetime').first()
-        visit_end = VisitOccurrence.objects.filter(person_id=utente.person_id,visit_end_datetime__isnull=False).exists()
+        visita = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
+        visit_end = VisitOccurrence.objects.filter(person_id=patient.person_id,visit_end_datetime__isnull=False).exists()
         if not visit_end:
-            medicao = Measurement.objects.filter(person_id=utente.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+            medicao = MeasurementExt.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
             tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
             global_model= get_global_model()
 
-            global_risk = predict_survival(global_model, tempo_utente)
             global_risk_prev = predict_survival(global_model,tempo_utente + int(temp_prev))
 
-            if global_risk > 0.6: global_risk_measurements[utente.person_id] =  "Estável"
-            elif global_risk > 0.4: global_risk_measurements[utente.person_id] =  "Moderado"
-            else: global_risk_measurements[utente.person_id] =  "Emergência"
+            if getCurrentModel() == 1:
+                if patient.probability_km is not None:
+                    global_risk = patient.probability_km
+                else:
+                    global_risk = predict_survival(global_model, tempo_utente)
+                    patient.probability_km = global_risk
+                    patient.save()
+            else:
+                if patient.probability_rsf is not None:
+                    global_risk = patient.probability_rsf
+                else:
+                    global_risk = predict_survival(global_model, tempo_utente)
+                    patient.probability_rsf = global_risk
+                    patient.save()
 
-            if global_risk_prev > 0.6: global_risk_measurements_prev[utente.person_id] =  "Estável"
-            elif global_risk_prev > 0.4: global_risk_measurements_prev[utente.person_id] =  "Moderado"
-            else: global_risk_measurements_prev[utente.person_id] =  "Emergência"
+            if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
+            elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
+            else: global_risk_measurements[patient.person_id] =  "Emergência"
+
+            if global_risk_prev > 0.6: global_risk_measurements_prev[patient.person_id] =  "Estável"
+            elif global_risk_prev > 0.4: global_risk_measurements_prev[patient.person_id] =  "Moderado"
+            else: global_risk_measurements_prev[patient.person_id] =  "Emergência"
         
 
             for key, concept_id in CONCEPT_IDS.items():
                 measurement = (
-                    Measurement.objects
-                    .filter(person_id=utente.person_id, measurement_concept_id=concept_id)
+                    MeasurementExt.objects
+                    .filter(person_id=patient.person_id, measurement_concept_id=concept_id)
                     .order_by('-measurement_datetime')
                     .first()
                 )
@@ -521,7 +557,7 @@ def listPatients(request):
                 else: prob_measurements[key] =  "Emergência"
 
             utentes_info.append({
-                'person': utente,
+                'person': patient,
                 **last_measurements,
                 'prev' : prob_measurements,
                 'global':global_risk_measurements,
