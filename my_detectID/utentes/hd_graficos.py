@@ -131,7 +131,7 @@ def graphicPatient_km(person_id, param_id, evento_id, tempoPrev = None):
     kmf = get_model(param_id,valor,evento_id)
     kmf.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_ut, 'black'))
     
-    if param_id!=2 and param_id !=8:
+    if param_id!=2 and param_id !=8 and param_id != 6:
         kmf2 = get_model(param_id,valor2,evento_id)
         kmf2.plot_survival_function(ax=ax, ci_show=False, color=cores.get(grupo_2, 'black'))
     if param_id!= 8:

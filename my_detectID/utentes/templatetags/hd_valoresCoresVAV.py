@@ -47,7 +47,7 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
             prob = medicao.probability_km
     else:
         if medicao.probability_rsf is None:
-            model = get_global_model(concept_id, value, event_id)
+            model = get_global_model()
             prob = predict_survival(model, tempo_utente)
             medicao.probability_rsf = prob
             medicao.save()

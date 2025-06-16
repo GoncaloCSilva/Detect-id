@@ -317,25 +317,25 @@
       <div name="models" style="display: flex; gap: 20px; margin-bottom: 10px;margin-top: 40px;">
             <label for="models"> Modelo de Previsão:</label>
               <label>
-                <input type="radio" name="model" value="km" onchange="this.form.submit()" {% if selected_model == "km" %}checked{% endif %}>
+                <input type="radio" name="model" value="km" {% if selected_model == "km" %}checked{% endif %}>
                 Estatistico
               </label>
 
               <label>
-                <input type="radio" name="model" value="rsf" onchange="this.form.submit()" {% if selected_model == "rsf" %}checked{% endif %}>
+                <input type="radio" name="model" value="rsf" {% if selected_model == "rsf" %}checked{% endif %}>
                   Aprendizagem Automática
               </label>
       </div>
 
       <label for="evento">Escolher Evento:</label>
       <select name="evento" id="evento" required>
-        <option value="1">Descompensação</option>
-        <option value="2">Ativação Médica</option>
-        <option value="3">Aumento da Vigilância</option>
-        <option value="4">Via Aérea Ameaçada</option>
-        <option value="5">Suporte Ventilatório</option>
-        <option value="6">Suporte Circulatório</option>
-        <option value="7">Mortalidade</option>
+        <option value="1" {% if event_filter == "1" %}selected{% endif %}>Descompensação</option>
+        <option value="2" {% if event_filter == "2" %}selected{% endif %}>Ativação Médica</option>
+        <option value="3" {% if event_filter == "3" %}selected{% endif %}>Aumento da Vigilância</option>
+        <option value="4" {% if event_filter == "4" %}selected{% endif %}>Via Aérea Ameaçada</option>
+        <option value="5" {% if event_filter == "5" %}selected{% endif %}>Suporte Ventilatório</option>
+        <option value="6" {% if event_filter == "6" %}selected{% endif %}>Suporte Circulatório</option>
+        <option value="7" {% if event_filter == "7" %}selected{% endif %}>Mortalidade</option>
       </select>
     
       <button type="submit" class="btn btn-edit" style="float: right; margin-bottom: 10px;">Atualizar Tabela</button>
@@ -496,8 +496,81 @@
     </tbody>
   </table>
 </div>
+
+<form method="POST" id="formEvent" style="display: none;" action="{% url 'registEvent' mymember.person_id %}">
+    {% csrf_token %}
+    <h3>Registar Evento</h3>
+
+    <label><input type="checkbox" name="eventos" value="1"> Descompensação</label><br>
+    <label><input type="checkbox" name="eventos" value="2"> Ativação Médica</label><br>
+    <label><input type="checkbox" name="eventos" value="3"> Aumento da Vigilância</label><br>
+    <label><input type="checkbox" name="eventos" value="4"> Via Aérea Ameaçada</label><br>
+    <label><input type="checkbox" name="eventos" value="5"> Suporte Ventilatório</label><br>
+    <label><input type="checkbox" name="eventos" value="6"> Suporte Circulatório</label><br>
+    <label><input type="checkbox" name="eventos" value="7"> Mortalidade</label><br>
+
+
+
+<br>
+
+    <h3>Registar Medição</h3>
+    <div class = "measurement-form" style="display: flex;">
+  {% csrf_token %}
+  <div class="input-group">
+    <label for="spo2">SpO2</label>
+    <input type="number" step="0.1" name="spo2" id="spo2" required class="input-box" />
+  </div>
+
+  <div class="input-group">
+    <label for="necessidade_o2">O2</label>
+    <select name="necessidade_o2" id="necessidade_o2" required class="input-box">
+      <option value="1">Sim</option>
+      <option value="0">Não</option>
+    </select>
+  </div>
+
+  <div class="input-group">
+    <label for="fc">FC</label>
+    <input type="number" step="0.1" name="fc" id="fc" required class="input-box" />
+  </div>
+
+  <div class="input-group">
+    <label for="ta_sistolica">TAS</label>
+    <input type="number" step="0.1" name="ta_sistolica" id="ta_sistolica" required class="input-box" />
+  </div>
+
+  <div class="input-group">
+    <label for="ta_diastolica">TAD</label>
+    <input type="number" step="0.1" name="ta_diastolica" id="ta_diastolica" required class="input-box" />
+  </div>
+
+  <div class="input-group">
+    <label for="temperatura">Temp</label>
+    <input type="number" step="0.1" name="temperatura" id="temperatura" required class="input-box" />
+  </div>
+
+  <div class="input-group">
+    <label for="nivel_consciencia">GCS</label>
+    <input type="number" min="1" max="15" name="nivel_consciencia" id="nivel_consciencia" required class="input-box" />
+  </div>
+
+  <div class="input-group">
+    <label for="dor">Dor</label>
+    <select name="dor" id="dor" required class="input-box">
+      <option value="1">Sim</option>
+      <option value="0">Não</option>
+    </select>
+  </div>
+
+<div class="button-row" style=" display: flex;justify-content: center;align-items: center;gap: 20px;margin-top: 30px;">
+  <button type="button" onclick="cancelEvent()" class="btn">Cancelar</button>
+  <button type="submit" class="btn btn-edit">Guardar Evento</button>
+</div>
+  </div>
+</form>
+
     <div style="display: flex; gap: 20%; margin-top: 5%; justify-content: center;">
-    <a href="registarEvento/{{ mymember.person_id}}" class="btn btn-edit same-width-btn"><i class="fas fa-plus" style="margin-right: 5px;"></i>Registar Evento</a>  
+    <a onclick="toggleEvent()" id="buttonEvent" class="btn btn-edit same-width-btn"><i class="fas fa-plus" style="margin-right: 5px;"></i>Registar Evento</a>  
     </div>
 </div>
 
@@ -662,6 +735,16 @@ function toggleMeasurement() {
 function cancelMeasurement() {
   document.getElementById("formMeasurement").style.display = "none";
   document.getElementById("newMeasurement").style.display = "block";
+}
+
+function toggleEvent() {
+  document.getElementById("formEvent").style.display = "block";
+  document.getElementById("buttonEvent").style.display = "none";
+}
+
+function cancelEvent() {
+  document.getElementById("formEvent").style.display = "none";
+  document.getElementById("buttonEvent").style.display = "block";
 }
   </script>
 </div>
