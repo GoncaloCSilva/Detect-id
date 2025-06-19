@@ -1,0 +1,72 @@
+# Configuration file for Detect.id
+# This file defines the parameters and settings for the system.
+
+# Set prediction hours 
+prediction_hours: [24,48,72,96]
+
+general_settings:
+  num_thresholds: 3  # This must match the number of thresholds defined in each parameter.
+  num_states: 3
+  name_states: ['Estável', 'Moderado', 'Emergência'] # Must be ordered from best to worst state.
+  color_states: ['#129716', '#E8A310', '#c91515'] # Must be ordered from best to worst state.
+  thresholds_states: [0.6,0.4] # Must be ordered from best to worst state.
+
+graph_settings:
+  graph_color_thresholds: ['blue', 'cyan', 'lime'] 
+  graph_color_states: ['green', 'yellow', 'red'] 
+  graph_color_points: ['dodgerblue','gray']
+
+# Define the events that will be monitored, they must exist in the csv file.
+events: ['Descompensação','Ativação Médico', 'Aumento da Vigilância', 'Via Área Ameaçada','Suporte Ventilatório', 'Suporte Circulatório', 'Mortalidade' ]
+
+# Define the parameters to be monitored, they must exist in the csv file.
+# Each parameter has a name, an abbreviation, a unit of measurement, thresholds.
+# The number of thresholds must be the same defined in general settings.
+parameters:
+  - name: 'SpO2' # Nome do CSV
+    abv_name: 'SpO2' # Abreviação do nome
+    full_name: 'Saturação de Oxigênio' # Nome completo 
+    unit_measurement: '%'
+    thresholds: [98,90]
+
+  - name: 'Necessidade de O2'
+    abv_name: 'O2'
+    full_name: 'Necessidade de Oxigênio'
+    unit_measurement: 'Sim/Não'
+    thresholds: [1,0]
+
+  - name: 'Frequência Cardíaca'
+    abv_name: 'FC'
+    full_name: 'Frequência Cardíaca'
+    unit_measurement: 'bpm'
+    thresholds: [99,60]
+  
+  - name: 'TA Sistólica'
+    abv_name: 'TAS'
+    full_name: 'Tensão Arterial Sistólica'
+    unit_measurement: 'mmHg'
+    thresholds: [130,100]
+  
+  - name: 'TA Diastólica'
+    abv_name: 'TAD'
+    full_name: 'Tensão Arterial Diastólica'
+    unit_measurement: 'mmHg'
+    thresholds: [90,60]
+  
+  - name: 'Temperatura'
+    abv_name: 'Temp'
+    full_name: 'Temperatura Corporal'
+    unit_measurement: '°C'
+    thresholds: [38,35]
+  
+  - name: 'Nível de Consciência'
+    abv_name: 'GCS'
+    full_name: 'Nível de Consciência (GCS)'
+    unit_measurement: '1 a 15'
+    thresholds: [15,8]
+  
+  - name: 'Dor'
+    abv_name: 'Dor'
+    full_name: 'Presença de Dor'
+    unit_measurement: 'Sim/Não'
+    thresholds: [1,0]

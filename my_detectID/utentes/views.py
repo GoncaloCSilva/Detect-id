@@ -5,7 +5,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import getCSV, getCurrentModel, getEvento, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
+from utentes.hd_utils import get_parameters, load_config,get_events, getCSV, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
@@ -25,16 +25,7 @@ from django.db.models import Q
 
 # Create your views here.
 # IDs dos conceitos de medição (para a tabela dos utentes)
-CONCEPT_IDS = {
-    'spo2': 1,
-    'o2': 2,
-    'fc': 3,
-    'tas': 4,
-    'tad': 5,
-    'temp': 6,
-    'gcs': 7,
-    'dor': 8,
-}
+
 
 def patients(request):
     """
@@ -45,9 +36,33 @@ def patients(request):
     """
     trainModels()
     
-    patients = PersonExt.objects.all()
+    patients = PersonExt.objects.all().order_by('person_id')
     patients_info = []
-    time_prev = 24
+
+    config = load_config()
+    settings = config['general_settings']
+    num_states = settings['num_states']
+    thresholds_states = settings['thresholds_states']
+    name_states = settings['name_states']
+    hours = config['prediction_hours']
+    time_prev = hours[0]
+    events = get_events()
+    event_filter = 1
+    parameters = get_parameters()
+
+    states = {}
+    for i in range(0, num_states):
+        states[i] = {
+            'name': name_states[i],
+            'id': i
+        }
+    
+    eventsDict = {}
+    for i in range(1, len(events)+1):
+        eventsDict[i] = {
+            'name': events[i],
+            'id': i
+        }
 
     if getCurrentModel() == 1:
         selected_model = 'km'   
@@ -57,7 +72,7 @@ def patients(request):
     # For each patient, retrieve the latest measurement of each clinical parameter,
     # estimate deterioration risk using survival models,
     # and store everything in `patients_info` for display on the "Utentes" page.
-    
+
     for patient in patients:
         last_measurements = {}
         prob_measurements = {}
@@ -92,29 +107,49 @@ def patients(request):
             
             global_risk_prev = predict_survival(global_model, time_patient + time_prev)
 
-            if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
-            elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
-            else: global_risk_measurements[patient.person_id] =  "Emergência"
+            check = False
+            for i in range(0, num_states - 1):
+                if global_risk >= thresholds_states[i]:
+                    global_risk_measurements[patient.person_id] =  i + 1
+                    global_risk_measurements["Name"] = name_states[i]
+                    check = True
+                    break
+            if check is False:
+                global_risk_measurements[patient.person_id] =  num_states 
+                global_risk_measurements["Name"] = name_states[-1]
 
-            if global_risk_prev > 0.6: global_risk_measurements_prev[patient.person_id] =  "Estável"
-            elif global_risk_prev > 0.4: global_risk_measurements_prev[patient.person_id] =  "Moderado"
-            else: global_risk_measurements_prev[patient.person_id] =  "Emergência"
+            check = False    
+            for i in range(0, num_states - 1):
+                if global_risk_prev >= thresholds_states[i]:
+                    global_risk_measurements_prev[patient.person_id] =  i + 1
+                    global_risk_measurements_prev["Name"] = name_states[i]      
+                    check = True
+                    break
+            if check is False:
+                global_risk_measurements_prev[patient.person_id] =  num_states        
+                global_risk_measurements_prev["Name"] = name_states[-1]   
         
-
-            for key, concept_id in CONCEPT_IDS.items():
+            for parameter_id,(name,abv_name,full_name,thresholds,unit) in parameters.items():
                 measurement = (
                     Measurement.objects
-                    .filter(person_id=patient.person_id, measurement_concept_id=concept_id)
+                    .filter(person_id=patient.person_id, measurement_concept_id=parameter_id)
                     .order_by('-measurement_datetime')
                     .first()
                 )
-                last_measurements[key] = measurement.value_as_number if measurement else None
-                model = get_model(concept_id,measurement.value_as_number,1)
+
+                last_measurements[parameter_id] = measurement.value_as_number
+                model = get_model(parameter_id,measurement.value_as_number,1)
                 prev = predict_survival(model, time_patient + time_prev)
-                
-                if prev > 0.6: prob_measurements[key] =  "Estável"
-                elif prev > 0.4: prob_measurements[key] =  "Moderado"
-                else: prob_measurements[key] =  "Emergência"
+               
+                check = False
+                for i in range(0, num_states - 1):
+                    if prev >= thresholds_states[i]:
+                        prob_measurements[parameter_id] =  i + 1
+                        check = True
+                        break
+                if check is False:
+                    prob_measurements[parameter_id] =  num_states    
+       
 
             patients_info.append({
                 'person': patient,
@@ -134,7 +169,13 @@ def patients(request):
         'mymembers': page_obj,
         'temp_prev' : time_prev,
         'active_page': 'patients',
-        'selected_model': selected_model
+        'selected_model': selected_model,
+        'hours': hours,
+        'states': states,
+        'events': eventsDict,
+        'event_filter': event_filter,
+        'parameters': parameters,
+        'num_params': list(range(1, len(parameters.items()) + 1)),
     })
 
 def patient(request, person_id):
@@ -147,17 +188,30 @@ def patient(request, person_id):
     """
     model = request.GET.get('model') 
 
+    config = load_config()
+    settings = config['general_settings']
+    num_states = settings['num_states']
+    thresholds_states = settings['thresholds_states']
+    name_states = settings['name_states']
+    events = get_events()
+    parameters = get_parameters()
+
+
+    states = {}
+    for i in range(0, num_states):
+        states[i] = {
+            'name': name_states[i],
+            'id': i
+        }
+    
+    eventsDict = {}
+    for i in range(1, len(events)+1):
+        eventsDict[i] = {
+            'name': events[i],
+            'id': i
+        }
+
     patient = PersonExt.objects.get(person_id=person_id)
-    if request.method == "POST":
-        patient.first_name = request.POST.get("firstname")
-        patient.last_name = request.POST.get("lastname")
-        patient.birthday = request.POST.get("birthday")
-        patient.gender_concept_id = request.POST.get("gender")
-        patient.person_source_value = request.POST.get("NumeroUtente")
-        patient.save()
-
-        return redirect("/utentes/")
-
     
     if model == 'km':
         setCurrentModel(1)
@@ -174,7 +228,7 @@ def patient(request, person_id):
 
     condition = ConditionOccurrence.objects.get(person_id=person_id)
     age = patient.idade()
-    event_filter = request.GET.get('evento')
+    event_filter = request.GET.get('evento',1)
 
     # Agrupar medições por data e hora
     measurements = Measurement.objects.filter(person_id=person_id)
@@ -193,12 +247,16 @@ def patient(request, person_id):
                 'measurements': []
             }
 
-        if global_risk > 0.6:
-            grouped[dt]['risk'] = "Estável"
-        elif global_risk > 0.4:
-            grouped[dt]['risk'] = "Moderado"
-        else:
-            grouped[dt]['risk'] = "Emergência"
+        check = False
+        for i in range(0, num_states - 1):
+            if global_risk >= thresholds_states[i]:
+                grouped[dt]['risk'] =  i + 1
+                grouped[dt]['Name'] = name_states[i]
+                check = True
+                break
+        if check is False:
+            grouped[dt]['risk'] =  num_states 
+            grouped[dt]['Name'] = name_states[-1]
 
         grouped[dt]['measurements'].append(m)
 
@@ -213,7 +271,7 @@ def patient(request, person_id):
     eventos_por_data = defaultdict(list)
     for obs in observacoes:
         data_hora = obs.observation_datetime
-        evento = getEvento(obs.observation_concept_id)
+        evento = events[obs.observation_concept_id]
         eventos_por_data[data_hora].append(evento)
 
     # Reorganizar como lista de dicionários para usar no template
@@ -233,7 +291,11 @@ def patient(request, person_id):
         'notes': notes,
         'servico': service,
         'event_filter':event_filter,
-        'selected_model': selected_model
+        'selected_model': selected_model,
+        'events': eventsDict,
+        'parameters': parameters,
+        'num_params': list(range(1, len(parameters.items()) + 1)),
+        
     }
     return HttpResponse(template.render(context, request))
 
@@ -343,6 +405,8 @@ def editPatient(request,person_id):
     @param person_id: ID of the patient to be edited.
     @return: Redirects to the patient list upon successful update, or renders the edit form if GET request.
     """
+
+    
     patient = PersonExt.objects.get(person_id=person_id)
     if request.method == "POST":
         patient.first_name = request.POST.get("firstname")
@@ -350,7 +414,12 @@ def editPatient(request,person_id):
         patient.birthday = request.POST.get("birthday")
         patient.gender_concept_id = request.POST.get("gender")
         patient.person_source_value = request.POST.get("NumeroUtente")
+        service = VisitOccurrence.objects.get(person_id=person_id)
+        service.care_site = CareSite.objects.get(care_site_id = int(request.POST.get("service")))
+        service.save()
         patient.save()
+
+        print("Debug ->",int(request.POST.get("service")))
 
         return redirect('patient', person_id=person_id)
     
@@ -385,7 +454,7 @@ def registEvent(request,person_id):
                 observation_concept_id=int(evento),
                 observation_datetime=dateTime
             )
-            print(f"DEBUG -> Evento {evento} adicionado para o paciente {person_id}.")
+
 
 
         return redirect('patient', person_id=person_id)
@@ -445,11 +514,34 @@ def listPatients(request):
     service_filter = request.GET.get("service")
     order_by = request.GET.get("order")
     event_filter = request.GET.get("event")
-    temp_prev = request.GET.get("temp_prev")
+    time_prev = request.GET.get("temp_prev")
     search_query = request.GET.get('search')
     model = request.GET.get('model') 
+    alert = request.GET.get('alert')
 
-    
+    config = load_config()
+    settings = config['general_settings']
+    num_states = settings['num_states']
+    thresholds_states = settings['thresholds_states']
+    name_states = settings['name_states']
+    hours = config['prediction_hours']
+    events = get_events()
+    parameters = get_parameters()
+
+    states = {}
+    for i in range(0, num_states):
+        states[i] = {
+            'name': name_states[i],
+            'id': i
+        }
+
+    eventsDict = {}
+    for i in range(1, len(events)+1):
+        eventsDict[i] = {
+            'name': events[i],
+            'id': i
+        }
+
     if model == 'km':
         setCurrentModel(1)
         selected_model = 'km'
@@ -467,15 +559,14 @@ def listPatients(request):
         3: "UCI",
     }
 
-    utentes = PersonExt.objects.all()
+    utentes = PersonExt.objects.all().order_by('person_id')
 
     if search_query:
         utentes = utentes.filter(
             Q(first_name__icontains=search_query) | 
             Q(last_name__icontains=search_query)
         )
-    if not event_filter: event_filter = 1
-    if not temp_prev: temp_prev = 24
+
 
 
     # Filter by service
@@ -486,20 +577,26 @@ def listPatients(request):
         ).values_list("person_id", flat=True).distinct()
         utentes = utentes.filter(person_id__in=person_ids)
 
-    elif service_filter == "Estável":
-        utentes = utentes.filter(probability_km__gt=0.6) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gt=0.6)
-    elif service_filter == "Moderado":
-        utentes = utentes.filter(probability_km__gt=0.4, probability_km__lte=0.6) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gt=0.4, probability_rsf__lte=0.6)
-    elif service_filter == "Emergência":
-        utentes = utentes.filter(probability_km__lte=0.4) if getCurrentModel() == 1 else utentes.filter(probability_rsf__lte=0.4)
-
+    else:
+        for i in range(0,num_states):
+            if service_filter == str(states[i]['id']):
+                if i == 0:
+                    utentes = utentes.filter(probability_km__gte=thresholds_states[0]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gte=thresholds_states[0])
+                elif i == num_states-1:
+                    utentes = utentes.filter(probability_km__lt=thresholds_states[-1]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__lt=thresholds_states[-1])
+                else:
+                    print("TO AQQUI")
+                    utentes = utentes.filter(probability_km__gte=thresholds_states[i], probability_km__lt=thresholds_states[i-1]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gte=thresholds_states[i], probability_rsf__lt=thresholds_states[i-1])
+           
     # Order if needed
     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
 
-   
+
+    print(utentes)
     utentes_info = []
     for patient in utentes:
+
         last_measurements = {}
         prob_measurements = {}
         global_risk_measurements = {}
@@ -511,50 +608,79 @@ def listPatients(request):
         if not visit_end:
             medicao = MeasurementExt.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
-            tempo_utente = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
+            time_patient = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
             global_model= get_global_model()
 
-            global_risk_prev = predict_survival(global_model,tempo_utente + int(temp_prev))
+            global_risk_prev = predict_survival(global_model,time_patient +float(time_prev))
 
             if getCurrentModel() == 1:
                 if patient.probability_km is not None:
                     global_risk = patient.probability_km
                 else:
-                    global_risk = predict_survival(global_model, tempo_utente)
+                    global_risk = predict_survival(global_model, time_patient)
                     patient.probability_km = global_risk
                     patient.save()
             else:
                 if patient.probability_rsf is not None:
                     global_risk = patient.probability_rsf
                 else:
-                    global_risk = predict_survival(global_model, tempo_utente)
+                    global_risk = predict_survival(global_model, time_patient)
                     patient.probability_rsf = global_risk
                     patient.save()
 
-            if global_risk > 0.6: global_risk_measurements[patient.person_id] =  "Estável"
-            elif global_risk > 0.4: global_risk_measurements[patient.person_id] =  "Moderado"
-            else: global_risk_measurements[patient.person_id] =  "Emergência"
+            
+                
+            check = False
+            for i in range(0, num_states - 1):
+                if global_risk >= thresholds_states[i]:
+                    global_risk_measurement_id =  i + 1
+                    global_risk_measurement_name = name_states[i]
+                    check = True
+                    break
+            if check is False:
+                global_risk_measurement_id =  num_states 
+                global_risk_measurement_name = name_states[-1]
 
-            if global_risk_prev > 0.6: global_risk_measurements_prev[patient.person_id] =  "Estável"
-            elif global_risk_prev > 0.4: global_risk_measurements_prev[patient.person_id] =  "Moderado"
-            else: global_risk_measurements_prev[patient.person_id] =  "Emergência"
-        
+            check = False    
+            for i in range(0, num_states - 1):
+                if global_risk_prev >= thresholds_states[i]:
+                    global_risk_measurements_prev_id =  i + 1
+                    global_risk_measurements_prev_name = name_states[i]      
+                    check = True
+                    break
+            if check is False:
+                global_risk_measurements_prev_id =  num_states        
+                global_risk_measurements_prev_name = name_states[-1]
 
-            for key, concept_id in CONCEPT_IDS.items():
+            if alert == "1":
+                if global_risk_measurements_prev_name == global_risk_measurement_name:
+                    continue
+
+            global_risk_measurements[patient.person_id] =  global_risk_measurement_id
+            global_risk_measurements["Name"] = global_risk_measurement_name
+            global_risk_measurements_prev[patient.person_id] =  global_risk_measurements_prev_id
+            global_risk_measurements_prev["Name"] = global_risk_measurements_prev_name
+            
+            for parameter_id,(name,abv_name,full_name,thresholds,unit) in parameters.items():
                 measurement = (
                     MeasurementExt.objects
-                    .filter(person_id=patient.person_id, measurement_concept_id=concept_id)
+                    .filter(person_id=patient.person_id, measurement_concept_id=parameter_id)
                     .order_by('-measurement_datetime')
                     .first()
                 )
-                last_measurements[key] = measurement.value_as_number if measurement else None
-                model = get_model(concept_id,measurement.value_as_number,int(event_filter))
-                prev = predict_survival(global_model,tempo_utente + int(temp_prev))
-                
-                if prev > 0.6: prob_measurements[key] =  "Estável"
-                elif prev > 0.4: prob_measurements[key] =  "Moderado"
-                else: prob_measurements[key] =  "Emergência"
+                last_measurements[parameter_id] = measurement.value_as_number 
+                model = get_model(parameter_id,measurement.value_as_number,int(event_filter))
+                prev = predict_survival(model,time_patient + float(time_prev))
+               
+                check = False
+                for i in range(0, num_states - 1):
+                    if prev >= thresholds_states[i]:
+                        prob_measurements[parameter_id] =  i + 1
+                        check = True
+                        break
+                if check is False:
+                    prob_measurements[parameter_id] =  num_states    
 
             utentes_info.append({
                 'person': patient,
@@ -573,10 +699,16 @@ def listPatients(request):
         "service_filter": service_filter,
         "order_by": order_by,
         "event_filter": event_filter,
-        "temp_prev":temp_prev,
+        "temp_prev":time_prev,
         "search_query":search_query,
         'active_page': 'patients',
-        'selected_model': selected_model
+        'selected_model': selected_model,
+        'hours': hours,
+        'states': states,
+        'events': eventsDict,
+        'parameters': parameters,
+        'alert_filter': alert,
+        'num_params': list(range(1, len(parameters.items()) + 1)),
     })
 
 @csrf_exempt

@@ -1,8 +1,12 @@
 import pandas as pd
 import random
 from datetime import datetime
-from utentes.hd_utils import getCSV
+from utentes.hd_utils import getCSV, load_config
 from utentes.models import MeasurementExt, Person, Measurement, ConditionOccurrence, Note, Observation, VisitOccurrence, PersonExt
+import yaml
+
+# Carregar o ficheiro de configuração
+config = load_config()
 
 df = getCSV(importBD=True)
 # Inserir dados na tabela Person
@@ -24,38 +28,23 @@ for _, row in df.iterrows():
 
 print("Pessoas inseridas!")
 
+parameters = config["parameters"]
+id = 1
+measurement_concepts = {}
+for param in parameters:
+    measurement_concepts[id] = (param["name"],param["abv_name"],param["full_name"] ,param["thresholds"],param["unit_measurement"])
+    id +=1
+
 # Tabela MEASUREMENT
-measurement_concepts = {
-    "SpO2": 1,
-    "Necessidade de O2": 2,
-    "Frequência Cardíaca": 3,
-    "TA Sistólica": 4,
-    "TA Diastólica": 5,
-    "Temperatura": 6,
-    "Nível de Consciência": 7,
-    "Dor": 8,
-}
-
-parametros = {
-    1: [90, 98],
-    2: [0,1],
-    3: [60,99],
-    4: [100, 130],
-    5: [60, 90],
-    6: [35, 38],
-    7: [8, 15],
-    8: [0,1],
-    }
-
 for _, row in df.iterrows():
-    for field, concept_id in measurement_concepts.items():
+    for concept_id, (name, abv_name,fullname, thresholds, unitMeasurement) in measurement_concepts.items():
         MeasurementExt.objects.create(
             person_id=row["person_id"],
             measurement_concept_id=concept_id,
-            value_as_number=row[field],
+            value_as_number=row[name],
             measurement_datetime=row["datetime"],
-            range_low = parametros[concept_id][0],
-            range_high = parametros[concept_id][1]
+            range_low = thresholds[0],
+            range_high = thresholds[1]
         )
 
 print("Medições inseridas!")
@@ -101,26 +90,23 @@ for person_id in df["person_id"].unique():
 print("Notas inseridas!")
 
 # Tabela OBSERVATION
-events = {
-    "Descompensação": 1,
-    "Ativação Médico": 2,
-    "Aumento da Vigilância": 3,
-    "Via Área Ameaçada": 4,
-    "Suporte Ventilatório": 5,
-    "Suporte Circulatório":6,
-    "Mortalidade":7
-}
+events_config = config["events"]
+id = 1
+events = {}
+for event in events_config:
+    events[id] = event
+    id+=1
 
 for _, row in df.iterrows():
-    for field, concept_id in events.items():
-        if row[field] == 1:
+    for concept_id, name in events.items():
+        if row[name] == 1:
             Observation.objects.create(
                 person_id=row["person_id"],
                 observation_concept_id=concept_id,
-                value_as_number=row[field],
+                value_as_number=row[name],
                 observation_datetime=row["datetime"]
             )
-            print(f"Observação {field} inserida para o utente {row['person_id']} com o valor {row[field]}")
+            print(f"Observação {name} inserida para o utente {row['person_id']} com o valor {row[name]}")
             
 
 print("Observações inseridas!")

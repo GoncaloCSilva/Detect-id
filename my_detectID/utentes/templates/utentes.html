@@ -1,8 +1,8 @@
 {% extends "master.html" %}
 {% load hd_valoresCoresVAV %}
-
+{% load static %}
 {% block title %}
-  My Detect.id - List of all utentes
+  Painel Clínico de Utentes
 {% endblock %}
 
 {% block content %}
@@ -108,7 +108,7 @@
   }
 
   .redBoxBad {
-    background-color: #C91515;
+    background-color: #c91515;
     color: white;
   }
 
@@ -147,224 +147,14 @@
     position: absolute;
     left: 15%;
   }
-</style>
+  .disabled-link {
+  pointer-events: none;  /* impede clique */
+  color: grey;           /* muda a aparência */
+  text-decoration: none; 
+  cursor: not-allowed;
+}
 
-<h1 class="page-title">Utentes</h1>
-
-<form method="GET" action="{% url 'listPatients' %}" style="text-align: center; margin: 20px auto;">
-  
-  <input type="text" name="search" placeholder="Pesquisar utente..." value="{{ request.GET.search }}" style="padding: 8px; width: 300px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
-  <input type="hidden" name="service" value="{{ service_filter }}">
-  <input type="hidden" name="event" value="{{ event_filter }}">
-  <input type="hidden" name="temp_prev" value="{{ temp_prev }}">
-  <button type="submit" style="padding: 8px 12px; background-color: #007041; color: white; border: none; border-radius: 6px; cursor: pointer;">Pesquisar</button>
-  
-  <div name="models" style="display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;margin-top: 20px;">
-  <label for="models"> <b>Modelo de Previsão:</b></label>
-    <label>
-      <input type="radio" name="model" value="km" onchange="this.form.submit()" id="km" {% if selected_model == "km" %}checked{% endif %}>
-       Estatistico
-    </label>
-
-    <label>
-      <input type="radio" name="model" value="rsf" onchange="this.form.submit()" id="rsf" {% if selected_model == "rsf" %}checked{% endif %}>
-        Aprendizagem Automática
-    </label>
-</div>
-</form>
-
-
-<form method="GET" action="{% url 'listPatients' %}" class="filter-form">
-
-  <label for="temp_prev">Tempo de Previsão:</label>
-  <select name="temp_prev" id="temp_prev">
-    <option value="24" {% if temp_prev == "24" %}selected{% endif %}>24h</option>
-    <option value="48" {% if temp_prev == "48" %}selected{% endif %}>48h</option>
-    <option value="72" {% if temp_prev == "72" %}selected{% endif %}>72h</option>
-    <option value="96" {% if temp_prev == "96" %}selected{% endif %}>96h</option>
-  </select>
-
-  <label for="service">Filtrar por:</label>
-  <select name="service" id="service">
-    <option value="">Todos</option>
-    <option value="Urgência" {% if service_filter == "Urgência" %}selected{% endif %}>Serviço Urgência</option>
-    <option value="Internamento" {% if service_filter == "Internamento" %}selected{% endif %}>Serviço Internamento</option>
-    <option value="UCI" {% if service_filter == "UCI" %}selected{% endif %}>Serviço UCI</option>
-    <option value="Estável" {% if service_filter == "Estável" %}selected{% endif %}>Estado Estável</option>
-    <option value="Moderado" {% if service_filter == "Moderado" %}selected{% endif %}>Estado Moderado</option>
-    <option value="Emergência" {% if service_filter == "Emergência" %}selected{% endif %}>Estado Emergência</option>
-    
-  </select>
-
-  <label for="order">Ordenar por:</label>
-  <select name="order" id="order">
-    <option value="NoOrder" {% if order_by == "NoOrder" %}selected{% endif %}>No Order</option>
-    <option value="first_name" {% if order_by == "first_name" %}selected{% endif %}>Nome (A-Z)</option>
-    <option value="-first_name" {% if order_by == "-first_name" %}selected{% endif %}>Nome (Z-A)</option>
-    <option value="birthday" {% if order_by == "birthday" %}selected{% endif %}>Nascimento (Antigo - Novo)</option>
-    <option value="-birthday" {% if order_by == "-birthday" %}selected{% endif %}>Nascimento (Novo - Antigo)</option>
-  </select>
-
-  <label for="event">Evento:</label>
-  <select name="event" id="event">
-    <option value="1" {% if event_filter == "1" %}selected{% endif %}>Descompensação</option>
-    <option value="2" {% if event_filter == "2" %}selected{% endif %}>Ativação Médica</option>
-    <option value="3" {% if event_filter == "3" %}selected{% endif %}>Aumento de Vigilância</option>
-    <option value="4" {% if event_filter == "4" %}selected{% endif %}>Via Área Ameaçada</option>
-    <option value="5" {% if event_filter == "5" %}selected{% endif %}>Suporte Ventilatório</option>
-    <option value="6" {% if event_filter == "6" %}selected{% endif %}>Suporte Circulatório</option>
-    <option value="7" {% if event_filter == "7" %}selected{% endif %}>Mortalidade</option>
-  </select>
-  <input type="hidden" name="search" value="{{ search_query }}">
-  <button type="submit">Aplicar</button>
-  <button type="reset" style="background-color: #646a68;">Reset</button>
-
-
-  <input type="hidden" name="model" value="{{ selected_model }}">
-</form>
-
-<div class="table-container">
-  <table>
-<thead>
-  <tr>
-<th title="Nome do Utente">
-  Nome
-</th>
-<th title="Risco Clínico">
-  RC
-  <div style="font-size: 0.75em; color: #666;">categorias</div>
-</th>
-<th title="Saturação de Oxigénio (SpO2)">
-  SpO2
-  <div style="font-size: 0.75em; color: #666;">%</div>
-</th>
-<th title="Necessidade de Oxigénio (O2)">
-  O2
-  <div style="font-size: 0.75em; color: #666;">Sim/Não</div>
-</th>
-<th title="Frequência Cardíaca">
-  FC
-  <div style="font-size: 0.75em; color: #666;">bpm</div>
-</th>
-<th title="Tensão Arterial Sistólica">
-  TAS
-  <div style="font-size: 0.75em; color: #666;">mmHg</div>
-</th>
-<th title="Tensão Arterial Diastólica">
-  TAD
-  <div style="font-size: 0.75em; color: #666;">mmHg</div>
-</th>
-<th title="Temperatura">
-  Temp
-  <div style="font-size: 0.75em; color: #666;">°C</div>
-</th>
-<th title="Nível de Consciência (GCS)">
-  GCS
-  <div style="font-size: 0.75em; color: #666;">1 a 15</div>
-</th>
-<th title="Presença de Dor">
-  Dor
-  <div style="font-size: 0.75em; color: #666;">Sim/Não</div>
-</th>
-
-  </tr>
-</thead>
-
-    <tbody>
-      {% for item in mymembers %}
-      <tr>
-        <td><a href="utente/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }} 
-          {% if item.global_prev|dict_value_first != item.global|dict_value_first %}
-            <span title="Alteração de estado clínico" style="margin-left: 5px; color: red; font-weight: bold;"> ⚠️</span>
-          {% endif %}
-      </a></td>
-
-
-        {% color_class_value item.global|dict_value_first "Global" item.person.person_id event_filter as global_class %}
-        <td class="{{ global_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="RC" data-evento="1">{{ item.global|dict_value_first }}</td>
-
-        {% color_class_value item.spo2 1 item.person.person_id event_filter as spo2_class %}
-        <td class="{{ spo2_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="1" data-evento="{{event_filter}}">{{ item.spo2|floatformat:1 }}</td>
-
-        {% color_class_value item.o2 2 item.person.person_id event_filter as o2_class %}
-        <td class="{{ o2_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="2" data-evento="{{event_filter}}">{% if item.o2 >= 0.5 %} Sim {% else %} Não {% endif %}</td>
-
-        {% color_class_value item.fc 3 item.person.person_id event_filter as fc_class %}
-        <td class="{{ fc_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="3" data-evento="{{event_filter}}">{{ item.fc|floatformat:1 }}</td>
-
-        {% color_class_value item.tas 4 item.person.person_id event_filter as tas_class %}
-        <td class="{{ tas_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="4" data-evento="{{event_filter}}">{{ item.tas|floatformat:1 }}</td>
-
-        {% color_class_value item.tad 5 item.person.person_id event_filter as tad_class %}
-        <td class="{{ tad_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="5" data-evento="{{event_filter}}">{{ item.tad|floatformat:1 }}</td>
-
-        {% color_class_value item.temp 6 item.person.person_id event_filter as temp_class %}
-        <td class="{{ temp_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="6" data-evento="{{event_filter}}">{{ item.temp|floatformat:1 }}</td>
-
-        {% color_class_value item.gcs 7 item.person.person_id event_filter as gcs_class %}
-        <td class="{{ gcs_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="7" data-evento="{{event_filter}}">{{ item.gcs|floatformat:1 }}</td>
-
-        {% color_class_value item.dor 8 item.person.person_id event_filter as dor_class %}
-        <td class="{{ dor_class }} clickable" data-person-id="{{ item.person.person_id }}"
-        data-parametro="8" data-evento="{{event_filter}}">{% if item.dor >= 0.5 %} Sim {% else %} Não {% endif %}</td>
-      </tr>
-
-      <tr>
-        <td>Previsão {{temp_prev}}h:</td>
-
-        {% color_class_value item.global_prev|dict_value_first "Global" item.person.person_id event_filter as global_prev_class %}
-        <td class="{{ global_prev_class }}">{{ item.global_prev|dict_value_first }}</td>
-
-        {% color_class_value item.prev.spo2 "prev" item.person.person_id event_filter as spo2_prev_class %}
-        <td class="{{ spo2_prev_class }}"></td>
-
-        {% color_class_value item.prev.o2 "prev" item.person.person_id event_filter as o2_prev_class %}
-        <td class="{{ o2_prev_class }}"></td>
-
-        {% color_class_value item.prev.fc "prev" item.person.person_id event_filter as fc_prev_class %}
-        <td class="{{ fc_prev_class }}"></td>
-
-        {% color_class_value item.prev.tas "prev" item.person.person_id event_filter as tas_prev_class %}
-        <td class="{{ tas_prev_class }}"></td>
-
-        {% color_class_value item.prev.tad "prev" item.person.person_id event_filter as tad_prev_class %}
-        <td class="{{ tad_prev_class }}"></td>
-
-        {% color_class_value item.prev.temp "prev" item.person.person_id event_filter as temp_prev_class %}
-        <td class="{{ temp_prev_class }}"></td>
-
-        {% color_class_value item.prev.gcs "prev" item.person.person_id event_filter as gcs_prev_class %}
-        <td class="{{ gcs_prev_class }}"></td>
-
-        {% color_class_value item.prev.dor "prev" item.person.person_id event_filter as dor_prev_class %}
-        <td class="{{ dor_prev_class }}"></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div id="myModal" class="modal">
-  <div class="modal-content">
-    <span id="closeModal" class="close">&times;</span>
-    <img id="graficoImagem"
-         src=""
-         alt="Gráfico do utente"
-         style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
-  </div>
-</div>
-
-
-<style>
-  .modal {
+.modal {
     display: none;
     position: fixed;
     z-index: 100;
@@ -418,19 +208,201 @@
   }
 </style>
 
+<form method="GET" action="{% url 'listPatients' %}" style="text-align: center; margin: 20px auto;">
+  
+  <input type="text" name="search" placeholder="Pesquisar utente..." value="{{ request.GET.search }}" style="padding: 8px; width: 300px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;">
+  <input type="hidden" name="service" value="{{ service_filter }}">
+  <input type="hidden" name="event" value="{{ event_filter }}">
+  <input type="hidden" name="order" value="{{ order_by }}">
+  <input type="hidden" name="temp_prev" value="{{ temp_prev }}">
+  <button type="submit" style="padding: 8px 12px; background-color: #007041; color: white; border: none; border-radius: 6px; cursor: pointer;">Pesquisar</button>
+  
+<div name="alerts" style="display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;margin-top: 20px;">
+  <label for="alerts"> <b>Procurar por ⚠️:</b></label>
+
+  <label>
+    <input type="radio" name="alert" value="1" onchange="this.form.submit()" {% if alert_filter == "1" %}checked{% endif %}>
+    Sim
+  </label>
+
+  <label>
+    <input type="radio" name="alert" value="0" onchange="this.form.submit()" {% if alert_filter == "0" or not alert_filter %}checked{% endif %}>
+    Não
+  </label>
+
+</div>
+
+
+  <div name="models" style="display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;margin-top: 20px;">
+  <label for="models"> <b>Modelo de Previsão:</b></label>
+    <label>
+      <input type="radio" name="model" value="km" onchange="this.form.submit()" id="km" {% if selected_model == "km" %}checked{% endif %}>
+       Estatístico
+    </label>
+
+    <label>
+      <input type="radio" name="model" value="rsf" onchange="this.form.submit()" id="rsf" {% if selected_model == "rsf" %}checked{% endif %}>
+        Aprendizagem Automática
+    </label>
+</div>
+
+</form>
+
+
+<form method="GET" action="{% url 'listPatients' %}" class="filter-form">
+
+  <label for="temp_prev">Tempo de Previsão:</label>
+  <select name="temp_prev" id="temp_prev">
+    {% for hour in hours %}
+    <option value="{{hour}}" {% if temp_prev|stringformat:"s" == hour|stringformat:"s"  %}selected{% endif %}>{{hour}}</option>
+    {% endfor %}
+  </select>
+
+  <label for="service">Filtrar:</label>
+  <select name="service" id="service">
+    <option value="">Todos</option>
+    <option value="Urgência" {% if service_filter == "Urgência" %}selected{% endif %}>Serviço Urgência</option>
+    <option value="Internamento" {% if service_filter == "Internamento" %}selected{% endif %}>Serviço Internamento</option>
+    <option value="UCI" {% if service_filter == "UCI" %}selected{% endif %}>Serviço UCI</option>
+  {% for key, state in states.items %}
+  <option value="{{ state.id }}" {% if service_filter|stringformat:"s" == state.id|stringformat:"s" %}selected{% endif %}>
+    Estado {{ state.name }}
+  </option>
+{% endfor %}
+
+  </select>
+
+  <label for="order">Ordenar:</label>
+  <select name="order" id="order">
+    <option value="NoOrder" {% if order_by == "NoOrder" %}selected{% endif %}>Nenhum</option>
+    <option value="first_name" {% if order_by == "first_name" %}selected{% endif %}>Nome (A-Z)</option>
+    <option value="-first_name" {% if order_by == "-first_name" %}selected{% endif %}>Nome (Z-A)</option>
+    <option value="birthday" {% if order_by == "birthday" %}selected{% endif %}>Nascimento (Antigo - Novo)</option>
+    <option value="-birthday" {% if order_by == "-birthday" %}selected{% endif %}>Nascimento (Novo - Antigo)</option>
+  </select>
+
+  <label for="event">Evento:</label>
+  <select name="event" id="event">
+  {% for key, event in events.items %}
+  <option value="{{ event.id }}" {% if event_filter|stringformat:"s" == event.id|stringformat:"s" %}selected{% endif %}>
+    {{ event.name }}
+  </option>
+{% endfor %}
+  </select>
+  <input type="hidden" name="search" value="{{ search_query }}">
+  <button type="submit">Aplicar</button>
+  <a href="{% url 'patients' %}"><img src="{% static 'images/reset.png' %}" alt="Reset">
+  </a>
+  <input type="hidden" name="alert" value="{{ alert_filter }}">
+  <input type="hidden" name="model" value="{{ selected_model }}">
+</form>
+<br>
+<div class="table-container">
+  <table>
+<thead>
+  <tr>
+<th title="Nome do Utente">
+  Nome
+</th>
+<th title="Risco Clínico">
+  RC
+  <div style="font-size: 0.75em; color: #666;">categorias</div>
+</th>
+{% for parameter in parameters.items %}
+<th title="{{ parameter.1.2 }}">
+  {{ parameter.1.1 }}
+  <div style="font-size: 0.75em; color: #666;">{{ parameter.1.4 }}</div>
+</th>
+{% endfor %}
+  </tr>
+</thead>
+
+    <tbody>
+      {% for item in mymembers %}
+      <tr>
+        <td><a href="utente/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }} 
+          {% if item.global_prev|dict_value_first != item.global|dict_value_first %}
+            <span title="Alteração de estado clínico" style="margin-left: 5px; color: red; font-weight: bold;"> ⚠️</span>
+          {% endif %}
+      </a></td>
+
+        {% color_class_value item.global|dict_value_first "Global" item.person.person_id event_filter as global_class %}
+        <td class="clickable" data-person-id="{{ item.person.person_id }}"
+            data-parametro="RC" data-evento="1"
+            style="background-color: {{ global_class}}; color: white;">
+            {{ item.global.Name }}
+        </td>
+
+        {% for id in num_params %}
+        {% with item|get:id as value %}
+        {% color_class_value value id item.person.person_id event_filter as parameter_class %}
+        <td class="clickable" data-person-id="{{ item.person.person_id }}"
+        data-parametro="{{id}}" data-evento="{{event_filter}}" style="background-color: {{ parameter_class}}; color: white;">
+        {% if id == 2 or id == 8 %}
+                {% if value >= 0.5 %} Sim {% else %} Não {% endif %}
+            {% else %}
+                {{ value|floatformat:1 }}
+            {% endif %}
+        </td>
+          {% endwith %}
+        {% endfor %}
+      </tr>
+
+      <tr>
+        <td>Previsão {{temp_prev}}h:</td>
+
+        {% color_class_value item.global_prev|dict_value_first "Global" item.person.person_id event_filter as global_prev_class %}
+        <td  style="background-color: {{ global_prev_class}}; color: white;"></td>
+
+
+        {% for id in num_params %}
+        {% with item.prev|get:id as value %}
+        {% color_class_value value "prev" item.person.person_id event_filter as prev_class %}
+        <td style="background-color: {{ prev_class}}; color: white;">
+        </td>
+          {% endwith %}
+        {% endfor %}
+      
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" class="close">&times;</span>
+    <img id="graficoImagem"
+         src=""
+         alt="Gráfico do utente"
+         style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
+  </div>
+</div>
+
+
+
+
 
 
 
 <div class="pagination">
-  {% if mymembers.has_previous %}
-    <a href="?page={{ mymembers.previous_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}">Anterior</a>
-  {% endif %}
+<a 
+  href="{% if mymembers.has_previous %}?page={{ mymembers.previous_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}{% else %}#{% endif %}" 
+  class="{% if not mymembers.has_previous %}disabled-link{% endif %}"
+>
+  Anterior
+</a>
+
 
   <span>Página {{ mymembers.number }} de {{ mymembers.paginator.num_pages }}</span>
 
-  {% if mymembers.has_next %}
-    <a href="?page={{ mymembers.next_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}">Seguinte</a>
-  {% endif %}
+  <a 
+  href="{% if mymembers.has_next %}?page={{ mymembers.next_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}{% else %}#{% endif %}" 
+  class="{% if not mymembers.has_next %}disabled-link{% endif %}"
+>
+  Seguinte
+</a>
+
 </div>
 
 <script>
@@ -468,6 +440,9 @@
       }
     });
   });
+
+
+
 </script>
 
 {% endblock %}

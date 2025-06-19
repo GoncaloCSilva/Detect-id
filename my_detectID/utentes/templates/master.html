@@ -68,9 +68,12 @@
     }
 
     .navbar-links {
-      flex-grow: 1;
-      text-align: center;
+      flex-grow: 0.85;
+      display: flex;
+      justify-content: center;
+      gap: 100px; /* Espaçamento entre os links */
     }
+
     .logo-link {
       display: inline-block;
       transition: transform 0.3s ease, filter 0.3s ease;
@@ -100,7 +103,7 @@
 </a>
     <!-- LINKS -->
     <div class="navbar-links">
-      <a href="{% url 'patients' %}" class="nav-link {% if active_page == 'patients' %}active{% endif %}">Utentes</a>
+      <a href="{% url 'patients' %}" class="nav-link {% if active_page == 'patients' %}active{% endif %}">Painel Clínico</a>
       <a href="{% url 'addPatient' %}" class="nav-link {% if active_page == 'addPatient' %}active{% endif %}">Adicionar Utente</a>
     </div>
   </div>
@@ -109,13 +112,13 @@
   {% endblock %}
 
   <!-- FOOTER -->
-  <footer style="margin-top: 30px; background-color: #007041; padding: 0px 20px 30px 20px; text-align: center; color: white;">
-    <div style="padding-top: 30px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; justify-items: center; margin-bottom: 20px;">
-      <a href="https://www.isel.pt"><img src="{% static 'images/isel_preto.png' %}" alt="ISEL Logo" style="height: 80px;"></a>
-      <img src="{% static 'images/idcare_preto.png' %}" alt="id.Care Logo" style="height: 100px;">
-      <a href="https://www.esel.pt"><img src="{% static 'images/esel_preto.png' %}" alt="ESEL Logo" style="height: 60px;"></a>
+  <footer style="margin-top: 30px; background-color: #007041; padding: 0px 0px 1px 0px; text-align: center; color: white;">
+    <div style="margin-top:10px ; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; justify-items: center;">
+      <a href="https://www.isel.pt"><img src="{% static 'images/isel_preto.png' %}" alt="ISEL Logo" style="height: 60px;"></a>
+      <img src="{% static 'images/idcare_preto.png' %}" alt="id.Care Logo" style="height: 60px;">
+      <a href="https://www.esel.pt"><img src="{% static 'images/esel_preto.png' %}" alt="ESEL Logo" style="height: 40px;"></a>
     </div>
-    <p style="margin-top: 20px; font-size: 14px;">
+    <p style="margin-top: 30px; font-size: 14px;">
       Projeto Final 2025: 48328 Gonçalo Silva, 48168 Diogo Lobo
     </p>
   </footer>
