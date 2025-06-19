@@ -740,7 +740,7 @@ def exportCSV(request):
     """
 
     df = trainModels()
-    
+
     filename = "exported_data.csv"
     parameters = get_parameters()
     events = get_events()
@@ -796,7 +796,7 @@ def exportCSV(request):
                 "Data/Hora de Entrada":f"{VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.date()} {VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.time()}",
                 "Data/Hora de Saída":alta,
                 "Dia de Medição":dt.date(),
-                "Hora de Medição":dt.time(),
+                "Hora de Medição":dt.time()
             }
 
             for concept_name, param_data in parameters.items():
@@ -818,13 +818,10 @@ def exportCSV(request):
 
     print(f"Exportação concluída: {filename}")
 
-    buffer = StringIO()
-    df.to_csv(buffer, index=False)
-    buffer.seek(0)
-
-    response = HttpResponse(buffer, content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=detectid_export.csv'
-    return response
+    with open(filename, "r", encoding="utf-8") as f:
+        response = HttpResponse(f.read(), content_type="text/csv")
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+        return response
 
 
 def graphicView(request, person_id):
