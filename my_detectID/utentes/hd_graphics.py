@@ -104,19 +104,36 @@ def graphicPatient_km(person_id, param_id, evento_id, tempoPrev = None):
     ax.axhspan(0, general_settings["thresholds_states"][-1], color=graph_settings["graph_color_states"][-1], alpha=0.2)
 
     kmf = get_model(param_id,valor,evento_id)
-    kmf.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[group])
+
+    if param_id != 2:
+        if group == 0: label_text=f"[{thresholds[0]}, \u221E["
+        elif group == num_states - 1: label_text = f"[0,{thresholds[-1]}]"
+        else: label_text = f"[{thresholds[group]},{thresholds[group-1]}["
+    else:
+        if group == 0: label_text = "Sim"
+        else: label_text = "Não"
+
+    kmf.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[group],label = label_text)
     
     for i in range(0, num_states-1):
         if i != group:
+
+            if param_id == 2:
+                if i == 0: label_text = "Sim"
+                else: label_text = "Não"
+            else:
+                if i == 0: label_text=f"[{thresholds[0]}, \u221E["
+                else:label_text = f"[{thresholds[i]},{thresholds[i-1]}["
+
             kmf2 = get_model(param_id,thresholds[i],evento_id)
-            kmf2.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[i])
+            kmf2.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[i],label=label_text)
             if param_id==2 or param_id ==8 or param_id == 6:
                 break
             
     
     if group != num_states - 1 and (param_id!=2 and param_id !=8 and param_id != 6):
         kmf3 = get_model(param_id,0,evento_id)
-        kmf3.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[-1])
+        kmf3.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[-1],label=f"[0,{thresholds[-1]}]")
 
            
     prob = kmf.predict(tempo_utente)
@@ -124,14 +141,14 @@ def graphicPatient_km(person_id, param_id, evento_id, tempoPrev = None):
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
     
     if tempoPrev is not None:
-        tempoPrev = int(tempoPrev)
+        tempoPrev = float(tempoPrev)
         prob = kmf.predict(tempo_utente+tempoPrev)
         ax.scatter(tempo_utente+tempoPrev, prob,color=points_colors[1], s=100, zorder=3, label=f"Previsão")   
         ax.annotate(f"{prob:.2f}", (tempo_utente+tempoPrev, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
     plt.title(f"Modelo Estatístico - {name_param} - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
-    ax.set_ylabel(f"Probabilidade de não ocorrer {event_name}")
+    ax.set_ylabel(f"Probabilidade de estabilidade clinica")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
     plt.legend()
@@ -205,20 +222,36 @@ def graphicPatient_rsf(person_id, param_id, evento_id,tempoPrev = None):
         ax.axhspan(general_settings["thresholds_states"][i], general_settings["thresholds_states"][i-1], color=graph_settings["graph_color_states"][i], alpha=0.2)
     ax.axhspan(0, general_settings["thresholds_states"][-1], color=graph_settings["graph_color_states"][-1], alpha=0.2)
 
-    rsf = get_model(param_id, evento_id)
+    rsf = get_model(param_id,valor,evento_id)
 
-    ax.step(rsf[0].x, rsf[0].y, where="post", color=thresholds_colors[group])
+    if param_id != 2:
+        if group == 0: label_text=f"[{thresholds[0]}, \u221E["
+        elif group == num_states - 1: label_text = f"[0,{thresholds[-1]}]"
+        else: label_text = f"[{thresholds[group]},{thresholds[group-1]}["
+    else:
+        if group == 0: label_text = "Sim"
+        else: label_text = "Não"
+
+    ax.step(rsf[0].x, rsf[0].y, where="post", color=thresholds_colors[group], label=label_text)
 
     for i in range(0, num_states-1):
         if i != group:
+
+            if param_id == 2:
+                if i == 0: label_text = "Sim"
+                else: label_text = "Não"
+            else:
+                if i == 0: label_text=f"[{thresholds[0]}, \u221E["
+                else:label_text = f"[{thresholds[i]},{thresholds[i-1]}["
+
             rsf2 = get_model(param_id,thresholds[i],evento_id)
-            ax.step(rsf2[0].x, rsf2[0].y, where="post", color=thresholds_colors[i])
+            ax.step(rsf2[0].x, rsf2[0].y, where="post", color=thresholds_colors[i], label=label_text)
             if param_id==2 or param_id ==8 or param_id == 6:
                 break
 
     if group != num_states - 1 and (param_id!=2 and param_id !=8 and param_id != 6):
         rsf3 = get_model(param_id,0,evento_id)
-        ax.step(rsf3[0].x, rsf3[0].y, where="post", color=thresholds_colors[-1])
+        ax.step(rsf3[0].x, rsf3[0].y, where="post", color=thresholds_colors[-1], label=f"[0,{thresholds[-1]}]")
 
     try:
         prob = np.interp(tempo_utente, rsf[0].x, rsf[0].y)
@@ -229,7 +262,7 @@ def graphicPatient_rsf(person_id, param_id, evento_id,tempoPrev = None):
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
     if tempoPrev is not None:
-        tempoPrev = int(tempoPrev)
+        tempoPrev = float(tempoPrev)
         try:
             prob = np.interp(tempo_utente+tempoPrev, rsf[0].x, rsf[0].y)
         except:
@@ -241,7 +274,7 @@ def graphicPatient_rsf(person_id, param_id, evento_id,tempoPrev = None):
 
     plt.title(f"Aprendizagem Automática - {name_param} - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
-    ax.set_ylabel(f"Probabilidade de não ocorrer {event_name}")
+    ax.set_ylabel(f"Probabilidade de estabilidade clinica")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
     plt.legend()
@@ -290,7 +323,7 @@ def graphicPatientGlobal(person_id,tempoPrev=None):
 
        
     if tempoPrev is not None:
-        tempoPrev = int(tempoPrev)
+        tempoPrev = float(tempoPrev)
         prob = kmf.predict(tempo_utente+tempoPrev)
         ax.scatter(tempo_utente+tempoPrev, prob, color=points_colors[1], s=100, zorder=3, label=f"Previsão")   
         ax.annotate(f"{prob:.2f}", (tempo_utente+tempoPrev, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
@@ -298,7 +331,7 @@ def graphicPatientGlobal(person_id,tempoPrev=None):
 
     plt.title(f"Estatistico - Risco Clinico - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
-    ax.set_ylabel(f"Probabilidade de não ocorrer um Evento")
+    ax.set_ylabel(f"Probabilidade de estabilidade clinica")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
     plt.legend()
@@ -360,7 +393,7 @@ def graphicPatientGlobal_rsf(person_id,tempoPrev=None):
     ax.annotate(f"{prob:.2f}", (tempo_utente, prob), textcoords="offset points", xytext=(-10, -10), ha='center')
 
     if tempoPrev is not None:
-        tempoPrev = int(tempoPrev)
+        tempoPrev = float(tempoPrev)
         try:
             prob = np.interp(tempo_utente+tempoPrev, rsf[0].x, rsf[0].y)
         except:
@@ -372,7 +405,7 @@ def graphicPatientGlobal_rsf(person_id,tempoPrev=None):
 
     plt.title(f"Aprendizagem Automática - Risco Clínico - {person.first_name} {person.last_name}", fontsize=14)
     ax.set_xlabel("Tempo desde entrada (horas)")
-    ax.set_ylabel("Probabilidade de não ocorrer um Evento")
+    ax.set_ylabel("Probabilidade de estabilidade clinica")
     ax.grid(True, linestyle='--', alpha=0.5)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3, fontsize=10, frameon=False)
     plt.legend()

@@ -23,9 +23,9 @@ events: ['Descompensação','Ativação Médico', 'Aumento da Vigilância', 'Via
 # Each parameter has a name, an abbreviation, a unit of measurement, thresholds.
 # The number of thresholds must be the same defined in general settings.
 parameters:
-  - name: 'SpO2' # Nome do CSV
-    abv_name: 'SpO2' # Abreviação do nome
-    full_name: 'Saturação de Oxigênio' # Nome completo 
+  - name: 'SpO2' # CSV Name
+    abv_name: 'SpO2' # Name abreviation
+    full_name: 'Saturação de Oxigênio' # Full Name
     unit_measurement: '%'
     thresholds: [98,90]
 
@@ -57,7 +57,7 @@ parameters:
     abv_name: 'Temp'
     full_name: 'Temperatura Corporal'
     unit_measurement: '°C'
-    thresholds: [38,35]
+    thresholds: [37,36.5]
   
   - name: 'Nível de Consciência'
     abv_name: 'GCS'

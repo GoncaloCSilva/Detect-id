@@ -88,7 +88,7 @@
   font-size: 14px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  width: 60px;
+  width: 70px;
   text-align: center;
 }
 </style>
@@ -141,52 +141,23 @@
 
      <div class = "measurement-form" style="display: flex;">
   {% csrf_token %}
-  <div class="input-group">
-    <label for="spo2">SpO2</label>
-    <input type="number" step="0.1" name="spo2" id="spo2" required class="input-box" />
-  </div>
+  {% for parameter in parameters.items %}
+  {% if parameter.0 == 2 or parameter.0 == 8 %}
+    <div class="input-group">
+      <label for="{{ parameter.0  }}">{{ parameter.1.1 }}</label>
+      <select name="{{ parameter.0 }}" id="{{ parameter.0 }}" required class="input-box">
+        <option value="1">Sim</option>
+        <option value="0">Não</option>
+      </select>
+    </div>
 
-  <div class="input-group">
-    <label for="necessidade_o2">O2</label>
-    <select name="necessidade_o2" id="necessidade_o2" required class="input-box">
-      <option value="1">Sim</option>
-      <option value="0">Não</option>
-    </select>
-  </div>
-
-  <div class="input-group">
-    <label for="fc">FC</label>
-    <input type="number" step="0.1" name="fc" id="fc" required class="input-box" />
-  </div>
-
-  <div class="input-group">
-    <label for="ta_sistolica">TAS</label>
-    <input type="number" step="0.1" name="ta_sistolica" id="ta_sistolica" required class="input-box" />
-  </div>
-
-  <div class="input-group">
-    <label for="ta_diastolica">TAD</label>
-    <input type="number" step="0.1" name="ta_diastolica" id="ta_diastolica" required class="input-box" />
-  </div>
-
-  <div class="input-group">
-    <label for="temperatura">Temp</label>
-    <input type="number" step="0.1" name="temperatura" id="temperatura" required class="input-box" />
-  </div>
-
-  <div class="input-group">
-    <label for="nivel_consciencia">GCS</label>
-    <input type="number" min="1" max="15" name="nivel_consciencia" id="nivel_consciencia" required class="input-box" />
-  </div>
-
-  <div class="input-group">
-    <label for="dor">Dor</label>
-    <select name="dor" id="dor" required class="input-box">
-      <option value="1">Sim</option>
-      <option value="0">Não</option>
-    </select>
-  </div>
-
+  {% else %}
+    <div class="input-group">
+      <label for="{{ parameter.0 }}">{{ parameter.1.1 }}</label>
+      <input type="number" step="0.1" name="{{ parameter.0  }}" id="{{ parameter.0  }}" required class="input-box" />
+    </div>
+  {% endif %}
+{% endfor %}
   </div>
   
   <div style="text-align: center;">

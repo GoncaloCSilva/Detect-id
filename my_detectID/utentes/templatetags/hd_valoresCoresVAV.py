@@ -28,7 +28,7 @@ def color_class_value(value, concept_id, person_id=None, event_id=1):
             
     # Obter medicao do utente
     medicao = (
-        MeasurementExt.objects
+        Measurement.objects
         .filter(person_id=person_id, measurement_concept_id=concept_id)
         .order_by('-measurement_datetime')
         .first()

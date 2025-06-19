@@ -11,7 +11,7 @@ from django.template import loader
 from rest_framework.decorators import api_view
 import matplotlib.pyplot as plt
 from io import BytesIO, StringIO, TextIOWrapper
-from .hd_graficos import graphicPatient_rsf, graphicPatientGlobal, graphicPatient_km, graphicPatientGlobal_rsf
+from .hd_graphics import graphicPatient_rsf, graphicPatientGlobal, graphicPatient_km, graphicPatientGlobal_rsf
 from datetime import date, datetime
 from decimal import Decimal
 from django.utils import timezone
@@ -83,7 +83,7 @@ def patients(request):
         visit = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
         visit_end = VisitOccurrence.objects.filter(person_id=patient.person_id,visit_end_datetime__isnull=False).exists()
         if  not visit_end:
-            measurement = MeasurementExt.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+            measurement = Measurement.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
             time_patient = (measurement.measurement_datetime - visit.visit_start_datetime).total_seconds() / 3600
 
@@ -312,7 +312,7 @@ def addPatient(request):
     @param request: HttpRequest object representing a POST request with the patient's information.
     @return: Redirects to the patients listing page after successful insertion, or renders the 'adicionarUtente.html' template if GET request.
     """
-
+    parameters = get_parameters()
     if request.method == "POST":
 
         firstname = request.POST.get("firstname")
@@ -324,18 +324,10 @@ def addPatient(request):
         queixasEntrada = request.POST.get("QueixasEntrada")
         alergies = request.POST.get("Alergias")
         diagnosis = request.POST.get("DiagnosticoPrincipal")
-        if request.POST.get("Serviço") == "Urgência": servico = 1 
+        if request.POST.get("Serviço") == "Urgência": service = 1 
         else: 
-            if request.POST.get("Serviço") == "Internamento": servico = 2 
-            else: servico = 3
-        spO2 = request.POST.get("spo2")
-        o2 = request.POST.get("necessidade_o2")
-        heartRate = request.POST.get("fc")
-        tAS = request.POST.get("ta_sistolica")
-        tAD = request.POST.get("ta_diastolica")
-        temperature = request.POST.get("temperatura")
-        gcs = request.POST.get("nivel_consciencia")
-        pain = request.POST.get("dor")
+            if request.POST.get("Serviço") == "Internamento": service = 2 
+            else: service = 3
 
         dateTime=datetime.now()
         date = dateTime.date()
@@ -367,20 +359,21 @@ def addPatient(request):
                 note_text=alergies,
                 note_type_concept_id=2  
             )
-
-        # Medições
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=1, value_as_number=Decimal(spO2), measurement_datetime=dateTime, range_low=90, range_high=98)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=2, value_as_number=int(o2), measurement_datetime=dateTime, range_low=0, range_high=1)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=3, value_as_number=Decimal(heartRate), measurement_datetime=dateTime, range_low=60, range_high=99)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=4, value_as_number=Decimal(tAS), measurement_datetime=dateTime, range_low=100, range_high=130)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=5, value_as_number=Decimal(tAD), measurement_datetime=dateTime, range_low=60, range_high=90)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=6, value_as_number=Decimal(temperature), measurement_datetime=dateTime, range_low=35, range_high=38)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=7, value_as_number=Decimal(gcs), measurement_datetime=dateTime, range_low=8, range_high=15)
-        Measurement.objects.create(person_id=person.person_id, measurement_concept_id=8, value_as_number=Decimal(pain), measurement_datetime=dateTime, range_low=0, range_high=1)
-
+        value = None
+        for id, (name, abv_name, full_name, thresholds, unit) in parameters.items():
+            value = request.POST.get(str(id))
+            if value is not None:
+                Measurement.objects.create(
+                    person_id=person.person_id,
+                    measurement_concept_id=id,
+                    value_as_number=Decimal(value),
+                    measurement_datetime=dateTime,
+                    range_low=thresholds[0],
+                    range_high=thresholds[1]
+                )
         VisitOccurrence.objects.create(
             person=person,
-            care_site_id=int(servico) if servico else 1, 
+            care_site_id=int(service) if service else 1, 
             visit_start_datetime=dateTime
         )
         
@@ -391,7 +384,8 @@ def addPatient(request):
     
     template = loader.get_template('adicionarUtente.html')
     context = {
-        'active_page': 'addPatient'
+        'active_page': 'addPatient',        
+        'parameters': parameters,
     }
 
     return HttpResponse(template.render(context))       
@@ -434,19 +428,22 @@ def registEvent(request,person_id):
     @param person_id: ID of the patient to be edited.
     @return: Redirects to the patient list upon successful update, or renders the edit form if GET request.
     """
-    patient = PersonExt.objects.get(person_id=person_id)
+    parameters = get_parameters()
+    person = PersonExt.objects.get(person_id=person_id)
+
     if request.method == "POST":
         dateTime = datetime.now()
-
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=dateTime, range_low=90, range_high=98)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=dateTime, range_low=0, range_high=1)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=dateTime, range_low=60, range_high=99)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=dateTime, range_low=100, range_high=130)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=dateTime, range_low=60, range_high=90)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=dateTime, range_low=35, range_high=38)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=dateTime, range_low=8, range_high=15)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=dateTime, range_low=0, range_high=1)
-
+        for id, (name, abv_name, full_name, thresholds, unit) in parameters.items():
+            value = request.POST.get(str(id))
+            if value is not None:
+                Measurement.objects.create(
+                    person_id=person.person_id,
+                    measurement_concept_id=id,
+                    value_as_number=Decimal(value),
+                    measurement_datetime=dateTime,
+                    range_low=thresholds[0],
+                    range_high=thresholds[1]
+                )
         eventos_selecionados = request.POST.getlist('eventos')
         for evento in eventos_selecionados:
             Observation.objects.create(
@@ -459,7 +456,7 @@ def registEvent(request,person_id):
 
         return redirect('patient', person_id=person_id)
     
-    return render(request, "registarEvento.html", {"utente": patient})
+    return render(request, "registarEvento.html", {"utente": person})
 
 
 def newMeasurement(request, person_id):
@@ -469,18 +466,21 @@ def newMeasurement(request, person_id):
     @param person_id: The ID of the patient
     @return: Redirects to the patient's edit page after successful insertion.
     """
+    parameters = get_parameters()
     if request.method == "POST":
         dateTime = datetime.now()
 
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=1, value_as_number=request.POST["spo2"], measurement_datetime=dateTime, range_low=90, range_high=98)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=2, value_as_number=request.POST["necessidade_o2"], measurement_datetime=dateTime, range_low=0, range_high=1)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=3, value_as_number=request.POST["fc"], measurement_datetime=dateTime, range_low=60, range_high=99)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=4, value_as_number=request.POST["ta_sistolica"], measurement_datetime=dateTime, range_low=100, range_high=130)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=5, value_as_number=request.POST["ta_diastolica"], measurement_datetime=dateTime, range_low=60, range_high=90)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=6, value_as_number=request.POST["temperatura"], measurement_datetime=dateTime, range_low=35, range_high=38)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=7, value_as_number=request.POST["nivel_consciencia"], measurement_datetime=dateTime, range_low=8, range_high=15)
-        Measurement.objects.create(person_id=person_id, measurement_concept_id=8, value_as_number=request.POST["dor"], measurement_datetime=dateTime, range_low=0, range_high=1)
-
+        for id, (name, abv_name, full_name, thresholds, unit) in parameters.items():
+            value = request.POST.get(str(id))
+            if value is not None:
+                Measurement.objects.create(
+                    person_id=person_id,
+                    measurement_concept_id=id,
+                    value_as_number=Decimal(value),
+                    measurement_datetime=dateTime,
+                    range_low=thresholds[0],
+                    range_high=thresholds[1]
+                )
     return redirect('patient', person_id=person_id)
 
 
@@ -606,7 +606,7 @@ def listPatients(request):
         visita = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
         visit_end = VisitOccurrence.objects.filter(person_id=patient.person_id,visit_end_datetime__isnull=False).exists()
         if not visit_end:
-            medicao = MeasurementExt.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
+            medicao = Measurement.objects.filter(person_id=patient.person_id, measurement_concept_id=1).order_by('-measurement_datetime').first()
             
             time_patient = (medicao.measurement_datetime - visita.visit_start_datetime).total_seconds() / 3600
 
@@ -664,7 +664,7 @@ def listPatients(request):
             
             for parameter_id,(name,abv_name,full_name,thresholds,unit) in parameters.items():
                 measurement = (
-                    MeasurementExt.objects
+                    Measurement.objects
                     .filter(person_id=patient.person_id, measurement_concept_id=parameter_id)
                     .order_by('-measurement_datetime')
                     .first()
@@ -740,8 +740,84 @@ def exportCSV(request):
     """
 
     df = trainModels()
+    
+    filename = "exported_data.csv"
+    parameters = get_parameters()
+    events = get_events()
 
-    # Usar buffer em memória
+    fieldnames = [
+        "Pessoa","Primeiro Nome", "Último Nome", "Número de Utente",
+        "Género", "Data de Nascimento", "Diagnóstico Principal",
+        "Queixas de Entrada", "Alergias",
+        "Serviço", "Data/Hora de Entrada", "Data/Hora de Saída",
+        "Dia de Medição", "Hora de Medição", "Serviço"] + [v[0] for v in parameters.values()] + [v for v in events.values()]
+
+
+    # Criar ficheiro CSV
+    with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        pessoas = {p.person_id: p for p in PersonExt.objects.all()}
+
+        medidas = Measurement.objects.all().order_by("person_id", "measurement_datetime")
+        medidas_por_pessoa = {}
+        for m in medidas:
+            chave = (m.person_id, m.measurement_datetime)
+            if chave not in medidas_por_pessoa:
+                medidas_por_pessoa[chave] = {}
+            medidas_por_pessoa[chave][m.measurement_concept_id] = m.value_as_number
+
+        for (person_id, dt), medidas_dict in medidas_por_pessoa.items():
+            pessoa = pessoas.get(person_id)
+            if not pessoa:
+                continue  
+            try:
+               alergias= Note.objects.filter(note_type_concept_id = 2).get(person=pessoa).note_text
+            except:
+                alergias =""
+
+            try:
+                alta = f"{VisitOccurrence.objects.get(person=pessoa).visit_end_datetime.date()} {VisitOccurrence.objects.get(person=pessoa).visit_end_datetime.time()}"
+            except:
+                alta= ""
+
+            row = {
+                "Pessoa":pessoa.person_id,
+                "Primeiro Nome": pessoa.first_name,
+                "Último Nome": pessoa.last_name,
+                "Número de Utente": pessoa.person_source_value,
+                "Género": pessoa.gender_concept_id,
+                "Data de Nascimento": pessoa.birthday,
+                "Diagnóstico Principal": ConditionOccurrence.objects.get(person=pessoa).condition_source_value,
+                "Queixas de Entrada": Note.objects.filter(note_type_concept_id = 1).get(person=pessoa).note_text,
+                "Alergias":alergias,
+                "Serviço":VisitOccurrence.objects.get(person=pessoa).care_site,
+                "Data/Hora de Entrada":f"{VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.date()} {VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.time()}",
+                "Data/Hora de Saída":alta,
+                "Dia de Medição":dt.date(),
+                "Hora de Medição":dt.time(),
+            }
+
+            for concept_name, param_data in parameters.items():
+                name = param_data[0]
+                row[name] = medidas_dict.get(concept_name, "")  
+
+            for event_id, event_name in events.items():
+                obs = Observation.objects.filter(
+                person=pessoa,
+                observation_concept_id=event_id,
+                observation_datetime=dt  
+                ).first() 
+                if obs:
+                    row[event_name] = obs.value_as_number
+                else:
+                    row[event_name] = "0"
+
+            writer.writerow(row)
+
+    print(f"Exportação concluída: {filename}")
+
     buffer = StringIO()
     df.to_csv(buffer, index=False)
     buffer.seek(0)

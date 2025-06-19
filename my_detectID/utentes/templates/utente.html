@@ -475,8 +475,8 @@
   {% for parameter in parameters.items %}
   {% if parameter.0 == 2 or parameter.0 == 8 %}
     <div class="input-group">
-      <label for="{{ parameter.1.1 }}">{{ parameter.1.1 }}</label>
-      <select name="{{ parameter.1.1 }}" id="{{ parameter.1.1 }}" required class="input-box">
+      <label for="{{ parameter.0 }}">{{ parameter.1.1 }}</label>
+      <select name="{{ parameter.0 }}" id="{{ parameter.0 }}" required class="input-box">
         <option value="1">Sim</option>
         <option value="0">Não</option>
       </select>
@@ -484,8 +484,8 @@
 
   {% else %}
     <div class="input-group">
-      <label for="{{ parameter.1.1 }}">{{ parameter.1.1 }}</label>
-      <input type="number" step="0.1" name="{{ parameter.1.1 }}" id="{{ parameter.1.1 }}" required class="input-box" />
+      <label for="{{ parameter.0 }}">{{ parameter.1.1 }}</label>
+      <input type="number" step="0.1" name="{{ parameter.0 }}" id="{{ parameter.0 }}" required class="input-box" />
     </div>
   {% endif %}
 {% endfor %}
@@ -503,7 +503,7 @@
 <!-- Eventos  -->
 <div class="section" id="registoEventos">
     <div class="event-table-container">
-  <h2>Histórico de Eventos</h2>
+  <h2>Registo de Eventos</h2>
   <table class="event-table">
     <thead>
       <tr>
@@ -546,8 +546,8 @@
     {% for parameter in parameters.items %}
   {% if parameter.0 == 2 or parameter.0 == 8 %}
     <div class="input-group">
-      <label for="{{ parameter.1.1 }}">{{ parameter.1.1 }}</label>
-      <select name="{{ parameter.1.1 }}" id="{{ parameter.1.1 }}" required class="input-box">
+      <label for="{{ parameter.0 }}">{{ parameter.1.1 }}</label>
+      <select name="{{ parameter.0 }}" id="{{ parameter.0 }}" required class="input-box">
         <option value="1">Sim</option>
         <option value="0">Não</option>
       </select>
@@ -555,8 +555,8 @@
 
   {% else %}
     <div class="input-group">
-      <label for="{{ parameter.1.1 }}">{{ parameter.1.1 }}</label>
-      <input type="number" step="0.1" name="{{ parameter.1.1 }}" id="{{ parameter.1.1 }}" required class="input-box" />
+      <label for="{{ parameter.0 }}">{{ parameter.1.1 }}</label>
+      <input type="number" step="0.1" name="{{ parameter.0 }}" id="{{ parameter.0 }}" required class="input-box" />
     </div>
   {% endif %}
 {% endfor %}
