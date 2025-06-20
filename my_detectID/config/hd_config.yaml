@@ -4,9 +4,12 @@
 # Set prediction hours 
 prediction_hours: [24,48,72,96]
 
+# 1 -> Train models 0 -> Load pickle files
+train_models: 0 
+
 general_settings:
   num_thresholds: 3  # This must match the number of thresholds defined in each parameter.
-  num_states: 3
+  num_states: 3 # This must match the number of names, colors and thresholds of states
   name_states: ['Estável', 'Moderado', 'Emergência'] # Must be ordered from best to worst state.
   color_states: ['#129716', '#E8A310', '#c91515'] # Must be ordered from best to worst state.
   thresholds_states: [0.6,0.4] # Must be ordered from best to worst state.
@@ -26,8 +29,8 @@ parameters:
   - name: 'SpO2' # CSV Name
     abv_name: 'SpO2' # Name abreviation
     full_name: 'Saturação de Oxigênio' # Full Name
-    unit_measurement: '%'
-    thresholds: [98,90]
+    unit_measurement: '%' #Unit measurement
+    thresholds: [98,90] # Thresholds for intervals
 
   - name: 'Necessidade de O2'
     abv_name: 'O2'

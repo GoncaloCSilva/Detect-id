@@ -110,7 +110,11 @@ def predict_survival(model,time):
     
 def trainModels():
     global _csv_data, MODELOS_KM,MODELOS_RSF,PARAMETERS, EVENTS
-    if os.path.exists("./pickle/rsf_modelos.pkl") and os.path.exists("./pickle/km_modelos.pkl"):
+    config = load_config()
+
+    train_models = config["train_models"]
+
+    if os.path.exists("./pickle/rsf_modelos.pkl") and os.path.exists("./pickle/km_modelos.pkl") and train_models == 0:
     
         print("A carregar modelos...")
         with open("./pickle/rsf_modelos.pkl", "rb") as f:
