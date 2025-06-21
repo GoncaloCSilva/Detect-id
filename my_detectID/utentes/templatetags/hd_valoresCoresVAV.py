@@ -3,8 +3,10 @@ from django.http import HttpResponse
 from lifelines import KaplanMeierFitter
 import pandas as pd
 
-from utentes.hd_utils import load_config,getCurrentModel, getLimiares, predict_survival, trainModels, get_global_model, get_model
-from utentes.models import Measurement, MeasurementExt, VisitOccurrence
+from ..models import Measurement, VisitOccurrence
+
+from ..hd_utils import load_config,getCurrentModel, getLimiares, predict_survival, trainModels, get_global_model, get_model
+
 
 register = template.Library()
 

@@ -5,7 +5,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from lifelines import KaplanMeierFitter
-from utentes.hd_utils import get_parameters, load_config,get_events, getCSV, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
+from utentes.hd_utils import changeCSV, get_parameters, load_config,get_events, getCSV, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
 from .models import *
 from django.template import loader
 from rest_framework.decorators import api_view
@@ -722,7 +722,7 @@ def importCSV(request):
     if request.method == "POST":
         try:
             csv_file = request.FILES["csv_file"]
-            df = getCSV(csv_file)
+            changeCSV(csv_file)
 
             messages.success(request, "✅ Ficheiro importado com sucesso!")
         except Exception as e:
@@ -747,10 +747,10 @@ def exportCSV(request):
 
     fieldnames = [
         "Pessoa","Primeiro Nome", "Último Nome", "Número de Utente",
-        "Género", "Data de Nascimento", "Diagnóstico Principal",
+        "Genero", "Data de Nascimento", "Diagnóstico Principal",
         "Queixas de Entrada", "Alergias",
         "Serviço", "Data/Hora de Entrada", "Data/Hora de Saída",
-        "Dia de Medição", "Hora de Medição", "Serviço"] + [v[0] for v in parameters.values()] + [v for v in events.values()]
+        "Dia de Medição", "Hora de Medição"] + [v[0] for v in parameters.values()] + [v for v in events.values()] + ["Evento"]
 
 
     # Criar ficheiro CSV
@@ -782,38 +782,48 @@ def exportCSV(request):
             except:
                 alta= ""
 
+            if pessoa.gender_concept_id == 1: gender = "Masculino"
+            else: gender ="Feminino"
+
             row = {
-                "Pessoa":pessoa.person_id,
+                "Pessoa": pessoa.person_id,
                 "Primeiro Nome": pessoa.first_name,
                 "Último Nome": pessoa.last_name,
                 "Número de Utente": pessoa.person_source_value,
-                "Género": pessoa.gender_concept_id,
-                "Data de Nascimento": pessoa.birthday,
-                "Diagnóstico Principal": ConditionOccurrence.objects.get(person=pessoa).condition_source_value,
-                "Queixas de Entrada": Note.objects.filter(note_type_concept_id = 1).get(person=pessoa).note_text,
-                "Alergias":alergias,
-                "Serviço":VisitOccurrence.objects.get(person=pessoa).care_site,
-                "Data/Hora de Entrada":f"{VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.date()} {VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.time()}",
-                "Data/Hora de Saída":alta,
-                "Dia de Medição":dt.date(),
-                "Hora de Medição":dt.time()
+                "Genero": gender,
+                "Data de Nascimento": pessoa.birthday.strftime("%d/%m/%Y") if pessoa.birthday else "",
+                "Diagnóstico Principal": ConditionOccurrence.objects.filter(person=pessoa).first().condition_source_value if ConditionOccurrence.objects.filter(person=pessoa).exists() else "",
+                "Queixas de Entrada": Note.objects.filter(person=pessoa, note_type_concept_id=1).first().note_text if Note.objects.filter(person=pessoa, note_type_concept_id=1).exists() else "",
+                "Alergias": alergias,
+                "Serviço": CareSite.objects.get(
+                    care_site_id=VisitOccurrence.objects.get(person=pessoa).care_site.care_site_id
+                ).care_site_id if VisitOccurrence.objects.filter(person=pessoa).exists() else 1,
+                "Data/Hora de Entrada": VisitOccurrence.objects.get(person=pessoa).visit_start_datetime.strftime("%d/%m/%Y %H:%M") if VisitOccurrence.objects.filter(person=pessoa).exists() else "",
+                "Data/Hora de Saída": alta.strftime("%d/%m/%Y %H:%M") if isinstance(alta, datetime) else "",
+                "Dia de Medição": dt.strftime("%d/%m/%Y") if dt else "",
+                "Hora de Medição": dt.strftime("%H:%M") if dt else ""
             }
 
+            # Adiciona as medições
             for concept_name, param_data in parameters.items():
                 name = param_data[0]
-                row[name] = medidas_dict.get(concept_name, "")  
+                row[name] = medidas_dict.get(concept_name, "")
 
+            # Adiciona os eventos
+            evento = 0
             for event_id, event_name in events.items():
                 obs = Observation.objects.filter(
-                person=pessoa,
-                observation_concept_id=event_id,
-                observation_datetime=dt  
-                ).first() 
+                    person=pessoa,
+                    observation_concept_id=event_id,
+                    observation_datetime=dt
+                ).first()
                 if obs:
-                    row[event_name] = obs.value_as_number
+                    row[event_name] = int(obs.value_as_number)
+                    evento = 1
                 else:
-                    row[event_name] = "0"
-
+                    row[event_name] = 0
+            
+            row["Evento"] = evento
             writer.writerow(row)
 
     print(f"Exportação concluída: {filename}")
