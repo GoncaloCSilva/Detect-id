@@ -214,7 +214,7 @@
   <input type="hidden" name="service" value="{{ service_filter }}">
   <input type="hidden" name="event" value="{{ event_filter }}">
   <input type="hidden" name="order" value="{{ order_by }}">
-  <input type="hidden" name="temp_prev" value="{{ temp_prev }}">
+  <input type="hidden" name="time_prev" value="{{ time_prev }}">
   <button type="submit" style="padding: 8px 12px; background-color: #007041; color: white; border: none; border-radius: 6px; cursor: pointer;">Pesquisar</button>
   
 <div name="alerts" style="display: flex; justify-content: center; gap: 20px; margin-bottom: 10px;margin-top: 20px;">
@@ -251,10 +251,10 @@
 
 <form method="GET" action="{% url 'listPatients' %}" class="filter-form">
 
-  <label for="temp_prev">Tempo de Previsão:</label>
-  <select name="temp_prev" id="temp_prev">
+  <label for="time_prev">Tempo de Previsão:</label>
+  <select name="time_prev" id="time_prev">
     {% for hour in hours %}
-    <option value="{{hour}}" {% if temp_prev|stringformat:"s" == hour|stringformat:"s"  %}selected{% endif %}>{{hour}}</option>
+    <option value="{{hour}}" {% if time_prev|stringformat:"s" == hour|stringformat:"s"  %}selected{% endif %}>{{hour}}</option>
     {% endfor %}
   </select>
 
@@ -318,7 +318,7 @@
 </thead>
 
     <tbody>
-      {% for item in mymembers %}
+      {% for item in patients %}
       <tr>
         <td><a href="utente/{{ item.person.person_id }}">{{ item.person.first_name }} {{ item.person.last_name }} 
           {% if item.global_prev|dict_value_first != item.global|dict_value_first %}
@@ -349,7 +349,7 @@
       </tr>
 
       <tr>
-        <td>Previsão {{temp_prev}}h:</td>
+        <td>Previsão {{time_prev}}h:</td>
 
         {% color_class_value item.global_prev|dict_value_first "Global" item.person.person_id event_filter as global_prev_class %}
         <td  style="background-color: {{ global_prev_class}}; color: white;"></td>
@@ -387,18 +387,18 @@
 
 <div class="pagination">
 <a 
-  href="{% if mymembers.has_previous %}?page={{ mymembers.previous_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}{% else %}#{% endif %}" 
-  class="{% if not mymembers.has_previous %}disabled-link{% endif %}"
+  href="{% if patients.has_previous %}?page={{ patients.previous_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&time_prev={{ time_prev }}{% else %}#{% endif %}" 
+  class="{% if not patients.has_previous %}disabled-link{% endif %}"
 >
   Anterior
 </a>
 
 
-  <span>Página {{ mymembers.number }} de {{ mymembers.paginator.num_pages }}</span>
+  <span>Página {{ patients.number }} de {{ patients.paginator.num_pages }}</span>
 
   <a 
-  href="{% if mymembers.has_next %}?page={{ mymembers.next_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&temp_prev={{ temp_prev }}{% else %}#{% endif %}" 
-  class="{% if not mymembers.has_next %}disabled-link{% endif %}"
+  href="{% if patients.has_next %}?page={{ patients.next_page_number }}&search={{ search_query }}&service={{ service_filter }}&order={{ order_by }}&event={{ event_filter }}&time_prev={{ time_prev }}{% else %}#{% endif %}" 
+  class="{% if not patients.has_next %}disabled-link{% endif %}"
 >
   Seguinte
 </a>
@@ -410,7 +410,7 @@
     const modal = document.getElementById("myModal");
     const graficoImagem = document.getElementById("graficoImagem");
     const closeModal = document.getElementById("closeModal");
-    const timePrev = document.getElementById("temp_prev").value;
+    const timePrev = document.getElementById("time_prev").value;
 
 
     document.querySelectorAll(".clickable").forEach(td => {
@@ -424,7 +424,7 @@
           var modele = 'rsf';
         }   
 
-        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}&temp_prev=${timePrev}`;
+        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}&time_prev=${timePrev}`;
 
         modal.style.display = "block";
       });

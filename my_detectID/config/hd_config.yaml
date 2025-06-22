@@ -5,7 +5,7 @@
 prediction_hours: [24,48,72,96]
 
 # 1 -> Train models 0 -> Load pickle files
-train_models: 0 
+train_models: 0
 
 general_settings:
   num_thresholds: 3  # This must match the number of thresholds defined in each parameter.
@@ -15,9 +15,9 @@ general_settings:
   thresholds_states: [0.6,0.4] # Must be ordered from best to worst state.
 
 graph_settings:
-  graph_color_thresholds: ['blue', 'cyan', 'lime'] 
-  graph_color_states: ['green', 'yellow', 'red'] 
-  graph_color_points: ['dodgerblue','gray']
+  graph_color_thresholds: ['blue', 'orangered', 'darkgreen'] # Color of the lines of the graphs 
+  graph_color_states: ['green', 'yellow', 'red'] # Color of the areas representing the states (should be similar to color_states)
+  graph_color_points: ['dodgerblue','gray'] # Color of the points that represent the pacient and the prevision
 
 # Define the events that will be monitored, they must exist in the csv file.
 events: ['Descompensação','Ativação Médico', 'Aumento da Vigilância', 'Via Área Ameaçada','Suporte Ventilatório', 'Suporte Circulatório', 'Mortalidade' ]

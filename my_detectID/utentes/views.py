@@ -1,32 +1,22 @@
 from collections import defaultdict
 import csv
 from django.contrib import messages
-from django.shortcuts import render,redirect,get_object_or_404
+from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from lifelines import KaplanMeierFitter
-from utentes.hd_utils import changeCSV, get_parameters, load_config,get_events, getCSV, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
+from utentes.hd_utils import changeCSV, get_parameters, load_config,get_events, getCurrentModel, predict_survival, setCurrentModel, trainModels, get_global_model, get_model
 from .models import *
 from django.template import loader
-from rest_framework.decorators import api_view
-import matplotlib.pyplot as plt
-from io import BytesIO, StringIO, TextIOWrapper
-from .hd_graphics import graphicPatient_rsf, graphicPatientGlobal, graphicPatient_km, graphicPatientGlobal_rsf
-from datetime import date, datetime
+from .hd_graphics import graphicPatient, graphicPatientGlobal
+from datetime import datetime
 from decimal import Decimal
-from django.utils import timezone
 from .models import PersonExt, Measurement
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.db.models import Q
 
-
-
-
 # Create your views here.
-# IDs dos conceitos de medição (para a tabela dos utentes)
-
-
+ 
 def patients(request):
     """
     @brief: Page that lists all patients with their latest clinical measurements.
@@ -166,8 +156,8 @@ def patients(request):
 
     
     return render(request, 'utentes.html', {
-        'mymembers': page_obj,
-        'temp_prev' : time_prev,
+        'patients': page_obj,
+        'time_prev' : time_prev,
         'active_page': 'patients',
         'selected_model': selected_model,
         'hours': hours,
@@ -299,12 +289,11 @@ def patient(request, person_id):
     }
     return HttpResponse(template.render(context, request))
 
-
 def main(request):
   template = loader.get_template('main.html')
   return HttpResponse(template.render()) 
 
-@csrf_exempt  # Desativa a verificação CSRF para esta view
+@csrf_exempt 
 def addPatient(request):
     """
     @brief: Handles the creation of a new patient and their associated clinical data.
@@ -390,7 +379,6 @@ def addPatient(request):
 
     return HttpResponse(template.render(context))       
 
-
 def editPatient(request,person_id):
     """
     @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
@@ -418,7 +406,6 @@ def editPatient(request,person_id):
         return redirect('patient', person_id=person_id)
     
     return redirect('patient', person_id=person_id)
-
 
 def registEvent(request,person_id):
     """
@@ -458,7 +445,6 @@ def registEvent(request,person_id):
     
     return render(request, "registarEvento.html", {"utente": person})
 
-
 def newMeasurement(request, person_id):
     """
     @brief: Handles the creation of a new measurement for a specific patient
@@ -483,7 +469,6 @@ def newMeasurement(request, person_id):
                 )
     return redirect('patient', person_id=person_id)
 
-
 def removePatient(request, person_id):
     """
     @brief Handles the deletion of a patient and all related clinical records from the database.
@@ -503,7 +488,6 @@ def removePatient(request, person_id):
 
     return render(request, "details.html", {"mymember": patient})
   
-
 def listPatients(request):
     """
     @brief Displays a paginated and optionally filtered list of patients with their latest clinical data and survival risk assessments.
@@ -514,7 +498,7 @@ def listPatients(request):
     service_filter = request.GET.get("service")
     order_by = request.GET.get("order")
     event_filter = request.GET.get("event")
-    time_prev = request.GET.get("temp_prev")
+    time_prev = request.GET.get("time_prev")
     search_query = request.GET.get('search')
     model = request.GET.get('model') 
     alert = request.GET.get('alert')
@@ -567,8 +551,6 @@ def listPatients(request):
             Q(last_name__icontains=search_query)
         )
 
-
-
     # Filter by service
     if service_filter in CARE_SITE_MAP.values():
         service_id = [k for k, v in CARE_SITE_MAP.items() if v == service_filter][0]
@@ -592,8 +574,6 @@ def listPatients(request):
     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
 
-
-    print(utentes)
     utentes_info = []
     for patient in utentes:
 
@@ -602,7 +582,6 @@ def listPatients(request):
         global_risk_measurements = {}
         global_risk_measurements_prev = {}
 
-        # Tempo relativo do utente (em horas)
         visita = VisitOccurrence.objects.filter(person_id=patient.person_id).order_by('-visit_start_datetime').first()
         visit_end = VisitOccurrence.objects.filter(person_id=patient.person_id,visit_end_datetime__isnull=False).exists()
         if not visit_end:
@@ -629,8 +608,6 @@ def listPatients(request):
                     patient.probability_rsf = global_risk
                     patient.save()
 
-            
-                
             check = False
             for i in range(0, num_states - 1):
                 if global_risk >= thresholds_states[i]:
@@ -695,11 +672,11 @@ def listPatients(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, "utentes.html", {
-        "mymembers": page_obj,
+        "patients": page_obj,
         "service_filter": service_filter,
         "order_by": order_by,
         "event_filter": event_filter,
-        "temp_prev":time_prev,
+        "time_prev":time_prev,
         "search_query":search_query,
         'active_page': 'patients',
         'selected_model': selected_model,
@@ -718,18 +695,15 @@ def importCSV(request):
     @param request: HTTP request object, expects a file under 'csv_file' in POST data.
     @return: Renders the main page with a status message.
     """
-
     if request.method == "POST":
         try:
             csv_file = request.FILES["csv_file"]
             changeCSV(csv_file)
-
             messages.success(request, "✅ Ficheiro importado com sucesso!")
         except Exception as e:
             messages.error(request, f"❌ Erro ao importar: {e}")
-
         return render(request, 'main.html')
-
+    
     return render(request, 'main.html')
 
 def exportCSV(request):
@@ -752,8 +726,7 @@ def exportCSV(request):
         "Serviço", "Data/Hora de Entrada", "Data/Hora de Saída",
         "Dia de Medição", "Hora de Medição"] + [v[0] for v in parameters.values()] + [v for v in events.values()] + ["Evento"]
 
-
-    # Criar ficheiro CSV
+    # Create CSV File
     with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -804,12 +777,10 @@ def exportCSV(request):
                 "Hora de Medição": dt.strftime("%H:%M") if dt else ""
             }
 
-            # Adiciona as medições
             for concept_name, param_data in parameters.items():
                 name = param_data[0]
                 row[name] = medidas_dict.get(concept_name, "")
 
-            # Adiciona os eventos
             evento = 0
             for event_id, event_name in events.items():
                 obs = Observation.objects.filter(
@@ -818,8 +789,11 @@ def exportCSV(request):
                     observation_datetime=dt
                 ).first()
                 if obs:
-                    row[event_name] = int(obs.value_as_number)
-                    evento = 1
+                    try:
+                        row[event_name] = int(obs.value_as_number)
+                        evento = 1
+                    except:
+                        row[event_name] = 0
                 else:
                     row[event_name] = 0
             
@@ -832,7 +806,6 @@ def exportCSV(request):
         response = HttpResponse(f.read(), content_type="text/csv")
         response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
         return response
-
 
 def graphicView(request, person_id):
     """
@@ -849,26 +822,13 @@ def graphicView(request, person_id):
 
     if model == 'km':
         setCurrentModel(1)
-        if parameter == "RC":
-            return graphicPatientGlobal(person_id,timePrev)
-    
-        return graphicPatient_km(person_id, parameter, event,timePrev)
-    elif model == 'rsf':
-        setCurrentModel(2)
-        if parameter == "RC":
-            return graphicPatientGlobal_rsf(person_id,timePrev)
-    
-        return graphicPatient_rsf(person_id, parameter, event,timePrev)
-    elif getCurrentModel() == 1:
-        if parameter == "RC":
-            return graphicPatientGlobal(person_id,timePrev)
-    
-        return graphicPatient_km(person_id, parameter, event,timePrev)
     else:
-        if parameter == "RC":
-            return graphicPatientGlobal_rsf(person_id,timePrev)
-    
-        return graphicPatient_rsf(person_id, parameter, event,timePrev)
+        setCurrentModel(2)
+
+    if parameter == "RC":
+        return graphicPatientGlobal(person_id, timePrev)
+    else:
+        return graphicPatient(person_id,parameter,event,timePrev)
 
 
 

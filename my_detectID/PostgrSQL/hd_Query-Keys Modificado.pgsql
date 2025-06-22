@@ -29,4 +29,3 @@ ALTER TABLE cdmDatabaseSchema.MEASUREMENT
 ADD CONSTRAINT fk_measurement_person
 FOREIGN KEY (person_id)
 REFERENCES cdmDatabaseSchema.PERSON(person_id);
-
