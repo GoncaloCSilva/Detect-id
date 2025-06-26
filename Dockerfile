@@ -9,7 +9,7 @@ COPY . .
 
 # Instala as dependências
 RUN pip install --upgrade pip && \
-    pip install -r my_detect_id/requirements.txt
+    pip install -r requirements.txt
 
 # Expõe a porta 8000 (usada por default pelo Django)
 EXPOSE 8000
