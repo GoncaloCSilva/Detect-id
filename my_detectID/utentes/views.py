@@ -150,9 +150,9 @@ def patients(request):
             })
 
 
-            paginator = Paginator(patients_info, 10)  
-            page_number = request.GET.get("page") or 1
-            page_obj = paginator.get_page(page_number)
+        paginator = Paginator(patients_info, 10)  
+        page_number = request.GET.get("page") or 1
+        page_obj = paginator.get_page(page_number)
 
     
     return render(request, 'utentes.html', {
