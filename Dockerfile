@@ -17,4 +17,4 @@ RUN pip install --upgrade pip && \
 EXPOSE 8000
 
 # Comando para iniciar o servidor
-CMD ["python", "my_detect_id/manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "my_detectID/manage.py", "runserver", "0.0.0.0:8000"]
