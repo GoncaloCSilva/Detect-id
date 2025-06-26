@@ -362,7 +362,7 @@ def addPatient(request):
                 )
         VisitOccurrence.objects.create(
             person=person,
-            care_site_id=int(service) if service else 1, 
+            care_site_id=CareSite.objects.get(care_siteid=int(service) if service else 1).care_site_id, 
             visit_start_datetime=dateTime
         )
         
