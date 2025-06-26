@@ -1,5 +1,5 @@
 # Usa uma imagem base do Python
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # Define o diretório de trabalho no container
 WORKDIR /app
