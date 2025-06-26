@@ -196,16 +196,13 @@
 
   td.clickable {
     cursor: pointer;
-  }
-
-  td.clickable {
-    cursor: pointer;
     transition: background-color 0.3s ease;
   }
 
-  td.clickable:hover {
-    background-color: #4597a0; 
-  }
+td.clickable:hover {
+  background-color: #4597a0 !important;
+}
+
 </style>
 
 <form method="GET" action="{% url 'listPatients' %}" style="text-align: center; margin: 20px auto;">
@@ -410,7 +407,7 @@
     const modal = document.getElementById("myModal");
     const graficoImagem = document.getElementById("graficoImagem");
     const closeModal = document.getElementById("closeModal");
-    const timePrev = document.getElementById("time_prev").value;
+    const time_prev = document.getElementById("time_prev").value;
 
 
     document.querySelectorAll(".clickable").forEach(td => {
@@ -424,7 +421,7 @@
           var modele = 'rsf';
         }   
 
-        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}&time_prev=${timePrev}`;
+        graficoImagem.src = `/grafico/${personId}?parametro=${parametro}&evento=${evento}&model=${modele}&time_prev=${time_prev}`;
 
         modal.style.display = "block";
       });

@@ -818,7 +818,7 @@ def graphicView(request, person_id):
     parameter = request.GET.get("parametro")  
     event = request.GET.get("evento")
     model = request.GET.get('model')
-    timePrev = request.GET.get("temp_prev",None)
+    time_prev = request.GET.get("time_prev",None)
 
     if model == 'km':
         setCurrentModel(1)
@@ -826,9 +826,9 @@ def graphicView(request, person_id):
         setCurrentModel(2)
 
     if parameter == "RC":
-        return graphicPatientGlobal(person_id, timePrev)
+        return graphicPatientGlobal(person_id, time_prev)
     else:
-        return graphicPatient(person_id,parameter,event,timePrev)
+        return graphicPatient(person_id,parameter,event,time_prev)
 
 
 
