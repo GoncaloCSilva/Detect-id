@@ -4,7 +4,8 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y libpq-dev gcc
 
 # Define o diretório de trabalho no container
-WORKDIR /app
+WORKDIR /app/my_detect_id
+
 
 # Copia TODO o projeto (incluindo my_detect_id/)
 COPY . .
