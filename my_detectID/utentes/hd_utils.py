@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import random
 from django.conf import settings
 from django.db import connection
@@ -48,13 +49,12 @@ def load_config():
 
     @return dict The loaded configuration dictionary.
     """
-
     global CONFIG
     if CONFIG is None:
-        with open("./config/hd_config.yaml", "r", encoding="utf-8") as file:
+        config_path = Path(settings.BASE_DIR) / 'config' / 'hd_config.yaml'
+        with open(config_path, "r", encoding="utf-8") as file:
             CONFIG = yaml.safe_load(file)
     return CONFIG
-
 def get_parameters():
     """
     @brief Retrieves the clinical parameters defined in the configuration file.
