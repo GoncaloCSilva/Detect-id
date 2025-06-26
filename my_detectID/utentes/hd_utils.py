@@ -55,6 +55,7 @@ def load_config():
         with open(config_path, "r", encoding="utf-8") as file:
             CONFIG = yaml.safe_load(file)
     return CONFIG
+
 def get_parameters():
     """
     @brief Retrieves the clinical parameters defined in the configuration file.
@@ -213,11 +214,14 @@ def trainModels():
     train_models = config["train_models"]
 
     # If the files exist and training is not enabled in the configuration file, the load pre-trained models
-    if os.path.exists("./pickle/rsf_modelos.pkl") and os.path.exists("./pickle/km_modelos.pkl") and train_models == 0:
-    
-        with open("./pickle/rsf_modelos.pkl", "rb") as f:
-            MODELOS_RSF = pickle.load(f)        
-        with open("./pickle/km_modelos.pkl", "rb") as f:
+    pickle_dir = Path(settings.BASE_DIR) / 'pickle'
+    rsf_path = pickle_dir / 'rsf_modelos.pkl'
+    km_path = pickle_dir / 'km_modelos.pkl'
+
+    if rsf_path.exists() and km_path.exists() and train_models == 0:
+        with open(rsf_path, "rb") as f:
+            MODELOS_RSF = pickle.load(f)
+        with open(km_path, "rb") as f:
             MODELOS_KM = pickle.load(f)
 
         _csv_data = getCSV()
@@ -413,7 +417,7 @@ def getCSV(file_path = "detectid.csv", importBD=False):
     - Optionally filters to keep only the last measurement per person when importBD is False.
     - Saves a new CSV file with an additional "Tempo" column.
     """
-
+    file_path = Path(settings.BASE_DIR) / file_path
     df = pd.read_csv(file_path)
 
     # Process numeric columns: fill missing values with the rounded mean of each column
