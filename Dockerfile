@@ -9,7 +9,7 @@ COPY . .
 
 # Instala as dependências
 RUN pip install --upgrade pip && \
-    pip install -r my_detect_id/requirements.txt
+    pip install -r my_detectID/requirements.txt
 
 # Dá permissão de execução ao script
 RUN chmod +x entrypoint.sh

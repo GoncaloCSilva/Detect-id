@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Aplica migrações
-python my_detect_id/manage.py migrate
+python my_detectID/manage.py migrate
 
 # Coleta ficheiros estáticos
-python my_detect_id/manage.py collectstatic --noinput
+python my_detectID/manage.py collectstatic --noinput
 
 # Inicia o servidor Django
-python my_detect_id/manage.py runserver 0.0.0.0:8000
+python my_detectID/manage.py runserver 0.0.0.0:8000
