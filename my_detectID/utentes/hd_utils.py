@@ -313,9 +313,9 @@ def trainModels():
         MODELOS_RSF["global"] = rsf
 
         # Save the models in the pickle files
-        with open("./pickle/rsf_modelos.pkl", "wb") as f:
+        with open(rsf_path, "wb") as f:
             pickle.dump(MODELOS_RSF,f)
-        with open("./pickle/km_modelos.pkl", "wb") as f:
+        with open(km_path, "wb") as f:
             pickle.dump(MODELOS_KM,f)
 
     return _csv_data
