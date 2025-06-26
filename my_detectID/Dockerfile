@@ -11,8 +11,11 @@ COPY . .
 RUN pip install --upgrade pip && \
     pip install -r my_detect_id/requirements.txt
 
+# Dá permissão de execução ao script
+RUN chmod +x entrypoint.sh
+
 # Expõe a porta 8000 (usada por default pelo Django)
 EXPOSE 8000
 
-# Comando para iniciar o servidor Django
-CMD ["python", "my_detect_id/manage.py", "runserver", "0.0.0.0:8000"]
+# Usa o script de entrada
+CMD ["./entrypoint.sh"]

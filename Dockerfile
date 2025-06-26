@@ -1,20 +1,21 @@
 # Usa uma imagem base do Python
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y libpq-dev gcc
-
-# Define diretório de trabalho
+# Define o diretório de trabalho no container
 WORKDIR /app
 
-# Copia o projeto
-COPY . /app
+# Copia TODO o projeto (incluindo my_detect_id/)
+COPY . .
 
 # Instala as dependências
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt || echo "Ignoring Windows-only packages"
+    pip install -r my_detect_id/requirements.txt
 
-# Expõe a porta 8000
+# Dá permissão de execução ao script
+RUN chmod +x entrypoint.sh
+
+# Expõe a porta 8000 (usada por default pelo Django)
 EXPOSE 8000
 
-# Comando para iniciar o servidor
-CMD ["python", "my_detectID/manage.py", "runserver", "0.0.0.0:8000"]
+# Usa o script de entrada
+CMD ["./entrypoint.sh"]
