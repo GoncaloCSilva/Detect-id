@@ -3,9 +3,10 @@ FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y libpq-dev gcc
 
+WORKDIR /app
 
 # Copia TODO o projeto (incluindo my_detect_id/)
-COPY . .
+COPY . /app
 
 # Instala as dependências
 RUN pip install --upgrade pip && \
