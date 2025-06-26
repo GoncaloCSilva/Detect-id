@@ -51,7 +51,7 @@ def load_config():
 
     global CONFIG
     if CONFIG is None:
-        with open("config/hd_config.yaml", "r", encoding="utf-8") as file:
+        with open("./config/hd_config.yaml", "r", encoding="utf-8") as file:
             CONFIG = yaml.safe_load(file)
     return CONFIG
 
