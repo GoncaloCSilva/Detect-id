@@ -9,13 +9,10 @@ COPY . .
 
 # Instala as dependências
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
-
-# Dá permissão de execução ao script
-RUN chmod +x entrypoint.sh
+    pip install -r my_detect_id/requirements.txt
 
 # Expõe a porta 8000 (usada por default pelo Django)
 EXPOSE 8000
 
-# Usa o script de entrada
-CMD ["./entrypoint.sh"]
+# Comando para aplicar migrações e arrancar o servidor
+CMD ["sh", "-c", "python my_detectID/manage.py migrate && python my_detectID/manage.py runserver 0.0.0.0:8000"]
