@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,8 +26,7 @@ SECRET_KEY = 'django-insecure-$)&p*-kxse7u(7&b57!k*xvnv!k2hx@hhqw5k3w27y_ep5gfn1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -75,20 +75,36 @@ WSGI_APPLICATION = 'my_detectID.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+#######  RUN ON DEPLOYMENT ###########
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'detectid',
-        'USER': 'postgres',
-        'PASSWORD': 'Goncalo123',
-        'HOST': 'localhost',  
-        'PORT': '5432', 
-        'OPTIONS': {
-            'options': '-c search_path=cdmdatabaseschema,public'
-        }      
-    }
+    'default': dj_database_url.config(
+        default='postgresql://detectiduser:nWDKY2AphbiPisXKjPIZkPPu4bxJ3qKF@dpg-d1elrsre5dus73bju4c0-a.frankfurt-postgres.render.com/detectid_hzg1',
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+# Adicionar options para search_path do schema cdmdatabaseschema
+DATABASES['default']['OPTIONS'] = {
+    'options': '-c search_path=cdmdatabaseschema,public'
 }
 
+#######  RUN ON LOCAL HOST ############
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'detectid',
+#         'USER': 'postgres',
+#         'PASSWORD': 'Goncalo123',
+#         'HOST': 'localhost',  
+#         'PORT': '5432', 
+#         'OPTIONS': {
+#             'options': '-c search_path=cdmdatabaseschema,public'
+#         }      
+#     }
+# }
+# 
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
