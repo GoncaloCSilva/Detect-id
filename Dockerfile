@@ -1,18 +1,20 @@
 # Usa uma imagem base do Python
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-# Define o diretório de trabalho no container
+RUN apt-get update && apt-get install -y libpq-dev gcc
+
+# Define diretório de trabalho
 WORKDIR /app
 
-# Copia TODO o projeto (incluindo my_detect_id/)
-COPY . .
+# Copia o projeto
+COPY . /app
 
 # Instala as dependências
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt || echo "Ignoring Windows-only packages"
 
-# Expõe a porta 8000 (usada por default pelo Django)
+# Expõe a porta 8000
 EXPOSE 8000
 
-# Comando para iniciar o servidor Django
-CMD ["python", "my_detect_id/manage.py", "runserver", "0.0.0.0:8000"]
+# Comando para iniciar o servidor
+CMD ["python", "my_detectID/manage.py", "runserver", "0.0.0.0:8000"]
