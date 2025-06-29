@@ -78,33 +78,33 @@ WSGI_APPLICATION = 'my_detectID.wsgi.application'
 
 #######  RUN ON DEPLOYMENT ###########
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=config("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
-# Adicionar options para search_path do schema cdmdatabaseschema
-DATABASES['default']['OPTIONS'] = {
-    'options': '-c search_path=cdmdatabaseschema,public'
-}
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=config("DATABASE_URL"),
+#         conn_max_age=600,
+#         ssl_require=True
+#     )
+# }
+# # Adicionar options para search_path do schema cdmdatabaseschema
+# DATABASES['default']['OPTIONS'] = {
+#     'options': '-c search_path=cdmdatabaseschema,public'
+# }
 
 #######  RUN ON LOCAL HOST ############
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'detectid',
-#         'USER': 'postgres',
-#         'PASSWORD': 'Goncalo123',
-#         'HOST': 'localhost',  
-#         'PORT': '5432', 
-#         'OPTIONS': {
-#             'options': '-c search_path=cdmdatabaseschema,public'
-#         }      
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'detectid',
+        'USER': 'postgres',
+        'PASSWORD': 'Goncalo123',
+        'HOST': 'localhost',  
+        'PORT': '5432', 
+        'OPTIONS': {
+            'options': '-c search_path=cdmdatabaseschema,public'
+        }      
+    }
+}
 
 
 # Password validation
