@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import decouple
+from decouple import config
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'my_detectID.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=decouple.config("DATABASE_URL"),
+        default=config("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=True
     )
