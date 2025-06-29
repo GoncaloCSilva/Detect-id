@@ -74,13 +74,14 @@ def graphicPatient(person_id,param_id,event_id,timePrev = None):
 
     model = get_model(param_id,valor,event_id)
 
-    if param_id != 2:
+    if param_id == 2 or param_id == 8:
+        if group == 0: label_text = "Sim"
+        else: label_text = "Não"
+    else:
         if group == 0: label_text=f"[{thresholds[0]}, \u221E["
         elif group == num_states - 1: label_text = f"[0,{thresholds[-1]}]"
         else: label_text = f"[{thresholds[group]},{thresholds[group-1]}["
-    else:
-        if group == 0: label_text = "Sim"
-        else: label_text = "Não"
+        
 
     current_model = getCurrentModel()
 
@@ -100,7 +101,7 @@ def graphicPatient(person_id,param_id,event_id,timePrev = None):
     for i in range(0, num_states-1):
         if i != group:
 
-            if param_id == 2:
+            if param_id == 2 or param_id == 8:
                 if i == 0: label_text = "Sim"
                 else: label_text = "Não"
             else:

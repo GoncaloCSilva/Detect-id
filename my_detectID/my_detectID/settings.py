@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import decouple
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -79,7 +80,7 @@ WSGI_APPLICATION = 'my_detectID.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://detectiduser:nWDKY2AphbiPisXKjPIZkPPu4bxJ3qKF@dpg-d1elrsre5dus73bju4c0-a.frankfurt-postgres.render.com/detectid_hzg1',
+        default=decouple.config("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=True
     )
@@ -104,7 +105,7 @@ DATABASES['default']['OPTIONS'] = {
 #         }      
 #     }
 # }
-# 
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

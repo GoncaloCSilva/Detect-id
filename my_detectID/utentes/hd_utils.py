@@ -341,14 +341,13 @@ def get_model(param_id, value, evento_id=1):
     config = load_config()
     group_count = config["general_settings"]["num_thresholds"]
     group = None
-    if param_id == 8:
-        group = 2
-    else:
-        for i in range(0, group_count-1):
-                if value >= thresholds[i]:
-                    group = i + 1
-                    break
-    
+    print(MODELOS_KM)
+
+    for i in range(0, group_count-1):
+            if value >= thresholds[i]:
+                group = i + 1
+                break
+
     if group is None:
         group = group_count
     

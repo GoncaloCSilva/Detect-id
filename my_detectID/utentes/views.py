@@ -379,6 +379,7 @@ def addPatient(request):
 
     return HttpResponse(template.render(context))       
 
+@csrf_exempt 
 def editPatient(request,person_id):
     """
     @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
@@ -407,6 +408,7 @@ def editPatient(request,person_id):
     
     return redirect('patient', person_id=person_id)
 
+@csrf_exempt 
 def registEvent(request,person_id):
     """
     @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
@@ -445,6 +447,7 @@ def registEvent(request,person_id):
     
     return render(request, "registarEvento.html", {"utente": person})
 
+@csrf_exempt 
 def newMeasurement(request, person_id):
     """
     @brief: Handles the creation of a new measurement for a specific patient
@@ -496,6 +499,7 @@ def listPatients(request):
     """
 
     service_filter = request.GET.get("service")
+    state_filter = request.GET.get("stateSelect")
     order_by = request.GET.get("order")
     event_filter = request.GET.get("event")
     time_prev = request.GET.get("time_prev")
@@ -559,17 +563,16 @@ def listPatients(request):
         ).values_list("person_id", flat=True).distinct()
         utentes = utentes.filter(person_id__in=person_ids)
 
-    else:
-        for i in range(0,num_states):
-            if service_filter == str(states[i]['id']):
-                if i == 0:
-                    utentes = utentes.filter(probability_km__gte=thresholds_states[0]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gte=thresholds_states[0])
-                elif i == num_states-1:
-                    utentes = utentes.filter(probability_km__lt=thresholds_states[-1]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__lt=thresholds_states[-1])
-                else:
-                    print("TO AQQUI")
-                    utentes = utentes.filter(probability_km__gte=thresholds_states[i], probability_km__lt=thresholds_states[i-1]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gte=thresholds_states[i], probability_rsf__lt=thresholds_states[i-1])
-           
+
+    for i in range(0,num_states):
+        if state_filter == str(states[i]['id']):
+            if i == 0:
+                utentes = utentes.filter(probability_km__gte=thresholds_states[0]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gte=thresholds_states[0])
+            elif i == num_states-1:
+                utentes = utentes.filter(probability_km__lt=thresholds_states[-1]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__lt=thresholds_states[-1])
+            else:
+                utentes = utentes.filter(probability_km__gte=thresholds_states[i], probability_km__lt=thresholds_states[i-1]) if getCurrentModel() == 1 else utentes.filter(probability_rsf__gte=thresholds_states[i], probability_rsf__lt=thresholds_states[i-1])
+        
     # Order if needed
     if order_by in ["first_name", "-first_name", "last_name", "-last_name", "birthday", "-birthday"]:
         utentes = utentes.order_by(order_by)
@@ -674,6 +677,7 @@ def listPatients(request):
     return render(request, "utentes.html", {
         "patients": page_obj,
         "service_filter": service_filter,
+        "state_filter":state_filter,
         "order_by": order_by,
         "event_filter": event_filter,
         "time_prev":time_prev,

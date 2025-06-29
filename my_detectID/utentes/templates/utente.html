@@ -71,7 +71,6 @@
     }
 
     .same-width-btn {
-    width: 160px;
     text-align: center;
     }
 
@@ -216,7 +215,6 @@
     .btn-edit {
     background-color: #007041;
     color: white;
-    padding: 10px 14px;
     font-weight: bold;
     border: none;
     border-radius: 6px;
@@ -424,7 +422,7 @@
       {% endfor %}
       </select>
     
-      <button type="submit" class="btn btn-edit" style="float: right; margin-bottom: 10px;">Atualizar Tabela</button>
+      <button type="submit" class="btn btn-edit" style="float: right; margin-bottom: 10px;   font-size: 1.1em;">⟳</button>
     </form>
     <!-- Tabela de Dados -->
     <table>
@@ -466,8 +464,8 @@
       </tbody>
     </table>
 
-    <div style="display: flex; gap: 20%; margin-top: 2%; justify-content: center;">
-    <button onclick="toggleMeasurement()" id="newMeasurement" class="btn btn-edit same-width-btn" style="width: 30%;"><i class="fas fa-plus" style="margin-right: 5px;"></i> Inserir Nova Medição</button>  
+    <div style="display: flex; gap: 20%; margin-top: 30px; justify-content: center;">
+    <button onclick="toggleMeasurement()" id="newMeasurement" class="btn btn-edit same-width-btn"><i class="fas fa-plus"></i></button>  
   </div>
     <form method="POST" action="{% url 'newMeasurement' mymember.person_id %}" class="measurement-form" style="display: none;" id="formMeasurement">
   {% csrf_token %}
@@ -568,8 +566,8 @@
   </div>
 </form>
 
-    <div style="display: flex; gap: 20%; margin-top: 5%; justify-content: center;">
-    <a onclick="toggleEvent()" id="buttonEvent" class="btn btn-edit same-width-btn"><i class="fas fa-plus" style="margin-right: 5px;"></i>Registar Evento</a>  
+    <div style="display: flex; justify-content: center; margin-top: 30px;">
+    <a onclick="toggleEvent()" id="buttonEvent" class="btn btn-edit same-width-btn"><i class="fas fa-plus"></i></a>  
     </div>
 </div>
 
@@ -608,7 +606,7 @@
         {% endfor %}
       </select>
     
-      <button type="button" style="float:right" class="btn btn-edit" onclick="atualizarGrafico()">Atualizar Gráfico</button>
+      <button type="button" style="float:right;   font-size: 1.1em;" class="btn btn-edit" onclick="atualizarGrafico()">⟳</button>
     </form>
 
     <div id="loading" style="display:none; font-weight:bold;">Carregando gráfico...</div>
