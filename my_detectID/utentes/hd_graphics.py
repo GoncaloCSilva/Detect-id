@@ -115,11 +115,11 @@ def graphicPatient(person_id,param_id,event_id,timePrev = None):
             else:
                 ax.step(model2[0].x, model2[0].y, where="post",color=thresholds_colors[i], label=label_text)
 
-            if param_id==2 or param_id ==8 or param_id == 6:
+            if param_id==2 or param_id ==8:
                 break
             
     
-    if group != num_states - 1 and (param_id!=2 and param_id !=8 and param_id != 6):
+    if group != num_states - 1 and (param_id!=2 and param_id !=8):
         model3 = get_model(param_id,0,event_id)
         if current_model == 1:
             model3.plot_survival_function(ax=ax, ci_show=False, color=thresholds_colors[-1],label=f"[0,{thresholds[-1]}]")

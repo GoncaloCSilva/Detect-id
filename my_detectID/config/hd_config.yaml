@@ -30,7 +30,7 @@ parameters:
     abv_name: 'SpO2' # Name abreviation
     full_name: 'Saturação de Oxigênio' # Full Name
     unit_measurement: '%' #Unit measurement
-    thresholds: [98,90] # Thresholds for intervals
+    thresholds: [96,91] # Thresholds for intervals
 
   - name: 'Necessidade de O2'
     abv_name: 'O2'
@@ -42,25 +42,25 @@ parameters:
     abv_name: 'FC'
     full_name: 'Frequência Cardíaca'
     unit_measurement: 'bpm'
-    thresholds: [99,60]
+    thresholds: [110,51]
   
   - name: 'TA Sistólica'
     abv_name: 'TAS'
     full_name: 'Tensão Arterial Sistólica'
     unit_measurement: 'mmHg'
-    thresholds: [130,100]
+    thresholds: [220,110]
   
   - name: 'TA Diastólica'
     abv_name: 'TAD'
     full_name: 'Tensão Arterial Diastólica'
     unit_measurement: 'mmHg'
-    thresholds: [90,60]
+    thresholds: [80,60]
   
   - name: 'Temperatura'
     abv_name: 'Temp'
     full_name: 'Temperatura Corporal'
     unit_measurement: '°C'
-    thresholds: [37,36.5]
+    thresholds: [38,36]
   
   - name: 'Nível de Consciência'
     abv_name: 'GCS'
@@ -73,3 +73,10 @@ parameters:
     full_name: 'Presença de Dor'
     unit_measurement: 'Sim/Não'
     thresholds: [1,0]
+
+  # - name: 'Frequência Respiratória'
+  #   abv_name: 'FR'
+  #   full_name: 'Frequência Respiratória'
+  #   unit_measurement: 'cr/m'
+  #   thresholds: [20,10]
+   
