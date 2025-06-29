@@ -630,7 +630,7 @@
   <div id="deletePopup" class="modal">
     <div class="modal-content">
       <h2>Confirmar Remoção</h2>
-      <p>Tem certeza que deseja encerrar o internameto de <strong>{{ mymember.first_name }} {{ mymember.last_name }}</strong>?</p>
+      <p>Tem certeza que deseja encerrar o internamento de <strong>{{ mymember.first_name }} {{ mymember.last_name }}</strong>?</p>
       <p>Esta ação não pode ser desfeita.</p>
       <form method="POST" action="{% url 'removePatient' mymember.person_id %}">
         {% csrf_token %}

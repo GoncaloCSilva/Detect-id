@@ -472,6 +472,7 @@ def newMeasurement(request, person_id):
                 )
     return redirect('patient', person_id=person_id)
 
+@csrf_exempt
 def removePatient(request, person_id):
     """
     @brief Handles the deletion of a patient and all related clinical records from the database.
@@ -550,10 +551,12 @@ def listPatients(request):
     utentes = PersonExt.objects.all().order_by('person_id')
 
     if search_query:
-        utentes = utentes.filter(
-            Q(first_name__icontains=search_query) | 
-            Q(last_name__icontains=search_query)
-        )
+        search_terms = search_query.strip().split()
+        for term in search_terms:
+            utentes = utentes.filter(
+                Q(first_name__icontains=term) | 
+                Q(last_name__icontains=term)
+            )
 
     # Filter by service
     if service_filter in CARE_SITE_MAP.values():
