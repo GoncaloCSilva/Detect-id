@@ -293,8 +293,8 @@ td.clickable:hover {
 <label for="order">Ordenar:</label>
 <select name="order" id="order">
   <option value="NoOrder" {% if order_by == "NoOrder" %}selected{% endif %}>Nenhum</option>
-  <option value="first_name" {% if order_by == "first_name" %}selected{% endif %}> Nome ▲</option>
-  <option value="-first_name" {% if order_by == "-first_name" %}selected{% endif %}> Nome ▼</option>
+  <option value="first_name" {% if order_by == "first_name" %}selected{% endif %}> Nome (A-Z)</option>
+  <option value="-first_name" {% if order_by == "-first_name" %}selected{% endif %}> Nome (Z-A)</option>
   <option value="-birthday" {% if order_by == "-birthday" %}selected{% endif %}>Idade ▲</option>
   <option value="birthday" {% if order_by == "birthday" %}selected{% endif %}>Idade ▼ </option>
 </select>
@@ -342,6 +342,7 @@ td.clickable:hover {
           {% if item.global_prev|dict_value_first != item.global|dict_value_first %}
             <span title="Alteração de estado clínico" style="margin-left: 5px; color: red; font-weight: bold;"> ⚠️</span>
           {% endif %}
+
       </a></td>
 
         {% color_class_value item.global|dict_value_first "Global" item.person.person_id event_filter as global_class %}
