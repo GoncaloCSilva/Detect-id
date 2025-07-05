@@ -224,6 +224,7 @@ td.clickable:hover {
   <input type="hidden" name="stateSelect" value="{{ state_filter }}">
   <input type="hidden" name="event" value="{{ event_filter }}">
   <input type="hidden" name="order" value="{{ order_by }}">
+  <input type="hidden" name="page" value="{{ patients.number }}">
   <input type="hidden" name="time_prev" value="{{ time_prev }}">
   <button type="submit" style="padding: 8px 12px; background-color: #007041; color: white; border: none; border-radius: 6px; cursor: pointer;">Pesquisar</button>
   
@@ -313,6 +314,7 @@ td.clickable:hover {
   </a>
   <input type="hidden" name="alert" value="{{ alert_filter }}">
   <input type="hidden" name="model" value="{{ selected_model }}">
+  <input type="hidden" name="page" value="{{ patients.number }}">
 </form>
 <br>
 <div class="table-container">
@@ -397,11 +399,6 @@ td.clickable:hover {
          style="width: 100%; max-height: 500px; object-fit: contain; margin-top: 10px;">
   </div>
 </div>
-
-
-
-
-
 
 
 <div class="pagination">

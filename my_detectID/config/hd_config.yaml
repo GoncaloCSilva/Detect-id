@@ -48,7 +48,7 @@ parameters:
     abv_name: 'TAS'
     full_name: 'Tensão Arterial Sistólica'
     unit_measurement: 'mmHg'
-    thresholds: [220,110]
+    thresholds: [130,110]
   
   - name: 'TA Diastólica'
     abv_name: 'TAD'

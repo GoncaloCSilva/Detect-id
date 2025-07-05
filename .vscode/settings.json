@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./my_detectID/utentes/hd_"
+        "./my_detectID/utentes/hd_",
+        "./my_detectID/utentes"
     ]
 }

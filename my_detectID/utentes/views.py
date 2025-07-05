@@ -462,10 +462,11 @@ def newMeasurement(request, person_id):
         for id, (name, abv_name, full_name, thresholds, unit) in parameters.items():
             value = request.POST.get(str(id))
             if value is not None:
+                numeric_value = abs(Decimal(value))
                 Measurement.objects.create(
                     person_id=person_id,
                     measurement_concept_id=id,
-                    value_as_number=Decimal(value),
+                    value_as_number=numeric_value,
                     measurement_datetime=dateTime,
                     range_low=thresholds[0],
                     range_high=thresholds[1]
