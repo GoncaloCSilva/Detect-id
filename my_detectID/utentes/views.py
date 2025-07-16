@@ -293,7 +293,7 @@ def main(request):
   template = loader.get_template('main.html')
   return HttpResponse(template.render()) 
 
-@csrf_exempt 
+
 def addPatient(request):
     """
     @brief: Handles the creation of a new patient and their associated clinical data.
@@ -371,15 +371,13 @@ def addPatient(request):
 
 
     
-    template = loader.get_template('adicionarUtente.html')
-    context = {
-        'active_page': 'addPatient',        
+
+    return render(request, 'adicionarUtente.html', {
+        'active_page': 'addPatient',
         'parameters': parameters,
-    }
+    })    
 
-    return HttpResponse(template.render(context))       
 
-@csrf_exempt 
 def editPatient(request,person_id):
     """
     @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
@@ -388,9 +386,11 @@ def editPatient(request,person_id):
     @param person_id: ID of the patient to be edited.
     @return: Redirects to the patient list upon successful update, or renders the edit form if GET request.
     """
+    patient = PersonExt.objects.get(person_id=person_id)
+    visit = VisitOccurrence.objects.get(person=patient)
+    parameters = get_parameters() 
 
     
-    patient = PersonExt.objects.get(person_id=person_id)
     if request.method == "POST":
         patient.first_name = request.POST.get("firstname")
         patient.last_name = request.POST.get("lastname")
@@ -402,13 +402,17 @@ def editPatient(request,person_id):
         service.save()
         patient.save()
 
-        print("Debug ->",int(request.POST.get("service")))
-
         return redirect('patient', person_id=person_id)
     
-    return redirect('patient', person_id=person_id)
+    context = {
+        'patient': patient,
+        'visit': visit,
+        'parameters': parameters,
+        'active_page': 'editPatient'
+    }
+    return render(request, 'editarUtente.html', context)
 
-@csrf_exempt 
+
 def registEvent(request,person_id):
     """
     @brief: Handles the editing of an existing patient's personal information and the allows to add new measurements.
@@ -447,7 +451,7 @@ def registEvent(request,person_id):
     
     return render(request, "registarEvento.html", {"utente": person})
 
-@csrf_exempt 
+
 def newMeasurement(request, person_id):
     """
     @brief: Handles the creation of a new measurement for a specific patient
@@ -473,7 +477,6 @@ def newMeasurement(request, person_id):
                 )
     return redirect('patient', person_id=person_id)
 
-@csrf_exempt
 def removePatient(request, person_id):
     """
     @brief Handles the deletion of a patient and all related clinical records from the database.
